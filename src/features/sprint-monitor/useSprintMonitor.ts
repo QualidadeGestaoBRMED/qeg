@@ -1,0 +1,117 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchMonitorCards } from "./api";
+import {
+  buildAreaBoardItems,
+  buildPlannedLaneSummary,
+  buildTeamLoadItems,
+  formatUpdatedAt,
+  groupCardsByAssignee,
+} from "./domain";
+import { loadMonitorConfigFromEnv } from "./env";
+import type { AssigneeGroup, MonitorConfig, SprintCard } from "./types";
+
+export function useSprintMonitor() {
+  const [initialState] = useState(() => {
+    const { config, error } = loadMonitorConfigFromEnv();
+
+    return {
+      config,
+      error,
+    };
+  });
+  const [config] = useState<MonitorConfig | null>(initialState.config);
+  const [groups, setGroups] = useState<AssigneeGroup[]>([]);
+  const [unassignedActiveCards, setUnassignedActiveCards] = useState(0);
+  const [activeCardsTotal, setActiveCardsTotal] = useState(0);
+  const [activeCards, setActiveCards] = useState<SprintCard[]>([]);
+  const [prioritizedCards, setPrioritizedCards] = useState<SprintCard[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialState.error);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!config) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { activeCards, prioritizedCards } = await fetchMonitorCards(config);
+      const grouped = groupCardsByAssignee(activeCards, prioritizedCards);
+      const unassigned = activeCards.filter((card) => card.assignees.length === 0);
+
+      setActiveCards(activeCards);
+      setPrioritizedCards(prioritizedCards);
+      setGroups(grouped);
+      setUnassignedActiveCards(unassigned.length);
+      setActiveCardsTotal(activeCards.length);
+      setLastUpdatedAt(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Nao foi possivel carregar os dados.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [config]);
+
+  useEffect(() => {
+    if (config) {
+      void refresh();
+    }
+  }, [config, refresh]);
+
+  const summary = useMemo(() => {
+    const people = groups.length;
+    const pipeNames = config?.pipes
+      .filter((pipe) => pipe.id && pipe.name)
+      .map((pipe) => pipe.name)
+      .join(" · ");
+
+    return {
+      activeCards: activeCardsTotal,
+      people,
+      pipeNames,
+      lastUpdatedLabel: formatUpdatedAt(lastUpdatedAt),
+    };
+  }, [activeCardsTotal, config, groups.length, lastUpdatedAt]);
+
+  const dashboard = useMemo(() => {
+    const peopleWithActiveCards = groups.filter((group) => group.activeCards.length > 0);
+    const peopleWithNextStep = peopleWithActiveCards.filter(
+      (group) => group.prioritizedCards.length > 0,
+    ).length;
+    const peopleWithoutNextStep = peopleWithActiveCards.filter(
+      (group) => group.prioritizedCards.length === 0,
+    ).length;
+    return {
+      activeCards: summary.activeCards,
+      withNextStep: peopleWithNextStep,
+      withoutNextStep: peopleWithoutNextStep,
+      unassignedCards: unassignedActiveCards,
+    };
+  }, [groups, summary.activeCards, unassignedActiveCards]);
+
+  const teamLoad = useMemo(() => buildTeamLoadItems(groups), [groups]);
+  const areaBoard = useMemo(
+    () => buildAreaBoardItems(activeCards, prioritizedCards),
+    [activeCards, prioritizedCards],
+  );
+  const plannedLaneSummary = useMemo(
+    () => buildPlannedLaneSummary(prioritizedCards),
+    [prioritizedCards],
+  );
+
+  return {
+    groups,
+    isLoading,
+    error,
+    summary,
+    dashboard,
+    areaBoard,
+    plannedLaneSummary,
+    teamLoad,
+    clearError: () => setError(null),
+    refresh,
+  };
+}
