@@ -1,16 +1,14 @@
 import { useState } from "react";
 import {
   AssigneeBoard,
-  AreaBoard,
+  DirectorPresentation,
   MetricsGrid,
   MonitorHeader,
-  MonitorTabs,
-  TeamLoadBoard,
 } from "./components";
 import { useSprintMonitor } from "./useSprintMonitor";
 
 export function SprintMonitorScreen() {
-  const [activeTab, setActiveTab] = useState<"person" | "area" | "load">("person");
+  const [isPresenting, setIsPresenting] = useState(false);
   const {
     groups,
     isLoading,
@@ -20,12 +18,27 @@ export function SprintMonitorScreen() {
     areaBoard,
     plannedLaneSummary,
     teamLoad,
+    directorView,
     clearError,
     refresh,
   } = useSprintMonitor();
 
   return (
     <main className="min-h-screen bg-background">
+      {isPresenting && (
+        <DirectorPresentation
+          view={directorView}
+          teamLoad={teamLoad}
+          areaBoard={areaBoard}
+          plannedLanes={plannedLaneSummary}
+          totalActiveCards={summary.activeCards}
+          totalPeople={summary.people}
+          lastUpdated={summary.lastUpdatedLabel}
+          pipeNames={summary.pipeNames}
+          onClose={() => setIsPresenting(false)}
+        />
+      )}
+
       <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
         <div className="flex w-full flex-col gap-4">
           <MonitorHeader
@@ -33,6 +46,7 @@ export function SprintMonitorScreen() {
             people={summary.people}
             isLoading={isLoading}
             onRefresh={() => void refresh()}
+            onPresent={() => setIsPresenting(true)}
           />
 
           {error && (
@@ -49,15 +63,7 @@ export function SprintMonitorScreen() {
           )}
 
           <MetricsGrid metrics={dashboard} />
-          <MonitorTabs
-            activeTab={activeTab}
-            onChange={setActiveTab}
-            children={{
-              person: <AssigneeBoard groups={groups} isLoading={isLoading} />,
-              area: <AreaBoard items={areaBoard} plannedLanes={plannedLaneSummary} />,
-              load: <TeamLoadBoard items={teamLoad} />,
-            }}
-          />
+          <AssigneeBoard groups={groups} isLoading={isLoading} />
         </div>
       </div>
     </main>

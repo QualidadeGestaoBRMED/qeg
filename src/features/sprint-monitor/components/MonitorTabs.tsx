@@ -1,9 +1,11 @@
 import type React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+type TabKey = "person" | "area" | "load";
+
 interface MonitorTabsProps {
-  activeTab: "person" | "area" | "load";
-  onChange: (tab: "person" | "area" | "load") => void;
+  activeTab: TabKey;
+  onChange: (tab: TabKey) => void;
   children: {
     person: React.ReactNode;
     area: React.ReactNode;
@@ -15,7 +17,7 @@ export function MonitorTabs({ activeTab, onChange, children }: MonitorTabsProps)
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) => onChange(value as MonitorTabsProps["activeTab"])}
+      onValueChange={(value) => onChange(value as TabKey)}
     >
       <TabsList>
         <TabsTrigger value="person">Por pessoa</TabsTrigger>

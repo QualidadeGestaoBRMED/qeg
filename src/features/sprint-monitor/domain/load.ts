@@ -1,11 +1,11 @@
 import type { AssigneeGroup, LoadLevel, TeamLoadItem } from "../types";
 
 export function getLoadLevel(activeCardCount: number): LoadLevel {
-  if (activeCardCount >= 3) {
+  if (activeCardCount >= 4) {
     return "critical";
   }
 
-  if (activeCardCount === 2) {
+  if (activeCardCount === 3) {
     return "high";
   }
 
@@ -25,7 +25,7 @@ export function getLoadLabel(loadLevel: LoadLevel): string {
 }
 
 export function getLoadRatio(activeCardCount: number): number {
-  return Math.min(activeCardCount / 3, 1);
+  return Math.min(activeCardCount / 4, 1);
 }
 
 function buildSuggestion(activeCardCount: number, prioritizedCardCount: number, loadLevel: LoadLevel): string {

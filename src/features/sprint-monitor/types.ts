@@ -74,3 +74,25 @@ export interface PlannedLaneSummary {
   label: string;
   count: number;
 }
+
+export type RagStatus = "green" | "amber" | "red";
+
+export interface PersonStatus {
+  name: string;
+  activeCardCount: number;
+  loadLevel: LoadLevel;
+  hasNextStep: boolean;
+}
+
+export interface DirectorView {
+  healthScore: number;
+  ragStatus: RagStatus;
+  ragLabel: string;
+  insights: string[];
+  coveragePercent: number;
+  criticalPeople: string[];
+  availablePeople: string[];
+  peopleWithNext: string[];
+  peopleWithoutNext: string[];
+  allPeople: PersonStatus[];
+}

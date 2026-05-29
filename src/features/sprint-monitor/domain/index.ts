@@ -5,3 +5,4 @@ export { getLoadLabel, getLoadLevel, getLoadRatio, buildTeamLoadItems } from "./
 export { buildPlannedLaneSummary } from "./lanes";
 export { formatUpdatedAt } from "./cards";
 export { sanitizePipe } from "./pipes";
+export { buildDirectorView } from "./director";

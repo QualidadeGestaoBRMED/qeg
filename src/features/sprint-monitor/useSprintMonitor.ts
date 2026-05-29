@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchMonitorCards } from "./api";
 import {
   buildAreaBoardItems,
+  buildDirectorView,
   buildPlannedLaneSummary,
   buildTeamLoadItems,
   formatUpdatedAt,
@@ -101,6 +102,10 @@ export function useSprintMonitor() {
     () => buildPlannedLaneSummary(prioritizedCards),
     [prioritizedCards],
   );
+  const directorView = useMemo(
+    () => buildDirectorView(groups, unassignedActiveCards),
+    [groups, unassignedActiveCards],
+  );
 
   return {
     groups,
@@ -111,6 +116,7 @@ export function useSprintMonitor() {
     areaBoard,
     plannedLaneSummary,
     teamLoad,
+    directorView,
     clearError: () => setError(null),
     refresh,
   };
