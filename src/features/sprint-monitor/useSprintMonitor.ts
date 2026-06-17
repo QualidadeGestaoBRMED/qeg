@@ -123,8 +123,11 @@ export function useSprintMonitor() {
   );
 
   const skillCoverage = useMemo<SkillCoverage[]>(
-    () => (talentMap ? buildSkillCoverage(talentMatrix, talentMap.skills) : []),
-    [talentMap, talentMatrix],
+    () =>
+      talentMap
+        ? buildSkillCoverage(talentMatrix, talentMap.skills, activeCards, talentMap.labelMap ?? {})
+        : [],
+    [talentMap, talentMatrix, activeCards],
   );
 
   return {

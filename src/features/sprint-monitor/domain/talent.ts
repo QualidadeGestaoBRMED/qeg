@@ -1,7 +1,7 @@
 import type {
   AssigneeGroup,
-  LoadLevel,
   SkillCoverage,
+  SprintCard,
   TalentMap,
   TalentMatrixRow,
 } from "../types";
@@ -55,7 +55,6 @@ export function buildTalentMatrix(talentMap: TalentMap, groups: AssigneeGroup[])
     return {
       name: member.name,
       avatarUrl: group?.avatarUrl ?? null,
-      senioridade: member.senioridade,
       skills: member.skills,
       loadLevel: getLoadLevel(activeCardCount),
       activeCardCount,
@@ -64,28 +63,65 @@ export function buildTalentMatrix(talentMap: TalentMap, groups: AssigneeGroup[])
   });
 }
 
-const LOAD_ORDER: Record<LoadLevel, number> = { ok: 0, high: 1, critical: 2 };
-
 export function findAvailableBySkill(matrix: TalentMatrixRow[], skill: string): TalentMatrixRow[] {
   return matrix
     .filter((row) => skill in row.skills)
     .sort((a, b) => {
-      const loadDiff = LOAD_ORDER[a.loadLevel] - LOAD_ORDER[b.loadLevel];
-      if (loadDiff !== 0) return loadDiff;
+      // Livres (0 cards) primeiro; depois quem libera mais cedo pelo prazo.
+      const aFree = a.activeCardCount === 0 ? 0 : 1;
+      const bFree = b.activeCardCount === 0 ? 0 : 1;
+      if (aFree !== bFree) return aFree - bFree;
       const aDay = a.soonestDelivery ? (daysUntil(a.soonestDelivery) ?? Infinity) : Infinity;
       const bDay = b.soonestDelivery ? (daysUntil(b.soonestDelivery) ?? Infinity) : Infinity;
       return aDay - bDay;
     });
 }
 
-export function buildSkillCoverage(matrix: TalentMatrixRow[], skills: string[]): SkillCoverage[] {
+/**
+ * Conta quantos cards ativos consomem cada skill, via labelMap (label do Pipefy -> skill).
+ * Um card que tenha varias labels da mesma skill conta uma vez para aquela skill.
+ */
+export function buildSkillDemand(
+  activeCards: SprintCard[],
+  labelMap: Record<string, string>,
+): Map<string, string[]> {
+  const lookup = new Map<string, string>();
+  for (const [label, skill] of Object.entries(labelMap)) {
+    lookup.set(normalizeText(label), skill);
+  }
+
+  const demand = new Map<string, string[]>();
+  for (const card of activeCards) {
+    const skillsForCard = new Set<string>();
+    for (const label of card.labels ?? []) {
+      const skill = lookup.get(normalizeText(label));
+      if (skill) skillsForCard.add(skill);
+    }
+    for (const skill of skillsForCard) {
+      const titles = demand.get(skill) ?? [];
+      titles.push(card.title);
+      demand.set(skill, titles);
+    }
+  }
+  return demand;
+}
+
+export function buildSkillCoverage(
+  matrix: TalentMatrixRow[],
+  skills: string[],
+  activeCards: SprintCard[] = [],
+  labelMap: Record<string, string> = {},
+): SkillCoverage[] {
+  const demand = buildSkillDemand(activeCards, labelMap);
+
   return skills.map((skill) => {
     const qualified = matrix.filter((row) => skill in row.skills);
-    const available = qualified.filter((row) => row.loadLevel === "ok");
+    const available = qualified.filter((row) => row.activeCardCount === 0);
     const strong = qualified.filter((row) => row.skills[skill] === "forte");
     const occupiedDates = qualified
       .filter((row) => row.activeCardCount > 0 && row.soonestDelivery)
       .map((row) => row.soonestDelivery as string);
+    const demandTitles = demand.get(skill) ?? [];
 
     return {
       skill,
@@ -93,6 +129,8 @@ export function buildSkillCoverage(matrix: TalentMatrixRow[], skills: string[]):
       available: available.length,
       strong: strong.length,
       nextDelivery: earliestDate(occupiedDates),
+      demandCount: demandTitles.length,
+      demandTitles,
     };
   });
 }

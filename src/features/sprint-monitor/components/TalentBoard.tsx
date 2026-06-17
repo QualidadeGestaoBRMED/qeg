@@ -2,7 +2,7 @@ import { useState } from "react";
 import { daysUntil, findAvailableBySkill } from "../domain/talent";
 import type { SkillCoverage, TalentMatrixRow } from "../types";
 
-type TalentView = "pessoas" | "alocar" | "gaps";
+type TalentView = "pessoas" | "alocar" | "balanco";
 
 interface TalentBoardProps {
   matrix: TalentMatrixRow[];
@@ -10,25 +10,21 @@ interface TalentBoardProps {
   skills: string[];
 }
 
-function deliveryLabel(date: string | null): { text: string; color: string } | null {
-  if (!date) return null;
-  const days = daysUntil(date);
-  if (days === null) return null;
-  if (days < 0) return { text: "prazo vencido", color: "text-destructive" };
-  if (days === 0) return { text: "entrega hoje", color: "text-[hsl(var(--amber))]" };
-  if (days === 1) return { text: "entrega amanhã", color: "text-[hsl(var(--amber))]" };
-  return { text: `entrega em ${days}d`, color: "text-muted-foreground" };
-}
-
-function LoadDot({ level }: { level: TalentMatrixRow["loadLevel"] }) {
-  const colors = { ok: "bg-primary", high: "bg-[hsl(var(--amber))]", critical: "bg-destructive" };
-  const labels = { ok: "Carga ok", high: "Carga alta", critical: "Carga crítica" };
-  return (
-    <span className="flex items-center gap-1.5">
-      <span className={`inline-block h-2 w-2 rounded-full ${colors[level]}`} />
-      <span className="text-xs text-muted-foreground">{labels[level]}</span>
-    </span>
-  );
+/** Disponibilidade binária: "livre" só com 0 cards; senão "ocupado · libera em ~Xd" pelo prazo. */
+function availability(row: TalentMatrixRow): { text: string; color: string } {
+  if (row.activeCardCount === 0) {
+    return { text: "livre", color: "text-primary" };
+  }
+  if (row.soonestDelivery) {
+    const days = daysUntil(row.soonestDelivery);
+    if (days !== null) {
+      if (days < 0) return { text: "ocupado · prazo vencido", color: "text-destructive" };
+      if (days === 0) return { text: "ocupado · libera hoje", color: "text-[hsl(var(--amber))]" };
+      if (days === 1) return { text: "ocupado · libera amanhã", color: "text-[hsl(var(--amber))]" };
+      return { text: `ocupado · libera em ~${days}d`, color: "text-muted-foreground" };
+    }
+  }
+  return { text: "ocupado · sem prazo", color: "text-muted-foreground" };
 }
 
 function SkillPill({ skill, level }: { skill: string; level: string }) {
@@ -46,16 +42,8 @@ function SkillPill({ skill, level }: { skill: string; level: string }) {
   );
 }
 
-function SenioridadeChip({ value }: { value: string }) {
-  return (
-    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-      {value}
-    </span>
-  );
-}
-
 function PersonCard({ row }: { row: TalentMatrixRow }) {
-  const delivery = deliveryLabel(row.soonestDelivery);
+  const avail = availability(row);
   const skillEntries = Object.entries(row.skills);
 
   return (
@@ -63,11 +51,12 @@ function PersonCard({ row }: { row: TalentMatrixRow }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-semibold text-foreground">{row.name}</p>
-          <div className="mt-1">
-            <SenioridadeChip value={row.senioridade} />
-          </div>
+          <p className={`mt-0.5 text-xs font-medium ${avail.color}`}>{avail.text}</p>
         </div>
-        <LoadDot level={row.loadLevel} />
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-sm font-semibold text-foreground">{row.activeCardCount}</span>
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">ativos</span>
+        </div>
       </div>
 
       {skillEntries.length > 0 && (
@@ -76,10 +65,6 @@ function PersonCard({ row }: { row: TalentMatrixRow }) {
             <SkillPill key={skill} skill={skill} level={level} />
           ))}
         </div>
-      )}
-
-      {delivery && (
-        <p className={`text-xs ${delivery.color}`}>{delivery.text}</p>
       )}
     </article>
   );
@@ -106,8 +91,8 @@ function PessoasView({ matrix }: { matrix: TalentMatrixRow[] }) {
 function AlocarView({ matrix, skills }: { matrix: TalentMatrixRow[]; skills: string[] }) {
   const [selected, setSelected] = useState(skills[0] ?? "");
   const filtered = findAvailableBySkill(matrix, selected);
-  const disponiveis = filtered.filter((r) => r.loadLevel === "ok");
-  const ocupados = filtered.filter((r) => r.loadLevel !== "ok");
+  const livres = filtered.filter((r) => r.activeCardCount === 0);
+  const ocupados = filtered.filter((r) => r.activeCardCount > 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -130,24 +115,24 @@ function AlocarView({ matrix, skills }: { matrix: TalentMatrixRow[]; skills: str
 
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Nenhum membro com skill <strong>{selected}</strong>.
+          Ninguém com a skill <strong>{selected}</strong> mapeado em <code>talent.json</code>.
         </p>
       ) : (
         <div className="flex flex-col gap-4">
-          {disponiveis.length > 0 && (
+          {livres.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-primary">
-                Disponíveis agora — {disponiveis.length}
+                Livres agora — {livres.length}
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {disponiveis.map((row) => (
+                {livres.map((row) => (
                   <article
                     key={row.name}
                     className="flex items-center justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-5 py-3"
                   >
-                    <div>
-                      <p className="font-semibold text-foreground">{row.name}</p>
-                      <SenioridadeChip value={row.senioridade} />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-foreground">{row.name}</p>
+                      <p className="text-xs text-muted-foreground">{row.activeCardCount} ativos</p>
                     </div>
                     <SkillPill skill={row.skills[selected]} level={row.skills[selected]} />
                   </article>
@@ -159,23 +144,21 @@ function AlocarView({ matrix, skills }: { matrix: TalentMatrixRow[]; skills: str
           {ocupados.length > 0 && (
             <div className="flex flex-col gap-2">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Ocupados — {ocupados.length}
+                Ocupados — liberam em breve
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {ocupados.map((row) => {
-                  const delivery = deliveryLabel(row.soonestDelivery);
+                  const avail = availability(row);
                   return (
                     <article
                       key={row.name}
                       className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-5 py-3"
                     >
-                      <div>
-                        <p className="font-semibold text-foreground">{row.name}</p>
-                        {delivery && (
-                          <p className={`text-xs ${delivery.color}`}>{delivery.text}</p>
-                        )}
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-foreground">{row.name}</p>
+                        <p className={`text-xs font-medium ${avail.color}`}>{avail.text}</p>
                       </div>
-                      <LoadDot level={row.loadLevel} />
+                      <SkillPill skill={row.skills[selected]} level={row.skills[selected]} />
                     </article>
                   );
                 })}
@@ -188,56 +171,107 @@ function AlocarView({ matrix, skills }: { matrix: TalentMatrixRow[]; skills: str
   );
 }
 
-function GapsView({ coverage }: { coverage: SkillCoverage[] }) {
+type BalancoStatus = "gargalo" | "apertado" | "ocioso" | "ok";
+
+function computeStatus(item: SkillCoverage): BalancoStatus {
+  if (item.demandCount > 0 && item.available === 0) return "gargalo";
+  if (item.demandCount > item.available) return "apertado";
+  if (item.demandCount === 0 && item.available > 0) return "ocioso";
+  return "ok";
+}
+
+const STATUS_META: Record<BalancoStatus, { label: string; chip: string; border: string }> = {
+  gargalo: {
+    label: "gargalo",
+    chip: "bg-destructive/10 text-destructive",
+    border: "border-l-destructive",
+  },
+  apertado: {
+    label: "apertado",
+    chip: "bg-[hsl(var(--amber))]/10 text-[hsl(var(--amber))]",
+    border: "border-l-[hsl(var(--amber))]",
+  },
+  ocioso: {
+    label: "capacidade ociosa",
+    chip: "bg-muted text-muted-foreground",
+    border: "border-l-border",
+  },
+  ok: { label: "equilibrado", chip: "bg-primary/10 text-primary", border: "border-l-primary" },
+};
+
+const STATUS_ORDER: Record<BalancoStatus, number> = {
+  gargalo: 0,
+  apertado: 1,
+  ok: 2,
+  ocioso: 3,
+};
+
+function BalancoView({ coverage }: { coverage: SkillCoverage[] }) {
+  const rows = coverage
+    .filter((item) => item.demandCount > 0 || item.total > 0)
+    .map((item) => ({ ...item, status: computeStatus(item) }))
+    .sort(
+      (a, b) =>
+        STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || b.demandCount - a.demandCount,
+    );
+
+  if (rows.length === 0) {
+    return <p className="text-sm text-muted-foreground">Sem dados de demanda ou skills.</p>;
+  }
+
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {coverage.map((item) => {
-        const nextDays =
-          item.nextDelivery ? daysUntil(item.nextDelivery) : null;
-        const allOccupied = item.total > 0 && item.available === 0;
-        const coverageRatio = item.total > 0 ? item.available / item.total : 0;
+    <div className="grid gap-3 lg:grid-cols-2">
+      {rows.map((item) => {
+        const meta = STATUS_META[item.status];
+        const nextDays = item.nextDelivery ? daysUntil(item.nextDelivery) : null;
 
         return (
           <article
             key={item.skill}
-            className={`rounded-xl border bg-white px-5 py-4 ${
-              allOccupied ? "border-destructive/30" : "border-border/60"
-            }`}
+            className={`rounded-xl border border-l-4 border-border/60 bg-white px-5 py-4 ${meta.border}`}
           >
             <div className="flex items-center justify-between gap-2">
               <p className="font-semibold text-foreground">{item.skill}</p>
-              <span
-                className={`text-xs font-medium ${
-                  item.available > 0 ? "text-primary" : "text-destructive"
-                }`}
-              >
-                {item.available}/{item.total} livres
+              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta.chip}`}>
+                {meta.label}
               </span>
             </div>
 
-            {item.total > 0 && (
-              <>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      coverageRatio === 0 ? "bg-destructive" : "bg-primary"
-                    }`}
-                    style={{ width: `${Math.max(coverageRatio * 100, item.total > 0 ? 4 : 0)}%` }}
-                  />
-                </div>
-                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{item.strong} forte{item.strong !== 1 ? "s" : ""}</span>
-                  {allOccupied && nextDays !== null && (
-                    <span className="text-[hsl(var(--amber))]">
-                      {nextDays <= 0 ? "libera em breve" : `libera em ~${nextDays}d`}
-                    </span>
-                  )}
-                </div>
-              </>
-            )}
+            <div className="mt-3 flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-2xl font-semibold leading-none text-foreground">
+                  {item.demandCount}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  card{item.demandCount !== 1 ? "s" : ""} na sprint
+                </p>
+              </div>
 
-            {item.total === 0 && (
-              <p className="mt-1 text-xs text-muted-foreground">Nenhum membro mapeado</p>
+              <div className="text-muted-foreground/40 text-xl">→</div>
+
+              <div className="flex-1 text-right">
+                <p className="text-2xl font-semibold leading-none text-foreground">
+                  <span className={item.available > 0 ? "text-primary" : "text-destructive"}>
+                    {item.available}
+                  </span>
+                  <span className="text-muted-foreground">/{item.total}</span>
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.total === 0 ? "ninguém mapeado" : "livres / qualificados"}
+                </p>
+              </div>
+            </div>
+
+            {item.status === "gargalo" && (
+              <p className="mt-3 text-xs text-destructive">
+                {item.total === 0
+                  ? "Demanda sem ninguém com a skill mapeada."
+                  : nextDays !== null
+                    ? nextDays <= 0
+                      ? "Todos ocupados — liberação esperada em breve."
+                      : `Todos ocupados — próxima liberação em ~${nextDays}d.`
+                    : "Todos ocupados e sem prazo de entrega definido."}
+              </p>
             )}
           </article>
         );
@@ -252,7 +286,7 @@ export function TalentBoard({ matrix, coverage, skills }: TalentBoardProps) {
   const views: { key: TalentView; label: string }[] = [
     { key: "pessoas", label: "Pessoas" },
     { key: "alocar", label: "Alocar" },
-    { key: "gaps", label: "Gaps" },
+    { key: "balanco", label: "Demanda × Oferta" },
   ];
 
   return (
@@ -276,7 +310,7 @@ export function TalentBoard({ matrix, coverage, skills }: TalentBoardProps) {
 
       {view === "pessoas" && <PessoasView matrix={matrix} />}
       {view === "alocar" && <AlocarView matrix={matrix} skills={skills} />}
-      {view === "gaps" && <GapsView coverage={coverage} />}
+      {view === "balanco" && <BalancoView coverage={coverage} />}
     </div>
   );
 }

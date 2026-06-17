@@ -9,64 +9,90 @@
     "Appsheet",
     "RPA",
     "ETL",
-    "Deploy",
-    "DB"
+    "Scripts",
+    "IA"
   ],
+  "labelMap": {
+    "PBI - Criação": "BI",
+    "PBI - Melhoria Pontual": "BI",
+    "PBI - Ajustes": "BI",
+    "PBI - Power Query": "BI",
+    "BI - Criação de Indicadores": "BI",
+    "BI - Ajustes": "BI",
+    "Relatórios Excel": "BI",
+    "Reports": "BI",
+    "Dados - Análise Exploratória dos Dados": "BI",
+    "Google Sheets": "BI",
+    "Pipefy": "Pipefy",
+    "Pipefy - Criação de automação": "Pipefy",
+    "Pipefy - Criação de campos": "Pipefy",
+    "Pipefy - Criação do pipe": "Pipefy",
+    "Pipefy - Criação de formulário": "Pipefy",
+    "Pipefy - criação de Portal": "Pipefy",
+    "Pipefy - ajustes": "Pipefy",
+    "Workato": "Workato",
+    "AppSheet": "Appsheet",
+    "Data App": "Appsheet",
+    "Desenvolvimento Back": "Backend",
+    "Back": "Backend",
+    "Desenvolvimento Backend & APIs": "Backend",
+    "Front": "Frontend",
+    "Desenvolvimento Web": "Frontend",
+    "Desenvolvimento Fullstack": "Fullstack",
+    "ETL": "ETL",
+    "RPA": "RPA",
+    "Criação de Script": "Scripts",
+    "Manutenção de Scripts": "Scripts",
+    "Refactor de Script": "Scripts",
+    "Script": "Scripts",
+    "Apps Script": "Scripts",
+    "Planilhas - VBA": "Scripts"
+  },
   "members": [
     {
       "name": "Gabriel Rodrigues",
-      "senioridade": "tech lead",
       "skills": {
         "Frontend": "forte",
         "Backend": "forte",
         "Fullstack": "forte",
-        "BI": "forte",
-        "Pipefy": "forte",
-        "Workato": "forte",
         "RPA": "forte",
         "ETL": "forte",
-        "Deploy": "forte",
-        "DB": "forte"
+        "IA": "forte"
       }
     },
     {
       "name": "Breno Rios",
-      "senioridade": "pleno",
       "skills": {
         "Backend": "forte",
-        "RPA": "forte",
+        "Workato": "forte",
         "ETL": "forte",
-        "Deploy": "forte",
-        "DB": "em desenvolvimento",
         "BI": "em desenvolvimento"
       }
     },
     {
       "name": "Euder Pereira",
-      "senioridade": "pleno",
       "skills": {
         "Frontend": "forte",
         "Backend": "forte",
         "Fullstack": "forte",
         "RPA": "forte",
-        "Deploy": "forte",
-        "DB": "forte"
+        "ETL": "forte",
+        "IA": "em desenvolvimento"
       }
     },
     {
       "name": "Gabriel Marques",
-      "senioridade": "assistente",
       "skills": {
         "Backend": "em desenvolvimento",
         "ETL": "forte",
         "Pipefy": "forte",
         "Workato": "forte",
+        "RPA": "forte",
         "Appsheet": "forte"
       }
     },
     {
       "name": "Leonardo Lopes",
-      "senioridade": "assistente",
       "skills": {
         "BI": "forte",
         "Pipefy": "forte",
@@ -75,18 +101,17 @@
     },
     {
       "name": "Expedito Junior",
-      "senioridade": "junior",
       "skills": {
         "BI": "forte"
       }
     },
     {
       "name": "Felipe Claudino",
-      "senioridade": "assistente",
       "skills": {
         "RPA": "forte",
         "ETL": "forte",
-        "Backend": "em desenvolvimento"
+        "Backend": "em desenvolvimento",
+        "Appsheet": "forte"
       }
     }
   ]

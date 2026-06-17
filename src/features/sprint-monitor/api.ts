@@ -26,6 +26,7 @@ interface RawPipefyCard {
   assignees?: Array<{ name: string; avatar_url: string | null }>;
   current_phase: { name: string };
   fields?: PipefyField[];
+  labels?: Array<{ name: string }>;
 }
 
 interface PipeCardsQueryResult {
@@ -107,6 +108,7 @@ function mapRawCard(card: RawPipefyCard, pipe: PipeConfig, filters: FieldFilters
     pipeName: pipe.name,
     pipeColor: pipe.color,
     deliveryDate: deliveryField?.value ?? undefined,
+    labels: card.labels?.map((label) => label.name) ?? [],
   };
 }
 
@@ -126,6 +128,7 @@ export async function fetchPipeCards(
               title
               assignees { name avatar_url }
               fields { name value report_value }
+              labels { name }
               current_phase { name }
             }
           }
