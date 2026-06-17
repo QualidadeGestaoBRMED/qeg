@@ -8,8 +8,9 @@ import {
   formatUpdatedAt,
   groupCardsByAssignee,
 } from "./domain";
+import { buildSkillCoverage, buildTalentMatrix, loadTalentMap } from "./domain/talent";
 import { loadMonitorConfigFromEnv } from "./env";
-import type { AssigneeGroup, MonitorConfig, SprintCard } from "./types";
+import type { AssigneeGroup, MonitorConfig, SkillCoverage, SprintCard, TalentMap, TalentMatrixRow } from "./types";
 
 export function useSprintMonitor() {
   const [initialState] = useState(() => {
@@ -29,6 +30,7 @@ export function useSprintMonitor() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialState.error);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [talentMap, setTalentMap] = useState<TalentMap | null>(null);
 
   const refresh = useCallback(async () => {
     if (!config) {
@@ -61,6 +63,14 @@ export function useSprintMonitor() {
       void refresh();
     }
   }, [config, refresh]);
+
+  useEffect(() => {
+    loadTalentMap()
+      .then(setTalentMap)
+      .catch(() => {
+        // talent.json is optional; ignore load failures silently
+      });
+  }, []);
 
   const summary = useMemo(() => {
     const people = groups.length;
@@ -107,6 +117,16 @@ export function useSprintMonitor() {
     [groups, unassignedActiveCards],
   );
 
+  const talentMatrix = useMemo<TalentMatrixRow[]>(
+    () => (talentMap ? buildTalentMatrix(talentMap, groups) : []),
+    [talentMap, groups],
+  );
+
+  const skillCoverage = useMemo<SkillCoverage[]>(
+    () => (talentMap ? buildSkillCoverage(talentMatrix, talentMap.skills) : []),
+    [talentMap, talentMatrix],
+  );
+
   return {
     groups,
     isLoading,
@@ -117,6 +137,9 @@ export function useSprintMonitor() {
     plannedLaneSummary,
     teamLoad,
     directorView,
+    talentMap,
+    talentMatrix,
+    skillCoverage,
     clearError: () => setError(null),
     refresh,
   };

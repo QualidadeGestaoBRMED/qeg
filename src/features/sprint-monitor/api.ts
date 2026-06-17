@@ -94,6 +94,8 @@ function mapRawCard(card: RawPipefyCard, pipe: PipeConfig, filters: FieldFilters
     filters,
   );
 
+  const deliveryField = card.fields?.find((f) => f.name.includes("Entrega Estimada"));
+
   return {
     id: card.id,
     title: card.title,
@@ -104,6 +106,7 @@ function mapRawCard(card: RawPipefyCard, pipe: PipeConfig, filters: FieldFilters
     pipeId: pipe.id,
     pipeName: pipe.name,
     pipeColor: pipe.color,
+    deliveryDate: deliveryField?.value ?? undefined,
   };
 }
 

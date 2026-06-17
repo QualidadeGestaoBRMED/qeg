@@ -41,6 +41,7 @@ export interface SprintCard {
   pipeId: string;
   pipeName: string;
   pipeColor: string;
+  deliveryDate?: string; // DD/MM/YYYY from "Data de Entrega Estimada"
 }
 
 export interface AssigneeGroup {
@@ -76,6 +77,38 @@ export interface PlannedLaneSummary {
 }
 
 export type RagStatus = "green" | "amber" | "red";
+
+export type SkillLevel = "forte" | "em desenvolvimento";
+export type Senioridade = "assistente" | "junior" | "pleno" | "senior" | "tech lead";
+
+export interface TalentMember {
+  name: string;
+  senioridade: Senioridade;
+  skills: Record<string, SkillLevel>;
+}
+
+export interface TalentMap {
+  skills: string[];
+  members: TalentMember[];
+}
+
+export interface TalentMatrixRow {
+  name: string;
+  avatarUrl: string | null;
+  senioridade: Senioridade;
+  skills: Record<string, SkillLevel>;
+  loadLevel: LoadLevel;
+  activeCardCount: number;
+  soonestDelivery: string | null;
+}
+
+export interface SkillCoverage {
+  skill: string;
+  total: number;
+  available: number;
+  strong: number;
+  nextDelivery: string | null;
+}
 
 export interface PersonStatus {
   name: string;

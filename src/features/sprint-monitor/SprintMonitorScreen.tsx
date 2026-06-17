@@ -4,21 +4,26 @@ import {
   DirectorPresentation,
   MetricsGrid,
   MonitorHeader,
+  MonitorTabs,
+  TalentBoard,
 } from "./components";
 import { useSprintMonitor } from "./useSprintMonitor";
 
+type TabKey = "person" | "talentos";
+
 export function SprintMonitorScreen() {
   const [isPresenting, setIsPresenting] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("person");
   const {
     groups,
     isLoading,
     error,
     summary,
     dashboard,
-    areaBoard,
-    plannedLaneSummary,
-    teamLoad,
     directorView,
+    talentMap,
+    talentMatrix,
+    skillCoverage,
     clearError,
     refresh,
   } = useSprintMonitor();
@@ -63,7 +68,19 @@ export function SprintMonitorScreen() {
           )}
 
           <MetricsGrid metrics={dashboard} />
-          <AssigneeBoard groups={groups} isLoading={isLoading} />
+
+          <MonitorTabs activeTab={activeTab} onChange={setActiveTab}>
+            {{
+              person: <AssigneeBoard groups={groups} isLoading={isLoading} />,
+              talentos: (
+                <TalentBoard
+                  matrix={talentMatrix}
+                  coverage={skillCoverage}
+                  skills={talentMap?.skills ?? []}
+                />
+              ),
+            }}
+          </MonitorTabs>
         </div>
       </div>
     </main>

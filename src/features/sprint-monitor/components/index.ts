@@ -6,4 +6,5 @@ export { DirectorPresentation } from "./DirectorPresentation";
 export { MetricsGrid } from "./MetricsGrid";
 export { MonitorHeader } from "./MonitorHeader";
 export { MonitorTabs } from "./MonitorTabs";
+export { TalentBoard } from "./TalentBoard";
 export { TeamLoadBoard } from "./TeamLoadBoard";

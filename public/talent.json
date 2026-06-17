@@ -1,0 +1,93 @@
+{
+  "skills": [
+    "Frontend",
+    "Backend",
+    "Fullstack",
+    "BI",
+    "Pipefy",
+    "Workato",
+    "Appsheet",
+    "RPA",
+    "ETL",
+    "Deploy",
+    "DB"
+  ],
+  "members": [
+    {
+      "name": "Gabriel Rodrigues",
+      "senioridade": "tech lead",
+      "skills": {
+        "Frontend": "forte",
+        "Backend": "forte",
+        "Fullstack": "forte",
+        "BI": "forte",
+        "Pipefy": "forte",
+        "Workato": "forte",
+        "RPA": "forte",
+        "ETL": "forte",
+        "Deploy": "forte",
+        "DB": "forte"
+      }
+    },
+    {
+      "name": "Breno Rios",
+      "senioridade": "pleno",
+      "skills": {
+        "Backend": "forte",
+        "RPA": "forte",
+        "ETL": "forte",
+        "Deploy": "forte",
+        "DB": "em desenvolvimento",
+        "BI": "em desenvolvimento"
+      }
+    },
+    {
+      "name": "Euder Pereira",
+      "senioridade": "pleno",
+      "skills": {
+        "Frontend": "forte",
+        "Backend": "forte",
+        "Fullstack": "forte",
+        "RPA": "forte",
+        "Deploy": "forte",
+        "DB": "forte"
+      }
+    },
+    {
+      "name": "Gabriel Marques",
+      "senioridade": "assistente",
+      "skills": {
+        "Backend": "em desenvolvimento",
+        "ETL": "forte",
+        "Pipefy": "forte",
+        "Workato": "forte",
+        "Appsheet": "forte"
+      }
+    },
+    {
+      "name": "Leonardo Lopes",
+      "senioridade": "assistente",
+      "skills": {
+        "BI": "forte",
+        "Pipefy": "forte",
+        "Workato": "forte"
+      }
+    },
+    {
+      "name": "Expedito Junior",
+      "senioridade": "junior",
+      "skills": {
+        "BI": "forte"
+      }
+    },
+    {
+      "name": "Felipe Claudino",
+      "senioridade": "assistente",
+      "skills": {
+        "RPA": "forte",
+        "ETL": "forte",
+        "Backend": "em desenvolvimento"
+      }
+    }
+  ]
+}
