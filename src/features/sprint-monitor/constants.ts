@@ -77,6 +77,8 @@ export const DEFAULT_NON_PERSON_NAMES = [
 export const DEFAULT_NON_PERSON_KEYWORDS = [
   "especificacao de fluxo",
   "fluxo de processo",
+  "melhoria continua",
+  "planejamento e pbi",
   "projetos",
   "projetos brmed",
   "projetos br med",

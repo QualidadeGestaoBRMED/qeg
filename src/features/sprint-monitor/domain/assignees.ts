@@ -7,7 +7,7 @@ import type {
 } from "../types";
 import { normalizeText } from "./text";
 
-const NON_PERSON_FIRST_TOKENS = ["projetos", "processos", "pipefy", "qeg", "sotec"];
+const NON_PERSON_FIRST_TOKENS = ["projetos", "processos", "pipefy", "qeg", "sotec", "criacao", "pbi"];
 
 function isHumanName(value: string, filters: FieldFilters): boolean {
   const normalized = normalizeText(value);

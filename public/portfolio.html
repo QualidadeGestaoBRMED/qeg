@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pessoas × projetos — SOTEC BR MED</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Caveat', cursive;
+      background-color: #111c26;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      color: #e8e4d5;
+      display: flex;
+      flex-direction: column;
+      padding: 2vh 3.5vw 2vh;
+      gap: 1vh;
+    }
+
+    /* ── Header ── */
+    .page-title {
+      font-size: clamp(20px, 3.5vh, 46px);
+      font-weight: 600;
+      color: #e8e4d5;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .page-meta {
+      font-size: clamp(13px, 1.8vh, 22px);
+      color: #a0c0d0;
+      flex-shrink: 0;
+    }
+
+    /* ── Table wrap ── */
+    .table-wrap {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    table {
+      width: 100%;
+      height: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    col.c-name { width: 26%; }
+    col.c-col  { width: 16%; }
+
+    /* group header */
+    th.group {
+      font-size: clamp(11px, 1.5vh, 16px);
+      font-weight: 600;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      text-align: center;
+      padding-bottom: 0.6vh;
+      border-bottom: 2px solid transparent;
+    }
+    th.group.active  { color: #5dd4e4; border-color: rgba(93,212,228,0.35); }
+    th.group.support { color: #a8c8d8; border-color: rgba(168,200,216,0.30); }
+    th.group.future  { color: #e0a840; border-color: rgba(224,168,64,0.35); }
+
+
+    /* column header */
+    th.col {
+      text-align: center;
+      padding: 0.8vh 1vw 1.4vh;
+      vertical-align: bottom;
+    }
+    .col-name {
+      display: block;
+      font-size: clamp(17px, 2.7vh, 34px);
+      font-weight: 600;
+    }
+    .col-sub {
+      display: block;
+      font-size: clamp(13px, 1.9vh, 22px);
+      font-weight: 400;
+      margin-top: 0.3vh;
+      line-height: 1.4;
+      opacity: 0.85;
+    }
+    .c-sst      { color: #5dd4e4; }
+    .c-appsheet { color: #50d898; }
+    .c-bi       { color: #a8c8d8; }
+    .c-future   { color: #e0a840; }
+
+    /* divider */
+    .col-divider {
+      border: none;
+      border-top: 2px solid rgba(255,255,255,0.10);
+    }
+
+    /* person cell */
+    td.name {
+      padding: 0 1.2vw 0 0;
+      vertical-align: middle;
+    }
+    .person-name {
+      display: block;
+      font-size: clamp(18px, 2.9vh, 36px);
+      font-weight: 600;
+      color: #e8e4d5;
+      line-height: 1.1;
+    }
+    .person-meta {
+      display: block;
+      font-size: clamp(14px, 2.1vh, 26px);
+      font-weight: 400;
+      color: #a0c0d0;
+      line-height: 1.2;
+    }
+    .person-warn { color: #ff8888; }
+    .person-note {
+      display: block;
+      font-size: clamp(12px, 1.8vh, 22px);
+      font-style: italic;
+      color: #e0a840;
+      line-height: 1.2;
+    }
+    .person-note.gap { color: #ff9898; }
+
+    /* allocation cells */
+    td.cell {
+      text-align: center;
+      vertical-align: middle;
+      border-left: 1px solid rgba(255,255,255,0.07);
+    }
+
+    /* dots — scale with vh */
+    .dot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: clamp(14px, 2.2vh, 26px);
+      height: clamp(14px, 2.2vh, 26px);
+      border-radius: 50%;
+    }
+    .dot-teal  { background: #5dd4e4; }
+    .dot-green { background: #50d898; }
+    .dot-gray  { background: #8ab8cc; }
+    .dot-lead  { background: transparent; border: 2.5px solid #5dd4e4; }
+    .dot-lead::after {
+      content: '';
+      width: 37%;  height: 37%;
+      border-radius: 50%;
+      background: #5dd4e4;
+    }
+    .dot-open {
+      border-radius: 50%;
+      border: 2.5px dashed #e0a840;
+      background: rgba(224,168,64,0.12);
+    }
+
+    /* row types */
+    tr.row-lead td { background: rgba(93,212,228,0.05); }
+    tr.row-lead .person-name { color: #5dd4e4; }
+
+    tr.row-sep td { border-top: 2px dashed rgba(255,255,255,0.10); }
+
+    tr.row-new td { background: rgba(224,168,64,0.06); }
+    tr.row-new .person-name { color: #d49838; }
+
+    tr.row-risk td { background: rgba(255,136,136,0.06); }
+
+    /* ── Bottom ── */
+    .bottom {
+      flex-shrink: 0;
+      display: flex;
+      gap: 2vw;
+      align-items: stretch;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: row;
+      gap: 1.6vw;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5vw;
+      font-size: clamp(13px, 1.9vh, 22px);
+      color: #a0c0d0;
+      white-space: nowrap;
+    }
+
+    .callout, .note-box {
+      flex: 1;
+      border-radius: 8px;
+      padding: 1vh 1.4vw;
+      font-size: clamp(13px, 1.9vh, 22px);
+      line-height: 1.5;
+    }
+    .callout {
+      background: rgba(255,136,136,0.08);
+      border: 1.5px dashed rgba(255,136,136,0.40);
+      color: #e09898;
+    }
+    .callout strong { color: #ff9898; }
+    .note-box {
+      background: rgba(224,168,64,0.07);
+      border: 1.5px dashed rgba(224,168,64,0.35);
+      color: #c09040;
+    }
+    .note-box strong { color: #e0a840; }
+  </style>
+</head>
+<body>
+
+  <div class="page-title">pessoas × projetos — SOTEC</div>
+  <div class="page-meta">BR MED · jun 2026</div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="c-name" />
+        <col class="c-col" />
+        <col class="c-col" />
+        <col class="c-col" />
+        <col class="c-col" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th></th>
+          <th colspan="2" class="group active">em andamento</th>
+          <th class="group support">suporte</th>
+          <th class="group future">próximos</th>
+        </tr>
+        <tr>
+          <th></th>
+          <th class="col c-sst">
+            <span class="col-name">Ecossistema SST</span>
+            <span class="col-sub">COPSOQ · ProntuAI<br>PGR · PMCSO · LTCAT</span>
+          </th>
+          <th class="col c-appsheet">
+            <span class="col-name">Ecossistema Appsheet</span>
+            <span class="col-sub">Rateio · Contas Fixas<br>Multi · Convocações</span>
+          </th>
+          <th class="col c-bi">
+            <span class="col-name">BI / Ops</span>
+            <span class="col-sub">dashboards · análise<br>Pipefy · automação</span>
+          </th>
+          <th class="col c-future">
+            <span class="col-name">Próximos</span>
+            <span class="col-sub">Radar · IA · SicoloS<br>melhorias em suporte</span>
+          </th>
+        </tr>
+        <tr><td colspan="5"><hr class="col-divider" /></td></tr>
+      </thead>
+
+      <tbody>
+        <tr class="row-lead">
+          <td class="name">
+            <span class="person-name">Gabriel Rodrigues</span>
+            <span class="person-meta">tech lead</span>
+          </td>
+          <td class="cell"><span class="dot dot-lead"></span></td>
+          <td class="cell"><span class="dot dot-lead"></span></td>
+          <td class="cell"><span class="dot dot-lead"></span></td>
+          <td class="cell"><span class="dot dot-lead"></span></td>
+        </tr>
+
+        <tr class="row-sep"><td colspan="5"></td></tr>
+
+        <tr>
+          <td class="name">
+            <span class="person-name">Breno</span>
+            <span class="person-meta">pleno</span>
+          </td>
+          <td class="cell"><span class="dot dot-teal"></span></td>
+          <td class="cell"></td><td class="cell"></td><td class="cell"></td>
+        </tr>
+
+        <tr>
+          <td class="name">
+            <span class="person-name">Euder</span>
+            <span class="person-meta">pleno · ProntuAI + PGR</span>
+          </td>
+          <td class="cell"><span class="dot dot-teal"></span></td>
+          <td class="cell"></td><td class="cell"></td><td class="cell"></td>
+        </tr>
+
+        <tr>
+          <td class="name">
+            <span class="person-name">Leo</span>
+            <span class="person-meta">Pipefy + BI</span>
+          </td>
+          <td class="cell"></td><td class="cell"></td>
+          <td class="cell"><span class="dot dot-gray"></span></td>
+          <td class="cell"></td>
+        </tr>
+
+        <tr>
+          <td class="name">
+            <span class="person-name">Expedito</span>
+            <span class="person-meta">BI</span>
+          </td>
+          <td class="cell"></td><td class="cell"></td>
+          <td class="cell"><span class="dot dot-gray"></span></td>
+          <td class="cell"></td>
+        </tr>
+
+        <tr>
+          <td class="name">
+            <span class="person-name">Felipe</span>
+            <span class="person-meta">junior · operações</span>
+          </td>
+          <td class="cell"></td><td class="cell"></td>
+          <td class="cell"><span class="dot dot-gray"></span></td>
+          <td class="cell"></td>
+        </tr>
+
+        <tr class="row-risk">
+          <td class="name">
+            <span class="person-name">Marques</span>
+            <span class="person-meta">assistente · Appsheet + Pipefy <span class="person-warn">⚠ possível saída</span></span>
+            <span class="person-note gap">→ gap se sair</span>
+          </td>
+          <td class="cell"></td>
+          <td class="cell"><span class="dot dot-green"></span></td>
+          <td class="cell"><span class="dot dot-gray"></span></td>
+          <td class="cell"></td>
+        </tr>
+
+        <tr class="row-sep"><td colspan="5"></td></tr>
+
+        <tr class="row-new">
+          <td class="name">
+            <span class="person-name">↳ NC · sub. Felipe</span>
+            <span class="person-note">→ preenche Appsheet</span>
+          </td>
+          <td class="cell"></td>
+          <td class="cell"><span class="dot dot-open"></span></td>
+          <td class="cell"></td><td class="cell"></td>
+        </tr>
+
+        <tr class="row-new">
+          <td class="name">
+            <span class="person-name">↳ NC · nível Euder</span>
+            <span class="person-meta">pleno <span class="person-note" style="display:inline;font-size:inherit;">→ reforça SST</span></span>
+          </td>
+          <td class="cell"><span class="dot dot-open"></span></td>
+          <td class="cell"></td><td class="cell"></td><td class="cell"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="bottom">
+    <div class="legend">
+      <div class="legend-item"><span class="dot dot-teal" style="display:inline-flex;"></span> principal</div>
+      <div class="legend-item"><span class="dot dot-gray" style="display:inline-flex;"></span> transversal</div>
+      <div class="legend-item"><span class="dot dot-lead" style="display:inline-flex;"></span> tech lead</div>
+      <div class="legend-item"><span class="dot dot-open" style="display:inline-flex;"></span> vaga aberta</div>
+      <div class="legend-item"><span style="color:#ff8888;">⚠</span> risco de saída</div>
+    </div>
+
+    <div class="callout">
+      <strong>risco:</strong> saída do Marques descobre Appsheet + Pipefy. NC (sub. Felipe) resolve Appsheet — Pipefy fica sem dono.
+    </div>
+
+    <div class="note-box">
+      <strong>Próximos / IA:</strong> não é projeto pontual — é movimento contínuo. Implementar IA, substituir SicoloS (ongoing), evoluir suporte. Quem lidera?
+    </div>
+  </div>
+
+</body>
+</html>
