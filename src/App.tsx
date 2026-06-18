@@ -1,3 +1,4 @@
+// App raiz: gate de autenticação (login) antes do monitor de sprint.
 import { LoginScreen } from "@/features/auth/LoginScreen";
 import { useAuth } from "@/features/auth/useAuth";
 import { SprintMonitorScreen } from "@/features/sprint-monitor";
