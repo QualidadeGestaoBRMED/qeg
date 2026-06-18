@@ -92,6 +92,11 @@ export interface TalentMap {
   labelMap?: Record<string, string>;
 }
 
+export interface TalentCardRef {
+  title: string;
+  deliveryDate: string | null;
+}
+
 export interface TalentMatrixRow {
   name: string;
   avatarUrl: string | null;
@@ -99,6 +104,7 @@ export interface TalentMatrixRow {
   loadLevel: LoadLevel;
   activeCardCount: number;
   soonestDelivery: string | null;
+  cards: TalentCardRef[];
 }
 
 export interface SkillCoverage {

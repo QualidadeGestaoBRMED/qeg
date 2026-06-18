@@ -12,7 +12,7 @@ export function buildPlannedLaneSummary(prioritizedCards: SprintCard[]): Planned
   const squad2Count = countByMatcher("priorizados squad 2");
   const otherCount = qegPrioritized.length - squad1Count - squad2Count;
 
-  return [
+  const lanes: PlannedLaneSummary[] = [
     {
       id: "squad-1",
       label: "Priorizados - Squad 1 (Operacoes e MKT)",
@@ -28,5 +28,7 @@ export function buildPlannedLaneSummary(prioritizedCards: SprintCard[]): Planned
       label: "Outras colunas priorizadas",
       count: otherCount,
     },
-  ].filter((item) => item.count > 0);
+  ];
+
+  return lanes.filter((item) => item.count > 0);
 }

@@ -57,7 +57,8 @@
         "Fullstack": "forte",
         "RPA": "forte",
         "ETL": "forte",
-        "IA": "forte"
+        "IA": "forte",
+        "Scripts": "forte"
       }
     },
     {
@@ -66,7 +67,9 @@
         "Backend": "forte",
         "Workato": "forte",
         "ETL": "forte",
-        "BI": "em desenvolvimento"
+        "RPA": "forte",
+        "BI": "em desenvolvimento",
+        "Scripts": "forte"
       }
     },
     {
@@ -77,7 +80,8 @@
         "Fullstack": "forte",
         "RPA": "forte",
         "ETL": "forte",
-        "IA": "em desenvolvimento"
+        "IA": "em desenvolvimento",
+        "Scripts": "forte"
       }
     },
     {
@@ -88,7 +92,8 @@
         "Pipefy": "forte",
         "Workato": "forte",
         "RPA": "forte",
-        "Appsheet": "forte"
+        "Appsheet": "forte",
+        "Scripts": "forte"
       }
     },
     {
@@ -102,7 +107,9 @@
     {
       "name": "Expedito Junior",
       "skills": {
-        "BI": "forte"
+        "BI": "forte",
+        "ETL": "em desenvolvimento",
+        "Scripts": "em desenvolvimento"
       }
     },
     {
@@ -111,7 +118,8 @@
         "RPA": "forte",
         "ETL": "forte",
         "Backend": "em desenvolvimento",
-        "Appsheet": "forte"
+        "Appsheet": "forte",
+        "Scripts": "forte"
       }
     }
   ]

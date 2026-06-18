@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Moon, Sun, X } from "lucide-react";
-import type { AreaBoardItem, DirectorView, PersonStatus, PlannedLaneSummary, RagStatus, TeamLoadItem } from "../types";
+import type { AreaBoardItem, DirectorView, PersonStatus, PlannedLaneSummary, RagStatus, SkillCoverage, TeamLoadItem } from "../types";
 
 interface DirectorPresentationProps {
   view: DirectorView;
   teamLoad: TeamLoadItem[];
   areaBoard: AreaBoardItem[];
   plannedLanes: PlannedLaneSummary[];
+  coverage: SkillCoverage[];
   totalActiveCards: number;
   totalPeople: number;
   lastUpdated: string | null;
@@ -438,16 +439,111 @@ function ScreenArea({ items, plannedLanes }: { items: AreaBoardItem[]; plannedLa
   );
 }
 
+// ── Screen 5: Capacity (mapa de skills) ────────────────────────────
+function ScreenCapacity({ coverage }: { coverage: SkillCoverage[] }) {
+  const t = useTheme();
+  const skills = [...coverage].sort((a, b) => b.total - a.total || b.strong - a.strong);
+  const atRisk = skills.filter((c) => c.total <= 1).length;
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 overflow-hidden">
+      {/* Risco (bus factor) */}
+      <div
+        style={{ background: t.CARD_BG, borderColor: t.CARD_BORDER }}
+        className="flex shrink-0 items-center gap-10 rounded-2xl border px-10 py-6"
+      >
+        <div className="shrink-0">
+          <p style={{ color: t.DIM }} className="text-xs font-semibold uppercase tracking-widest">
+            Risco de cobertura
+          </p>
+          <p
+            style={{ color: atRisk > 0 ? t.RED : t.TEAL, fontSize: "clamp(48px,7vw,96px)", lineHeight: 1 }}
+            className="mt-2 font-black tracking-tight"
+          >
+            {atRisk}
+          </p>
+        </div>
+        <p style={{ color: t.MUTED }} className="text-lg">
+          {atRisk === 1 ? "skill depende" : "skills dependem"} de 1 pessoa ou menos — ponto único de
+          falha se alguém sair ou faltar.
+        </p>
+      </div>
+
+      {/* Capacidade por skill */}
+      <div
+        style={{ background: t.CARD_BG, borderColor: t.CARD_BORDER }}
+        className="flex flex-1 flex-col overflow-hidden rounded-2xl border px-8 py-5"
+      >
+        <div className="mb-3 flex shrink-0 items-center gap-5">
+          <p style={{ color: t.DIM }} className="text-xs font-semibold uppercase tracking-widest">
+            Capacidade por skill
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ background: t.TEAL }} />
+              <span style={{ color: t.DIM }} className="text-xs">forte</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full opacity-60" style={{ background: t.GOLD }} />
+              <span style={{ color: t.DIM }} className="text-xs">em desenvolvimento</span>
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col justify-around">
+          {skills.map((c) => {
+            const dev = c.total - c.strong;
+            const risk = c.total === 0 ? "none" : c.total === 1 ? "single" : c.strong === 0 ? "nostrong" : "ok";
+            return (
+              <div key={c.skill} className="flex items-center gap-4">
+                <p
+                  style={{ color: t.TEXT, minWidth: "clamp(90px,11vw,150px)" }}
+                  className="shrink-0 truncate text-sm font-medium"
+                >
+                  {c.skill}
+                </p>
+                <div className="flex flex-1 items-center gap-1.5">
+                  {Array.from({ length: c.strong }).map((_, i) => (
+                    <span key={`s${i}`} style={{ background: t.TEAL }} className="h-3 w-3 rounded-full" />
+                  ))}
+                  {Array.from({ length: dev }).map((_, i) => (
+                    <span key={`d${i}`} style={{ background: t.GOLD }} className="h-3 w-3 rounded-full opacity-60" />
+                  ))}
+                  {c.total === 0 && (
+                    <span style={{ color: t.RED }} className="text-xs font-semibold">sem ninguém</span>
+                  )}
+                </div>
+                <p
+                  style={{
+                    color: risk === "single" || risk === "none" ? t.RED : risk === "nostrong" ? t.GOLD : t.DIM,
+                    minWidth: "clamp(120px,14vw,190px)",
+                  }}
+                  className="shrink-0 text-right text-xs font-semibold tabular-nums"
+                >
+                  {c.total} {c.total === 1 ? "pessoa" : "pessoas"}
+                  {c.strong > 0 && ` · ${c.strong} forte${c.strong > 1 ? "s" : ""}`}
+                  {risk === "single" && " · risco"}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const SCREENS = [
   { id: "health",   label: "Saúde do Sprint" },
   { id: "team",     label: "Carga da Equipe" },
   { id: "coverage", label: "Próximos Passos" },
   { id: "area",     label: "Por Área"        },
+  { id: "capacity", label: "Capacidade (Skills)" },
 ];
 
 // ── Main export ────────────────────────────────────────────────────
 export function DirectorPresentation({
-  view, teamLoad, areaBoard, plannedLanes,
+  view, teamLoad, areaBoard, plannedLanes, coverage,
   totalActiveCards, totalPeople, lastUpdated, pipeNames, onClose,
 }: DirectorPresentationProps) {
   const [screen, setScreen] = useState(0);
@@ -514,6 +610,7 @@ export function DirectorPresentation({
           {screen === 1 && <ScreenTeamLoad teamLoad={teamLoad} totalActiveCards={totalActiveCards} />}
           {screen === 2 && <ScreenCoverage view={view} />}
           {screen === 3 && <ScreenArea items={areaBoard} plannedLanes={plannedLanes} />}
+          {screen === 4 && <ScreenCapacity coverage={coverage} />}
         </div>
 
         {/* Navigation */}

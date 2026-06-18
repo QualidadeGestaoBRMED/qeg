@@ -1,0 +1,1 @@
+{"root":["./vite.config.ts","./api/login.ts","./api/logout.ts","./api/pipefy.ts","./api/session.ts","./api/_lib/server.ts"],"version":"5.8.3"}

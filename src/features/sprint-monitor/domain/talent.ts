@@ -59,6 +59,10 @@ export function buildTalentMatrix(talentMap: TalentMap, groups: AssigneeGroup[])
       loadLevel: getLoadLevel(activeCardCount),
       activeCardCount,
       soonestDelivery: earliestDate(deliveryDates),
+      cards: (group?.activeCards ?? []).map((card) => ({
+        title: card.title,
+        deliveryDate: card.deliveryDate ?? null,
+      })),
     };
   });
 }

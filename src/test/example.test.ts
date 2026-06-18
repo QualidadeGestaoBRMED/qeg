@@ -18,6 +18,7 @@ function createCard(overrides: Partial<SprintCard>): SprintCard {
     pipeId: "pipe-1",
     pipeName: "QEG",
     pipeColor: "--pipe-1",
+    labels: [],
     ...overrides,
   };
 }

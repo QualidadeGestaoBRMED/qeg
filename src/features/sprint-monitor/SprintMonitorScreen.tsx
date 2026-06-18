@@ -9,7 +9,7 @@ import {
 } from "./components";
 import { useSprintMonitor } from "./useSprintMonitor";
 
-type TabKey = "person" | "talentos";
+type TabKey = "person" | "skills";
 
 interface SprintMonitorScreenProps {
   onLogout?: () => void;
@@ -24,6 +24,9 @@ export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
     error,
     summary,
     dashboard,
+    teamLoad,
+    areaBoard,
+    plannedLaneSummary,
     directorView,
     talentMap,
     talentMatrix,
@@ -40,6 +43,7 @@ export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
           teamLoad={teamLoad}
           areaBoard={areaBoard}
           plannedLanes={plannedLaneSummary}
+          coverage={skillCoverage}
           totalActiveCards={summary.activeCards}
           totalPeople={summary.people}
           lastUpdated={summary.lastUpdatedLabel}
@@ -77,7 +81,7 @@ export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
           <MonitorTabs activeTab={activeTab} onChange={setActiveTab}>
             {{
               person: <AssigneeBoard groups={groups} isLoading={isLoading} />,
-              talentos: (
+              skills: (
                 <TalentBoard
                   matrix={talentMatrix}
                   coverage={skillCoverage}
