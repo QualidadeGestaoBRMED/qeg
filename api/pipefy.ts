@@ -1,3 +1,3 @@
-import { pipefyHandler } from "./_lib/server";
+import { pipefyHandler } from "./_lib/server.js";
 
 export default pipefyHandler;
