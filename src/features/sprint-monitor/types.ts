@@ -14,7 +14,6 @@ export interface FieldFilters {
 }
 
 export interface MonitorConfig {
-  token: string;
   pipes: PipeConfig[];
   defaultActivePhases: string[];
   defaultPrioritizedPhases: string[];

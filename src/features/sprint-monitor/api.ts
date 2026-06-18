@@ -13,7 +13,8 @@ import type {
   SprintCard,
 } from "./types";
 
-const PIPEFY_API_URL = "https://api.pipefy.com/graphql";
+// Proxy no backend: injeta o token do Pipefy server-side e exige sessão.
+const PIPEFY_API_URL = "/api/pipefy";
 
 interface PipefyGraphQLResponse<T> {
   data?: T;
@@ -40,15 +41,19 @@ interface PipeCardsQueryResult {
   } | null;
 }
 
-async function pipefyRequest<T>(token: string, query: string): Promise<T> {
+async function pipefyRequest<T>(query: string): Promise<T> {
   const response = await fetch(PIPEFY_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
+    credentials: "same-origin",
     body: JSON.stringify({ query }),
   });
+
+  if (response.status === 401) {
+    throw new Error("Sessão expirada. Recarregue a página e entre novamente.");
+  }
 
   if (!response.ok) {
     throw new Error(`Falha na API do Pipefy (${response.status}).`);
@@ -113,7 +118,6 @@ function mapRawCard(card: RawPipefyCard, pipe: PipeConfig, filters: FieldFilters
 }
 
 export async function fetchPipeCards(
-  token: string,
   pipe: PipeConfig,
   config: MonitorConfig,
 ): Promise<{ activeCards: SprintCard[]; prioritizedCards: SprintCard[] }> {
@@ -137,7 +141,7 @@ export async function fetchPipeCards(
     }
   }`;
 
-  const data = await pipefyRequest<PipeCardsQueryResult>(token, query);
+  const data = await pipefyRequest<PipeCardsQueryResult>(query);
 
   if (!data.pipe) {
     return { activeCards: [], prioritizedCards: [] };
@@ -181,9 +185,7 @@ export async function fetchMonitorCards(
 ): Promise<{ activeCards: SprintCard[]; prioritizedCards: SprintCard[] }> {
   const pipes = config.pipes.filter((pipe) => pipe.id);
 
-  const results = await Promise.all(
-    pipes.map((pipe) => fetchPipeCards(config.token, pipe, config)),
-  );
+  const results = await Promise.all(pipes.map((pipe) => fetchPipeCards(pipe, config)));
 
   return {
     activeCards: results.flatMap((result) => result.activeCards),

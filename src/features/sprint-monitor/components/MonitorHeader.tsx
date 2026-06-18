@@ -1,4 +1,4 @@
-import { Presentation, RefreshCw } from "lucide-react";
+import { LogOut, Presentation, RefreshCw } from "lucide-react";
 
 interface MonitorHeaderProps {
   activeCards: number;
@@ -6,9 +6,17 @@ interface MonitorHeaderProps {
   isLoading: boolean;
   onRefresh: () => void;
   onPresent: () => void;
+  onLogout?: () => void;
 }
 
-export function MonitorHeader({ activeCards, people, isLoading, onRefresh, onPresent }: MonitorHeaderProps) {
+export function MonitorHeader({
+  activeCards,
+  people,
+  isLoading,
+  onRefresh,
+  onPresent,
+  onLogout,
+}: MonitorHeaderProps) {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="space-y-1">
@@ -38,6 +46,17 @@ export function MonitorHeader({ activeCards, people, isLoading, onRefresh, onPre
           <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
           Atualizar
         </button>
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            aria-label="Sair"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-white px-3.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            Sair
+          </button>
+        )}
       </div>
     </header>
   );

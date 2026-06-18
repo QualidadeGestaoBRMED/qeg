@@ -11,7 +11,11 @@ import { useSprintMonitor } from "./useSprintMonitor";
 
 type TabKey = "person" | "talentos";
 
-export function SprintMonitorScreen() {
+interface SprintMonitorScreenProps {
+  onLogout?: () => void;
+}
+
+export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
   const [isPresenting, setIsPresenting] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("person");
   const {
@@ -44,14 +48,15 @@ export function SprintMonitorScreen() {
         />
       )}
 
-      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 sm:py-8">
-        <div className="flex w-full flex-col gap-4">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-8 sm:py-12">
+        <div className="flex w-full flex-col gap-6">
           <MonitorHeader
             activeCards={summary.activeCards}
             people={summary.people}
             isLoading={isLoading}
             onRefresh={() => void refresh()}
             onPresent={() => setIsPresenting(true)}
+            onLogout={onLogout}
           />
 
           {error && (

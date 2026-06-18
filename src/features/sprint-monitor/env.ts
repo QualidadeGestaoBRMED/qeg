@@ -12,7 +12,6 @@ import { parseCommaSeparated, sanitizePipe } from "./domain";
 import type { MonitorConfig, PipeConfig } from "./types";
 
 interface RawEnvConfig {
-  VITE_PIPEFY_TOKEN?: string;
   VITE_PIPEFY_ACTIVE_PHASES?: string;
   VITE_PIPEFY_PRIORITIZED_PHASES?: string;
   VITE_PIPEFY_PIPES?: string;
@@ -54,19 +53,10 @@ function parsePipeList(value: string | undefined): PipeConfig[] {
 export function loadMonitorConfigFromEnv(
   env: RawEnvConfig = import.meta.env,
 ): { config: MonitorConfig | null; error: string | null } {
-  const token = env.VITE_PIPEFY_TOKEN?.trim() ?? "";
-
-  if (!token) {
-    return {
-      config: null,
-      error: "Defina VITE_PIPEFY_TOKEN no .env para carregar o monitor.",
-    };
-  }
-
+  // O token do Pipefy fica no servidor (PIPEFY_TOKEN). O cliente só carrega config pública.
   try {
     return {
       config: {
-        token,
         pipes: parsePipeList(env.VITE_PIPEFY_PIPES),
         defaultActivePhases: csvList(env.VITE_PIPEFY_ACTIVE_PHASES, DEFAULT_ACTIVE_PHASES),
         defaultPrioritizedPhases: csvList(
