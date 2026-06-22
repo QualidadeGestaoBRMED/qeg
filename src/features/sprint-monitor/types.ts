@@ -70,6 +70,28 @@ export interface AreaBoardItem {
   plannedCount: number;
 }
 
+export interface AreaCardRef {
+  id: string;
+  title: string;
+  deliveryDate: string | null;
+  phase: string;
+  status: "active" | "planned";
+}
+
+export interface AreaDetail {
+  area: string;
+  activeCount: number;
+  plannedCount: number;
+  cards: AreaCardRef[];
+}
+
+export interface AreaBucketGroup {
+  bucket: string;
+  areas: AreaDetail[];
+  activeCount: number;
+  plannedCount: number;
+}
+
 export interface PlannedLaneSummary {
   id: "squad-1" | "squad-2" | "other";
   label: string;

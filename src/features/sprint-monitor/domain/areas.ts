@@ -1,6 +1,15 @@
-import type { AreaBoardItem, FieldFilters, PipefyField, SprintCard } from "../types";
+import type {
+  AreaBoardItem,
+  AreaBucketGroup,
+  AreaDetail,
+  FieldFilters,
+  PipefyField,
+  SprintCard,
+} from "../types";
 import { QEG_PIPE_ID } from "../constants";
 import { normalizeText } from "./text";
+
+const FALLBACK_BUCKET = "Outras áreas";
 
 export function extractProjectAreas(
   fields: PipefyField[] = [],
@@ -82,4 +91,80 @@ export function buildAreaBoardItems(
 
     return left.area.localeCompare(right.area, "pt-BR");
   });
+}
+
+/**
+ * Agrupa as áreas em "baldes" (diretorias) conforme o mapa buckets (balde -> [áreas]),
+ * expondo as demandas (cards) de cada área. Áreas fora do mapa caem em "Outras áreas".
+ */
+export function buildAreaBuckets(
+  activeCards: SprintCard[],
+  prioritizedCards: SprintCard[],
+  buckets: Record<string, string[]>,
+): AreaBucketGroup[] {
+  const areaToBucket = new Map<string, string>();
+  const bucketOrder: string[] = [];
+  for (const [bucket, areas] of Object.entries(buckets)) {
+    bucketOrder.push(bucket);
+    for (const area of areas) areaToBucket.set(normalizeText(area), bucket);
+  }
+
+  const areaMap = new Map<string, AreaDetail>();
+  const ensureArea = (area: string) => {
+    if (!areaMap.has(area)) {
+      areaMap.set(area, { area, activeCount: 0, plannedCount: 0, cards: [] });
+    }
+    return areaMap.get(area)!;
+  };
+
+  const collect = (cards: SprintCard[], status: "active" | "planned") => {
+    for (const card of cards.filter((item) => item.pipeId === QEG_PIPE_ID)) {
+      for (const area of resolveCardAreas(card)) {
+        const detail = ensureArea(area);
+        if (status === "active") detail.activeCount += 1;
+        else detail.plannedCount += 1;
+        detail.cards.push({
+          id: card.id,
+          title: card.title,
+          deliveryDate: card.deliveryDate ?? null,
+          phase: card.currentPhase,
+          status,
+        });
+      }
+    }
+  };
+
+  collect(activeCards, "active");
+  collect(prioritizedCards, "planned");
+
+  const groupMap = new Map<string, AreaBucketGroup>();
+  const ensureBucket = (bucket: string) => {
+    if (!groupMap.has(bucket)) {
+      groupMap.set(bucket, { bucket, areas: [], activeCount: 0, plannedCount: 0 });
+    }
+    return groupMap.get(bucket)!;
+  };
+
+  for (const detail of areaMap.values()) {
+    const bucket = areaToBucket.get(normalizeText(detail.area)) ?? FALLBACK_BUCKET;
+    const group = ensureBucket(bucket);
+    group.areas.push(detail);
+    group.activeCount += detail.activeCount;
+    group.plannedCount += detail.plannedCount;
+  }
+
+  const order = [...bucketOrder, FALLBACK_BUCKET];
+  const groups = [...groupMap.values()].sort((a, b) => {
+    const ia = order.indexOf(a.bucket);
+    const ib = order.indexOf(b.bucket);
+    return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+  });
+
+  for (const group of groups) {
+    group.areas.sort(
+      (x, y) => y.activeCount - x.activeCount || y.plannedCount - x.plannedCount,
+    );
+  }
+
+  return groups;
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchMonitorCards } from "./api";
 import {
   buildAreaBoardItems,
+  buildAreaBuckets,
   buildDirectorView,
   buildPlannedLaneSummary,
   buildTeamLoadItems,
@@ -31,6 +32,7 @@ export function useSprintMonitor() {
   const [error, setError] = useState<string | null>(initialState.error);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [talentMap, setTalentMap] = useState<TalentMap | null>(null);
+  const [areaBucketsConfig, setAreaBucketsConfig] = useState<Record<string, string[]>>({});
 
   const refresh = useCallback(async () => {
     if (!config) {
@@ -72,6 +74,17 @@ export function useSprintMonitor() {
       });
   }, []);
 
+  useEffect(() => {
+    fetch("/areas.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { buckets?: Record<string, string[]> } | null) => {
+        if (data?.buckets) setAreaBucketsConfig(data.buckets);
+      })
+      .catch(() => {
+        // areas.json is optional; ignore load failures silently
+      });
+  }, []);
+
   const summary = useMemo(() => {
     const people = groups.length;
     const pipeNames = config?.pipes
@@ -108,6 +121,10 @@ export function useSprintMonitor() {
     () => buildAreaBoardItems(activeCards, prioritizedCards),
     [activeCards, prioritizedCards],
   );
+  const areaBuckets = useMemo(
+    () => buildAreaBuckets(activeCards, prioritizedCards, areaBucketsConfig),
+    [activeCards, prioritizedCards, areaBucketsConfig],
+  );
   const plannedLaneSummary = useMemo(
     () => buildPlannedLaneSummary(prioritizedCards),
     [prioritizedCards],
@@ -137,6 +154,7 @@ export function useSprintMonitor() {
     summary,
     dashboard,
     areaBoard,
+    areaBuckets,
     plannedLaneSummary,
     teamLoad,
     directorView,

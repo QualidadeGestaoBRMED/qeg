@@ -1,0 +1,8 @@
+{
+  "buckets": {
+    "CEO": ["Brand", "Enablement", "On Going", "Suporte", "On Boarding", "Desenvolvimento", "DP", "Jurídico", "Cliente"],
+    "CGO": ["Sales", "Planejamento"],
+    "CFO": ["Financeiro", "Controladoria", "Suprimentos", "RH"],
+    "COO": ["Operação (Filiais e Campanha)", "Saúde", "Segurança", "Qualidade e Gestão", "Legalização", "Credenciado"]
+  }
+}

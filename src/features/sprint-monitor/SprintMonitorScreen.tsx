@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  AreasBoard,
   AssigneeBoard,
   DirectorPresentation,
   MetricsGrid,
@@ -9,7 +10,7 @@ import {
 } from "./components";
 import { useSprintMonitor } from "./useSprintMonitor";
 
-type TabKey = "person" | "skills";
+type TabKey = "person" | "skills" | "areas";
 
 interface SprintMonitorScreenProps {
   onLogout?: () => void;
@@ -26,6 +27,7 @@ export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
     dashboard,
     teamLoad,
     areaBoard,
+    areaBuckets,
     plannedLaneSummary,
     directorView,
     talentMap,
@@ -88,6 +90,7 @@ export function SprintMonitorScreen({ onLogout }: SprintMonitorScreenProps) {
                   skills={talentMap?.skills ?? []}
                 />
               ),
+              areas: <AreasBoard buckets={areaBuckets} />,
             }}
           </MonitorTabs>
         </div>

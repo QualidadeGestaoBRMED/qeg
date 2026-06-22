@@ -1,5 +1,6 @@
 export { AssigneeBoard } from "./AssigneeBoard";
 export { AreaBoard } from "./AreaBoard";
+export { AreasBoard } from "./AreasBoard";
 export { DirectorBoard } from "./DirectorBoard";
 export { DirectorPresentation } from "./DirectorPresentation";
 
