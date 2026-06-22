@@ -73,7 +73,7 @@ function AreaRow({ detail }: { detail: AreaDetail }) {
 }
 
 function BucketCard({ group }: { group: AreaBucketGroup }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <section className="rounded-2xl border border-border/50 bg-white p-5">
       <button
