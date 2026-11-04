@@ -1,7 +1,7 @@
 {
   "voz": "ohZOfA9iwlZ5nOsoY7LB",
   "modelo": "eleven_multilingual_v2",
-  "gerado_em": "2026-11-04T16:29:56.385Z",
+  "gerado_em": "2026-11-04T16:38:41.679Z",
   "falas": [
     {
       "arquivo": "fala-883fb4195c.mp3",
@@ -19,11 +19,13 @@
     },
     {
       "arquivo": "fala-a6496509be.mp3",
-      "duracao": 12.68,
+      "duracao": 13.86,
       "texto": "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
       "marcas": {
-        "primeiro": 8.308,
-        "depois": 10.404
+        "esforco": 2.57,
+        "discovery": 5.162,
+        "primeiro": 8.431,
+        "depois": 10.719
       }
     },
     {

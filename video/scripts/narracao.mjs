@@ -34,7 +34,7 @@ export const FALAS = [
   {
     texto:
       "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
-    marcas: { primeiro: "primeiro", depois: "depois" },
+    marcas: { esforco: "precisa do esforço", discovery: "discouveri", primeiro: "primeiro", depois: "depois" },
   },
   "Para isso, criamos o rito: uma reunião com a área, guiada por esta tela.",
   "O quadro mostra em que fase está cada feature.",

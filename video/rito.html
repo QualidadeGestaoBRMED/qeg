@@ -68,6 +68,16 @@ svg.setas { position: absolute; inset: 0; }
 .citacao { position: absolute; left: 0; right: 0; top: 900px; text-align: center; font-size: 46px; font-weight: 300; color: var(--navy); }
 .citacao em { font-style: normal; font-weight: 600; color: var(--teal); }
 
+/* RICE dividido */
+.letra { position: absolute; top: 450px; width: 190px; height: 200px; border-radius: 22px; background: #fff; border: 3px solid var(--rule); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.letra b { font-size: 120px; line-height: 1; font-weight: 600; color: var(--navy); }
+.letra span { font-size: 22px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
+.letra i { position: absolute; top: -26px; right: -22px; width: 64px; height: 64px; border-radius: 50%; background: var(--alerta); color: #fff; font: 600 40px/64px "Work Sans", sans-serif; text-align: center; font-style: normal; }
+#disc { position: absolute; top: 460px; left: 900px; width: 420px; height: 180px; border-radius: 22px; background: var(--navy); color: #fff; padding: 30px 34px; font-size: 30px; line-height: 1.25; }
+#disc small { display: block; font-size: 18px; letter-spacing: .18em; color: var(--sky2); font-weight: 600; margin-bottom: 8px; }
+.grupo { position: absolute; top: 430px; height: 240px; border-radius: 30px; border: 4px solid var(--teal); background: rgba(0,120,145,.05); }
+.cap { position: absolute; top: 710px; font-size: 30px; color: var(--ink2); text-align: center; line-height: 1.3; }
+.cap b { display: block; font-size: 20px; letter-spacing: .16em; text-transform: uppercase; color: var(--teal); }
 /* beacon */
 .frase { position: absolute; left: 0; right: 0; text-align: center; font-size: 84px; font-weight: 400; line-height: 1.1; }
 .frase em { font-style: normal; color: var(--sky2); font-weight: 600; }
@@ -133,25 +143,20 @@ svg.setas { position: absolute; inset: 0; }
     <div class="frase" id="pq2" style="top:880px;font-size:46px;color:#F2B49F">Entra? Quando? Por quê?</div>
   </section>
 
-  <!-- 3 saída -->
+  <!-- 2 RICE dividido -->
   <section class="cena clara" data-cena="saida">
-    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">O impasse e a saída</div><h2 style="font-size:64px;color:var(--navy)">Priorizar em dois momentos</h2></div>
-    <div class="trilho">
-      <div class="etapa" id="e1"><b>1º momento</b><span>Alcance · Impacto · Confiança</span></div>
-      <div class="liga"><i id="l1"></i></div>
-      <div class="etapa" id="e2"><b>Discovery</b><span>entender o problema</span></div>
-      <div class="liga"><i id="l2"></i></div>
-      <div class="etapa" id="e3"><b>Traz</b><span>o esforço</span></div>
-      <div class="liga"><i id="l3"></i></div>
-      <div class="etapa" id="e4"><b>2º momento</b><span>RICE completo</span></div>
-      <div class="liga"><i id="l4"></i></div>
-      <div class="etapa" id="e5"><b>Decide</b><span>o que entra em execução</span></div>
-    </div>
-    <div class="chave" id="ch1" style="left:120px;width:620px"></div>
-    <div class="chave-txt" id="cht1" style="left:120px;width:620px">decide onde investir discovery</div>
-    <div class="chave" id="ch2" style="left:1180px;width:620px"></div>
-    <div class="chave-txt" id="cht2" style="left:1180px;width:620px">decide o que construir</div>
-    <div class="citacao" id="cit">“Primeiro a gente prioriza <em>o que vale a pena entender</em>.”</div>
+    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Como decidir</div><h2 style="font-size:60px;color:var(--navy)" id="rt">Priorizar em dois momentos</h2></div>
+    <div class="letra" id="lR"><b>R</b><span>Alcance</span></div>
+    <div class="letra" id="lI"><b>I</b><span>Impacto</span></div>
+    <div class="letra" id="lC"><b>C</b><span>Confiança</span></div>
+    <div class="letra" id="lE"><b>E</b><span>Esforço</span><i id="eQ">?</i></div>
+    <div id="disc"><small>DISCOVERY</small>entender o problema e estimar quanto custa</div>
+    <svg class="setas" viewBox="0 0 1920 1080" aria-hidden="true"><defs><marker id="ponta2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#007891"/></marker></defs>
+      <path id="sD" d="M1330,550 L1440,550" fill="none" stroke="#007891" stroke-width="6" marker-end="url(#ponta2)"/></svg>
+    <div class="grupo" id="gRIC"></div>
+    <div class="cap" id="cap1"><b>1º momento</b>R · I · C decidem qual discovery fazer</div>
+    <div class="cap" id="cap2"><b>vem do discovery</b>o E só existe depois dele</div>
+    <div class="cap" id="cap3"><b>2º momento</b>RICE completo decide o que construir</div>
   </section>
 
   <!-- 5 quebra-cabeça -->
@@ -239,7 +244,7 @@ svg.setas { position: absolute; inset: 0; }
 
   // ---------- linha do tempo ----------
   const CENAS = $$(".cena");
-  const MIN = [4.5, 6, 9, 5, ...ZOOMS.map(() => 3.6), 6];
+  const MIN = [4.5, 6, 13, 5, ...ZOOMS.map(() => 3.6), 6];
   const NOMES = ["Abertura", "Hoje", "Dois momentos", "O rito", "Quadro", "Produto", "Feature", "Priorizar discovery", "Discovery", "Priorizar execução", "Ata", "Fim"];
   const DUR = CENAS.map((_, i) => Math.max(MIN[i], (NARR?.falas?.[i]?.duracao ?? 0) + ANTES + DEPOIS));
   const INI = DUR.reduce((acc, d, i) => (acc.push(acc[i] + d), acc), [0]);
@@ -257,13 +262,35 @@ svg.setas { position: absolute; inset: 0; }
     const r = seg(t, 0.4, 1.0); sty($('[data-k="a-rampa"]'), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
     entra($('[data-k="a-sub"]'), t, 1.0, 0.9);
   };
+  const traco = (path, p) => { const L = path.getTotalLength(); path.style.strokeDasharray = L; path.style.strokeDashoffset = L * (1 - p); };
   DESENHO[2] = (t, d, i) => {
-    const tr = marca(i, "primeiro", 6), tc = marca(i, "depois", 7.5);
-    const tempos = [tr, tr + 0.5, tc - 0.6, tc, tc + 0.5];
-    ["#e1", "#e2", "#e3", "#e4", "#e5"].forEach((s, k) => { entra($(s), t, 0.4 + k * 0.15, 0.6, 20); $(s).classList.toggle("on", t >= tempos[k]); });
-    ["#l1", "#l2", "#l3", "#l4"].forEach((s, k) => sty($(s), { width: `${seg(t, tempos[k + 1] - 0.5, 0.5) * 100}%` }));
-    [["#ch1", "#cht1", tr + 1.2], ["#ch2", "#cht2", tc + 0.2]].forEach(([c, x, a]) => { sty($(c), { opacity: seg(t, a, 0.6) }); entra($(x), t, a + 0.2, 0.6, 12); });
-    entra($("#cit"), t, Math.min(d - 1.6, tc + 0.8), 0.8);
+    const tE = marca(i, "esforco", 3), tD = marca(i, "discovery", 5.5), t1 = marca(i, "primeiro", 8.5), t2 = marca(i, "depois", 10.5);
+    // posições: juntas (centro), separadas (RIC à esquerda, E à direita), juntas de novo
+    const W = 190, G = 30, junto = [550, 770, 990, 1210], separado = [160, 380, 600, 1460];
+    const sep = seg(t, tD - 0.3, 0.9) * (1 - seg(t, t2 - 0.2, 0.9));
+    ["#lR", "#lI", "#lC", "#lE"].forEach((id, k) => {
+      const el = $(id), e = seg(t, 0.2 + k * 0.15, 0.6, easeOut);
+      sty(el, { left: `${lerp(junto[k], separado[k], sep)}px`, opacity: e, transform: `translateY(${(1 - e) * 30}px)` });
+    });
+    const eOn = t >= tE - 0.2 && t < t2;
+    sty($("#lE"), { borderColor: eOn ? "#C8502B" : t >= t2 ? "#007891" : "#DCE3E6" });
+    const q = seg(t, tE - 0.2, 0.4, easeOut) * (1 - seg(t, t2 - 0.4, 0.4));
+    sty($("#eQ"), { opacity: q, transform: `scale(${q})` });
+    const dI = seg(t, tD, 0.7, easeOut) * (1 - seg(t, t2 - 0.4, 0.4));
+    sty($("#disc"), { opacity: dI, transform: `translateY(${(1 - dI) * -60}px)` });
+    const pS = seg(t, tD + 0.8, 0.5) * (1 - seg(t, t2 - 0.4, 0.3));
+    traco($("#sD"), pS); $("#sD").style.opacity = pS > 0.02 ? 1 : 0;
+    // grupo: primeiro em volta do RIC, depois em volta do RICE inteiro
+    // o contorno some enquanto as letras se juntam e reaparece em volta do RICE inteiro
+    const g1 = seg(t, t1 - 0.2, 0.5) * (1 - seg(t, t2 - 0.3, 0.3)), g2 = seg(t, t2 + 0.7, 0.5);
+    const depois = t >= t2 + 0.4;
+    sty($("#gRIC"), depois
+      ? { left: `${junto[0] - 26}px`, width: `${junto[3] + W - junto[0] + 52}px`, opacity: g2 }
+      : { left: `${separado[0] - 26}px`, width: `${separado[2] + W - separado[0] + 52}px`, opacity: g1 });
+    sty($("#cap1"), { left: `${separado[0] - 26}px`, width: `${separado[2] + W - separado[0] + 52}px`, opacity: g1 });
+    sty($("#cap2"), { left: `${separado[3] - 120}px`, width: "430px", opacity: seg(t, tD + 0.9, 0.5) * (1 - seg(t, t2 - 0.4, 0.4)) });
+    sty($("#cap3"), { left: `${junto[0] - 26}px`, width: `${junto[3] + W - junto[0] + 52}px`, opacity: g2 });
+    sty($("#rt"), { opacity: seg(t, 0, 0.5) });
   };
   // problema: pedidos de cada área caem numa pilha, sem resposta
   const PED = [];
