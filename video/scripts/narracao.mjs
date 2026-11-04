@@ -24,7 +24,7 @@ const LUFS = -21;
 const FFMPEG = process.env.FFMPEG || "ffmpeg";
 
 // Uma fala por cena de video/rito.html, na mesma ordem. `marcas`: palavras cujo início sincroniza a animação.
-// Palavras escritas como se falam: "ráice" (RICE), "discóuveri" (discovery); a tela mantém a grafia certa.
+// Palavras escritas como se falam: "ráice" (RICE), "discovery" (discovery); a tela mantém a grafia certa.
 export const FALAS = [
   "Rito de priorização: como a SOTEC decide o que construir, junto com cada área.",
   {
@@ -33,18 +33,18 @@ export const FALAS = [
   },
   {
     texto:
-      "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discóuveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
-    marcas: { esforco: "precisa do esforço", discovery: "discóuveri", primeiro: "primeiro", depois: "depois" },
+      "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discovery. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+    marcas: { esforco: "precisa do esforço", discovery: "discovery", primeiro: "primeiro", depois: "depois" },
   },
   "Para isso, criamos o rito: uma reunião com a área, guiada por esta tela.",
   "O quadro mostra em que fase está cada feature.",
   "O fluxo começa no produto.",
   "Dentro dele, a feature, com o problema que ela resolve.",
   {
-    texto: "Com a área, definimos alcance, impacto e confiança. A nota diz qual discóuveri vem primeiro.",
+    texto: "Com a área, definimos alcance, impacto e confiança. A nota diz qual discovery vem primeiro.",
     marcas: { nota: "A nota" },
   },
-  "O discóuveri traz o esforço.",
+  "O discovery traz o esforço.",
   "E o ráice completo decide o que entra em execução.",
   "No fim, a ata se escreve sozinha.",
   "Assim, a área sabe o que vem, quando, e por quê.",
