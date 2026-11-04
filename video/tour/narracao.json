@@ -1,7 +1,7 @@
 {
   "voz": "ohZOfA9iwlZ5nOsoY7LB",
   "modelo": "eleven_multilingual_v2",
-  "gerado_em": "2026-11-04T16:38:41.679Z",
+  "gerado_em": "2026-11-04T18:01:17.072Z",
   "falas": [
     {
       "arquivo": "fala-883fb4195c.mp3",
@@ -9,12 +9,12 @@
       "texto": "Rito de priorização: como a SOTEC decide o que construir, junto com cada área."
     },
     {
-      "arquivo": "fala-e0c526a823.mp3",
-      "duracao": 7,
-      "texto": "Hoje, cada área manda seus pedidos, e espera. Sem saber se, nem quando, eles vão entrar.",
+      "arquivo": "fala-320369987a.mp3",
+      "duracao": 5.79,
+      "texto": "Hoje, cada área manda seus pedidos e espera, sem saber se eles vão entrar, nem quando.",
       "marcas": {
-        "espera": 2.795,
-        "quando": 4.78
+        "espera": 2.176,
+        "quando": 4.667
       }
     },
     {

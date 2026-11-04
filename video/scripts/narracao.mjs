@@ -28,7 +28,7 @@ const FFMPEG = process.env.FFMPEG || "ffmpeg";
 export const FALAS = [
   "Rito de priorização: como a SOTEC decide o que construir, junto com cada área.",
   {
-    texto: "Hoje, cada área manda seus pedidos, e espera. Sem saber se, nem quando, eles vão entrar.",
+    texto: "Hoje, cada área manda seus pedidos e espera, sem saber se eles vão entrar, nem quando.",
     marcas: { espera: "espera", quando: "nem quando" },
   },
   {
