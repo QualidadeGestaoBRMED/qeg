@@ -97,7 +97,7 @@ svg.setas { position: absolute; inset: 0; }
 .mapa i { height: 34px; border-radius: 6px; background: #E2E7EA; }
 .mapa i.feita { background: var(--sky); }
 .mapa i.agora { background: var(--teal); box-shadow: 0 0 0 4px rgba(0,120,145,.18); }
-.janela { position: absolute; left: 640px; top: 70px; width: 1220px; height: 940px; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 30px 80px rgba(21,58,76,.16); }
+.janela { position: absolute; left: 640px; top: 159px; width: 1220px; height: 763px; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 30px 80px rgba(21,58,76,.16); }
 .mundo { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
 .mundo img { width: 1440px; height: 900px; display: block; }
 .foco { position: absolute; border: 4px solid var(--teal); border-radius: 12px; box-shadow: 0 0 0 4000px rgba(21,58,76,.22); opacity: 0; }
@@ -328,11 +328,13 @@ svg.setas { position: absolute; inset: 0; }
     }
   };
   // câmera: enquadra um retângulo do mundo (1440×900) na janela 1220×940
-  const JW = 1220, JH = 940;
+  const JW = 1220, JH = 763; // mesma proporção da tela capturada (1440×900): nada de faixa vazia
   const foco = (r, pad = 36) => {
     if (!r) { const s = Math.min(JW / 1440, JH / 900); return { s, x: (JW - 1440 * s) / 2, y: (JH - 900 * s) / 2 }; }
-    const s = Math.min(JW / (r.w + 2 * pad), JH / (r.h + 2 * pad), 2.4);
-    return { s, x: JW / 2 - (r.x + r.w / 2) * s, y: JH / 2 - (r.y + r.h / 2) * s };
+    const s = Math.max(JW / 1440, Math.min(JW / (r.w + 2 * pad), JH / (r.h + 2 * pad), 2.4));
+    // a câmera nunca sai da tela capturada: sem bordas brancas nem print cortado
+    const x = clamp(JW / 2 - (r.x + r.w / 2) * s, JW - 1440 * s, 0), y = clamp(JH / 2 - (r.y + r.h / 2) * s, JH - 900 * s, 0);
+    return { s, x, y };
   };
   ZOOMS.forEach((z, zi) => {
     const i = 4 + zi;
