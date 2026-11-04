@@ -1,6 +1,9 @@
 # Board Beacon
 
-Monitor enxuto de sprint para Pipefy. O app busca os cards das fases configuradas, agrupa por responsavel e destaca gargalos de execucao.
+Ferramenta do rito de priorizacao da SOTEC, feito com cada area cliente. Tem duas telas:
+
+- **Rito** (tela principal): quadro da area (backlog, discovery, pronto para decidir, execucao), produtos, atas e o modo rito, que conduz a reuniao em 5 passos (execucao, discovery, triagem, escolha, ata). A priorizacao tem dois momentos: alcance, impacto e confianca (pre-score) decidem qual discovery fazer; o discovery traz o esforco, e o RICE completo decide o que entra em execucao.
+- **Execucao**: monitor de sprint do Pipefy (cards das fases configuradas, por responsavel e por area).
 
 ## Stack
 
@@ -18,6 +21,17 @@ npm run dev
 ```
 
 O app abre em `http://localhost:8080`.
+
+## Banco do rito (Neon)
+
+O rito guarda itens, produtos, movimentos e atas num Postgres (Neon). Defina `DATABASE_URL` no `.env` (e nas variaveis da Vercel) e rode:
+
+```bash
+npm run db:setup              # tabelas, areas e produtos do Suporte
+npm run db:setup -- --exemplos # idem + itens de exemplo do Suporte
+```
+
+O codigo do rito fica em `src/features/rito/` (regras em `regras.ts`) e a API em `api/_lib/rito.ts` (`POST /api/rito`).
 
 ## Configuracao
 

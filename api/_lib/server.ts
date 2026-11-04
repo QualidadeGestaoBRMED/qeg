@@ -1,17 +1,18 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { ritoHandler } from "./rito.js";
 
 const COOKIE_NAME = "qeg_session";
 const SESSION_TTL_SEC = 60 * 60 * 12; // 12h
 const PIPEFY_API_URL = "https://api.pipefy.com/graphql";
 
-type Req = IncomingMessage & { body?: unknown };
+export type Req = IncomingMessage & { body?: unknown };
 
 function env(name: string): string {
   return process.env[name] ?? "";
 }
 
-async function readJsonBody(req: Req): Promise<Record<string, unknown>> {
+export async function readJsonBody(req: Req): Promise<Record<string, unknown>> {
   // Vercel já entrega o corpo parseado em req.body; Vite/dev entrega via stream.
   if (req.body !== undefined && req.body !== null) {
     if (typeof req.body === "string") {
@@ -72,7 +73,7 @@ function verifySession(token: string | undefined, secret: string): boolean {
   return Number.isFinite(expNum) && expNum > Math.floor(Date.now() / 1000);
 }
 
-function isAuthed(req: Req): boolean {
+export function isAuthed(req: Req): boolean {
   return verifySession(parseCookies(req)[COOKIE_NAME], env("SESSION_SECRET"));
 }
 
@@ -92,7 +93,7 @@ function setSessionCookie(res: ServerResponse, value: string, maxAgeSec: number,
   res.setHeader("Set-Cookie", attrs.join("; "));
 }
 
-function json(res: ServerResponse, status: number, body: unknown) {
+export function json(res: ServerResponse, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json");
   res.end(JSON.stringify(body));
@@ -165,6 +166,7 @@ export function devApiMiddleware() {
     if (url === "/api/logout") return void logoutHandler(req, res);
     if (url === "/api/session") return void sessionHandler(req, res);
     if (url === "/api/pipefy") return void pipefyHandler(req, res);
+    if (url === "/api/rito") return void ritoHandler(req, res);
     next();
   };
 }
