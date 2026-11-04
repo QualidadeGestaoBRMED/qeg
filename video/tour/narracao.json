@@ -1,7 +1,7 @@
 {
   "voz": "ohZOfA9iwlZ5nOsoY7LB",
   "modelo": "eleven_multilingual_v2",
-  "gerado_em": "2026-11-04T18:01:17.072Z",
+  "gerado_em": "2026-11-04T18:04:41.833Z",
   "falas": [
     {
       "arquivo": "fala-883fb4195c.mp3",
@@ -18,14 +18,14 @@
       }
     },
     {
-      "arquivo": "fala-a6496509be.mp3",
-      "duracao": 13.86,
-      "texto": "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+      "arquivo": "fala-301152bb22.mp3",
+      "duracao": 13.14,
+      "texto": "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discóuveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
       "marcas": {
-        "esforco": 2.57,
-        "discovery": 5.162,
-        "primeiro": 8.431,
-        "depois": 10.719
+        "esforco": 2.502,
+        "discovery": 5.083,
+        "primeiro": 8.453,
+        "depois": 10.854
       }
     },
     {
@@ -49,17 +49,17 @@
       "texto": "Dentro dele, a feature, com o problema que ela resolve."
     },
     {
-      "arquivo": "fala-88c2e09892.mp3",
-      "duracao": 6.69,
-      "texto": "Com a área, definimos alcance, impacto e confiança. A nota diz qual discouveri vem primeiro.",
+      "arquivo": "fala-e6223d7177.mp3",
+      "duracao": 6.91,
+      "texto": "Com a área, definimos alcance, impacto e confiança. A nota diz qual discóuveri vem primeiro.",
       "marcas": {
-        "nota": 3.968
+        "nota": 3.878
       }
     },
     {
-      "arquivo": "fala-58187bd00b.mp3",
+      "arquivo": "fala-f46e15d885.mp3",
       "duracao": 2.18,
-      "texto": "O discouveri traz o esforço."
+      "texto": "O discóuveri traz o esforço."
     },
     {
       "arquivo": "fala-8233498ebe.mp3",
