@@ -28,12 +28,15 @@ const FFMPEG = process.env.FFMPEG || "ffmpeg";
 export const FALAS = [
   "Rito de priorização: como a SOTEC decide o que construir, junto com cada área.",
   {
+    texto: "Hoje, cada área manda seus pedidos, e espera. Sem saber se, nem quando, eles vão entrar.",
+    marcas: { espera: "espera", quando: "nem quando" },
+  },
+  {
     texto:
-      "Para priorizar com ráice, precisamos do esforço. Mas o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+      "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
     marcas: { primeiro: "primeiro", depois: "depois" },
   },
-  { texto: "E o Beacon, um painel que ninguém abria, virou o rito.", marcas: { virou: "virou" } },
-  "Cada peça da tela guia a reunião.",
+  "Para isso, criamos o rito: uma reunião com a área, guiada por esta tela.",
   "O quadro mostra em que fase está cada feature.",
   "O fluxo começa no produto.",
   "Dentro dele, a feature, com o problema que ela resolve.",
@@ -44,7 +47,7 @@ export const FALAS = [
   "O discouveri traz o esforço.",
   "E o ráice completo decide o que entra em execução.",
   "No fim, a ata se escreve sozinha.",
-  "A área não manda um pedido e espera. Ela prioriza com a gente.",
+  "Assim, a área sabe o que vem, quando, e por quê.",
 ];
 
 const chave = process.env.ELEVENLABS_API_KEY?.trim();

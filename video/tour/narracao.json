@@ -1,7 +1,7 @@
 {
   "voz": "ohZOfA9iwlZ5nOsoY7LB",
   "modelo": "eleven_multilingual_v2",
-  "gerado_em": "2026-11-04T16:20:20.730Z",
+  "gerado_em": "2026-11-04T16:29:56.385Z",
   "falas": [
     {
       "arquivo": "fala-883fb4195c.mp3",
@@ -9,26 +9,27 @@
       "texto": "Rito de priorização: como a SOTEC decide o que construir, junto com cada área."
     },
     {
-      "arquivo": "fala-0dfd18dc06.mp3",
-      "duracao": 13.32,
-      "texto": "Para priorizar com ráice, precisamos do esforço. Mas o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+      "arquivo": "fala-e0c526a823.mp3",
+      "duracao": 7,
+      "texto": "Hoje, cada área manda seus pedidos, e espera. Sem saber se, nem quando, eles vão entrar.",
       "marcas": {
-        "primeiro": 7.868,
-        "depois": 10.257
+        "espera": 2.795,
+        "quando": 4.78
       }
     },
     {
-      "arquivo": "fala-0a5e01dfcf.mp3",
-      "duracao": 3.98,
-      "texto": "E o Beacon, um painel que ninguém abria, virou o rito.",
+      "arquivo": "fala-a6496509be.mp3",
+      "duracao": 12.68,
+      "texto": "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
       "marcas": {
-        "virou": 2.548
+        "primeiro": 8.308,
+        "depois": 10.404
       }
     },
     {
-      "arquivo": "fala-fc040823da.mp3",
-      "duracao": 2.81,
-      "texto": "Cada peça da tela guia a reunião."
+      "arquivo": "fala-71bc114fbf.mp3",
+      "duracao": 4.93,
+      "texto": "Para isso, criamos o rito: uma reunião com a área, guiada por esta tela."
     },
     {
       "arquivo": "fala-120999bd17.mp3",
@@ -69,9 +70,9 @@
       "texto": "No fim, a ata se escreve sozinha."
     },
     {
-      "arquivo": "fala-e8cf309f8d.mp3",
-      "duracao": 4.66,
-      "texto": "A área não manda um pedido e espera. Ela prioriza com a gente."
+      "arquivo": "fala-9742888975.mp3",
+      "duracao": 3.58,
+      "texto": "Assim, a área sabe o que vem, quando, e por quê."
     }
   ]
 }

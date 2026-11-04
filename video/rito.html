@@ -55,17 +55,17 @@ h1, h2 { margin: 0; font-weight: 500; letter-spacing: -.01em; text-wrap: balance
 svg.setas { position: absolute; inset: 0; }
 
 /* saída: o caminho em dois momentos */
-.trilho { position: absolute; left: 120px; right: 120px; top: 360px; display: flex; align-items: center; gap: 0; }
-.etapa { flex: 1; height: 230px; border-radius: 22px; background: #fff; border: 2px solid var(--rule); display: flex; flex-direction: column; justify-content: center; padding: 0 30px; gap: 12px; }
+.trilho { position: absolute; left: 120px; right: 120px; top: 440px; display: flex; align-items: center; gap: 0; }
+.etapa { flex: 1; height: 250px; border-radius: 22px; background: #fff; border: 2px solid var(--rule); display: flex; flex-direction: column; justify-content: center; padding: 0 30px; gap: 12px; }
 .etapa b { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
 .etapa span { font-size: 36px; font-weight: 500; line-height: 1.15; }
 .etapa.on { border-color: var(--teal); box-shadow: 0 20px 50px rgba(0,120,145,.18); }
 .etapa.on b { color: var(--teal); }
 .liga { width: 70px; height: 4px; background: var(--rule); position: relative; flex: none; }
 .liga i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
-.chave { position: absolute; top: 640px; height: 70px; border: 3px solid var(--sky); border-top: none; border-radius: 0 0 18px 18px; }
-.chave-txt { position: absolute; top: 730px; font-size: 26px; color: var(--ink2); text-align: center; }
-.citacao { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-size: 46px; font-weight: 300; color: var(--navy); }
+.chave { position: absolute; top: 720px; height: 70px; border: 3px solid var(--sky); border-top: none; border-radius: 0 0 18px 18px; }
+.chave-txt { position: absolute; top: 810px; font-size: 30px; font-size: 26px; color: var(--ink2); text-align: center; }
+.citacao { position: absolute; left: 0; right: 0; top: 900px; text-align: center; font-size: 46px; font-weight: 300; color: var(--navy); }
 .citacao em { font-style: normal; font-weight: 600; color: var(--teal); }
 
 /* beacon */
@@ -90,7 +90,7 @@ svg.setas { position: absolute; inset: 0; }
 .janela { position: absolute; left: 640px; top: 70px; width: 1220px; height: 940px; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 30px 80px rgba(21,58,76,.16); }
 .mundo { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
 .mundo img { width: 1440px; height: 900px; display: block; }
-.foco { position: absolute; border: 4px solid var(--teal); border-radius: 12px; box-shadow: 0 0 0 4000px rgba(21,58,76,.42); opacity: 0; }
+.foco { position: absolute; border: 4px solid var(--teal); border-radius: 12px; box-shadow: 0 0 0 4000px rgba(21,58,76,.22); opacity: 0; }
 
 /* controles */
 #ctl { position: fixed; left: 0; right: 0; bottom: 0; padding: 14px 22px 18px; display: flex; align-items: center; gap: 16px; background: linear-gradient(transparent, rgba(8,22,30,.85)); color: #fff; font-size: 14px; transition: opacity .3s; z-index: 10; }
@@ -120,6 +120,19 @@ svg.setas { position: absolute; inset: 0; }
     <div class="marca">BR MED<small>SAÚDE CORPORATIVA</small></div>
   </section>
 
+  <!-- 1 problema -->
+  <section class="cena escura" data-cena="problema">
+    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Hoje</div></div>
+    <div id="areasP" style="position:absolute;left:160px;top:300px;display:flex;flex-direction:column;gap:120px;font-size:34px;font-weight:600;color:#C9E6EC">
+      <span>Suporte</span><span>Operações</span><span>Financeiro</span>
+    </div>
+    <div id="caixa" style="position:absolute;left:1180px;top:330px;width:520px;height:420px;border:3px solid rgba(255,255,255,.35);border-top:none;border-radius:0 0 28px 28px"></div>
+    <div style="position:absolute;left:1180px;top:780px;width:520px;text-align:center;font-size:28px;letter-spacing:.16em;font-weight:600;color:#9BD5E1">SOTEC</div>
+    <div id="pedidos"></div>
+    <div class="frase" id="pq" style="top:150px;font-size:60px">Manda o pedido… <em>e espera.</em></div>
+    <div class="frase" id="pq2" style="top:880px;font-size:46px;color:#F2B49F">Entra? Quando? Por quê?</div>
+  </section>
+
   <!-- 3 saída -->
   <section class="cena clara" data-cena="saida">
     <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">O impasse e a saída</div><h2 style="font-size:64px;color:var(--navy)">Priorizar em dois momentos</h2></div>
@@ -141,17 +154,9 @@ svg.setas { position: absolute; inset: 0; }
     <div class="citacao" id="cit">“Primeiro a gente prioriza <em>o que vale a pena entender</em>.”</div>
   </section>
 
-  <!-- 4 beacon -->
-  <section class="cena escura" data-cena="beacon">
-    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">A ferramenta</div></div>
-    <div class="frase" id="b1" style="top:330px">Um painel, ninguém abre.</div>
-    <div class="frase" id="b2" style="top:470px">Um rito, <em>todo mundo precisa abrir.</em></div>
-    <div class="troca" id="b3"><s>Board Beacon</s><span style="color:var(--sky2)">→</span><span>Rito</span></div>
-  </section>
-
   <!-- 5 quebra-cabeça -->
   <section class="cena clara" data-cena="puzzle">
-    <div class="titulo-peca" id="tp">Cada peça foi pensada para guiar a reunião</div>
+    <div class="titulo-peca" id="tp">O rito: uma reunião com a área, guiada por esta tela</div>
     <div class="mesa" id="mesa"></div>
   </section>
 
@@ -161,8 +166,8 @@ svg.setas { position: absolute; inset: 0; }
   <!-- 18 fim -->
   <section class="cena escura" data-cena="fim">
     <div class="centro">
-      <div class="sub-grande" id="fim1" style="font-size:56px;color:#fff">A área não manda um pedido e espera.</div>
-      <div class="sub-grande" id="fim2" style="font-size:56px;color:var(--sky2);font-weight:500">Ela prioriza com a gente.</div>
+      <div class="sub-grande" id="fim1" style="font-size:56px;color:#fff">A área sabe o que vem,</div>
+      <div class="sub-grande" id="fim2" style="font-size:56px;color:var(--sky2);font-weight:500">quando, e por quê.</div>
       <div class="rampa" id="fim3" style="margin-top:30px"><i></i><i></i><i></i><i></i></div>
       <div class="titulo-grande" id="fim4" style="font-size:96px">Rito de priorização</div>
     </div>
@@ -208,13 +213,13 @@ svg.setas { position: absolute; inset: 0; }
     { img: "quadro", titulo: "O quadro", texto: "Em que fase está cada feature.",
       passos: [[0, null], [1.4, { x: 52, y: 217, w: 1336, h: 440 }, true]] },
     { img: "produto-criado", titulo: "1. Produto", texto: "O fluxo começa no produto.",
-      passos: [[0, null], [0.9, R("produtos.aberto"), true]] },
+      passos: [[0, null], [0.4, { ...R("produtos.aberto"), x: R("produtos.aberto").x, w: 700 }, true]] },
     { img: "feature", titulo: "2. Feature", texto: "A feature nasce dentro do produto, com o problema que resolve.",
       passos: [[0, null], [0.9, R("feature.modal"), true]] },
     { img: "rito-2a", titulo: "3. Priorizar discovery", texto: "Alcance, impacto e confiança, com a área. A nota ordena os discoveries.",
-      passos: [[0, null], [0.9, R("rito2.ric"), true], ["nota", R("rito2.escolha"), true]] },
+      passos: [[0, null], [0.5, R("rito2.escolha"), true]] },
     { img: "rito-3", titulo: "4. Discovery", texto: "O discovery traz o esforço.",
-      passos: [[0, null], [0.8, R("rito3.lista"), true]] },
+      passos: [[0, null], [0.3, R("rito3.lista"), true]] },
     { img: "rito-4", titulo: "5. Priorizar execução", texto: "O RICE completo decide o que entra em execução.",
       passos: [[0, null], [0.8, R("rito4.lista"), true]] },
     { img: "rito-ata", titulo: "6. Ata", texto: "A ata se escreve sozinha.",
@@ -234,8 +239,8 @@ svg.setas { position: absolute; inset: 0; }
 
   // ---------- linha do tempo ----------
   const CENAS = $$(".cena");
-  const MIN = [4.5, 9, 5, 5.5, ...ZOOMS.map(() => 3.6), 6];
-  const NOMES = ["Abertura", "Dois momentos", "Ferramenta", "Montagem", "Quadro", "Produto", "Feature", "Priorizar discovery", "Discovery", "Priorizar execução", "Ata", "Fim"];
+  const MIN = [4.5, 6, 9, 5, ...ZOOMS.map(() => 3.6), 6];
+  const NOMES = ["Abertura", "Hoje", "Dois momentos", "O rito", "Quadro", "Produto", "Feature", "Priorizar discovery", "Discovery", "Priorizar execução", "Ata", "Fim"];
   const DUR = CENAS.map((_, i) => Math.max(MIN[i], (NARR?.falas?.[i]?.duracao ?? 0) + ANTES + DEPOIS));
   const INI = DUR.reduce((acc, d, i) => (acc.push(acc[i] + d), acc), [0]);
   const TOTAL = INI[INI.length - 1];
@@ -248,22 +253,35 @@ svg.setas { position: absolute; inset: 0; }
 
   const DESENHO = [];
   DESENHO[0] = (t) => {
-    entra($('[data-k="a-eye"]'), t, 0.3); entra($('[data-k="a-tit"]'), t, 0.6, 1.1, 50);
-    const r = seg(t, 1.3, 1.2); sty($('[data-k="a-rampa"]'), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
-    entra($('[data-k="a-sub"]'), t, 1.9, 1);
+    entra($('[data-k="a-eye"]'), t, -0.4); entra($('[data-k="a-tit"]'), t, -0.5, 1.1, 50);
+    const r = seg(t, 0.4, 1.0); sty($('[data-k="a-rampa"]'), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
+    entra($('[data-k="a-sub"]'), t, 1.0, 0.9);
   };
-  DESENHO[1] = (t, d, i) => {
+  DESENHO[2] = (t, d, i) => {
     const tr = marca(i, "primeiro", 6), tc = marca(i, "depois", 7.5);
     const tempos = [tr, tr + 0.5, tc - 0.6, tc, tc + 0.5];
     ["#e1", "#e2", "#e3", "#e4", "#e5"].forEach((s, k) => { entra($(s), t, 0.4 + k * 0.15, 0.6, 20); $(s).classList.toggle("on", t >= tempos[k]); });
     ["#l1", "#l2", "#l3", "#l4"].forEach((s, k) => sty($(s), { width: `${seg(t, tempos[k + 1] - 0.5, 0.5) * 100}%` }));
     [["#ch1", "#cht1", tr + 1.2], ["#ch2", "#cht2", tc + 0.2]].forEach(([c, x, a]) => { sty($(c), { opacity: seg(t, a, 0.6) }); entra($(x), t, a + 0.2, 0.6, 12); });
-    entra($("#cit"), t, Math.min(d - 1.6, tc + 1.4), 0.8);
+    entra($("#cit"), t, Math.min(d - 1.6, tc + 0.8), 0.8);
   };
-  DESENHO[2] = (t, d, i) => {
-    const tv = marca(i, "virou", 2.5);
-    entra($("#b1"), t, 0.3, 0.7); entra($("#b2"), t, Math.max(0.8, tv - 1.2), 0.7);
-    const p = seg(t, tv - 0.3, 0.9, easeOut); sty($("#b3"), { opacity: p, transform: `scale(${lerp(0.85, 1, p)})` });
+  // problema: pedidos de cada área caem numa pilha, sem resposta
+  const PED = [];
+  for (let k = 0; k < 9; k++) {
+    const el = document.createElement("div");
+    sty(el, { position: "absolute", width: "190px", height: "64px", borderRadius: "10px", background: "#fff", boxShadow: "0 10px 24px rgba(0,0,0,.25)" });
+    el.innerHTML = '<div style="margin:14px 16px;height:10px;width:120px;border-radius:5px;background:#CFE3E8"></div><div style="margin:0 16px;height:8px;width:80px;border-radius:4px;background:#E3EDF0"></div>';
+    $("#pedidos").append(el);
+    PED.push({ el, y0: 300 + (k % 3) * 160, x1: 1240 + (k % 3) * 140 + (k % 2) * 30, y1: 660 - Math.floor(k / 3) * 56 - (k % 3) * 6, rot: (k * 37) % 17 - 8, atraso: 0.2 + k * 0.32 });
+  }
+  DESENHO[1] = (t, d, i) => {
+    entra($("#areasP"), t, 0, 0.5, 0);
+    for (const p of PED) {
+      const k = seg(t, p.atraso, 0.9, easeOut);
+      sty(p.el, { left: `${lerp(380, p.x1, k)}px`, top: `${lerp(p.y0, p.y1, k) - Math.sin(k * Math.PI) * 120}px`, transform: `rotate(${p.rot * k}deg)`, opacity: clamp(k * 4) });
+    }
+    entra($("#pq"), t, marca(i, "espera", 1.6) - 0.6, 0.7);
+    entra($("#pq2"), t, marca(i, "quando", 3.2), 0.7);
   };
   // quebra-cabeça: a tela do quadro em 6×4 peças que voam até o lugar
   const COL = 6, LIN = 4, PW = 1440 / COL, PH = 900 / LIN, pecas = [];
