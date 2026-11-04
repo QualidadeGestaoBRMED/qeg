@@ -1,0 +1,145 @@
+{
+  "voz": "m151rjrbWXbBqyq56tly",
+  "modelo": "eleven_multilingual_v2",
+  "gerado_em": "2026-11-04T15:03:14.429Z",
+  "falas": [
+    {
+      "arquivo": "fala-3802030008.mp3",
+      "duracao": 7.54,
+      "texto": "Rito de priorização. Como a SOTEC decide o que construir, junto com cada área."
+    },
+    {
+      "arquivo": "fala-3192712d92.mp3",
+      "duracao": 14.98,
+      "texto": "Tudo começou num levantamento para o Suporte. Listamos tudo o que já tínhamos entregado. Mas, quando criamos as colunas de KPI e de score raice, elas ficaram vazias. A gente não tinha como preencher.",
+      "marcas": {
+        "vazias": 10.956
+      }
+    },
+    {
+      "arquivo": "fala-5d259699c7.mp3",
+      "duracao": 10.43,
+      "texto": "Porque havia um impasse. O raice precisa do esforço. O esforço só sai de um discovery. E o discovery só acontece para o que já foi priorizado.",
+      "marcas": {
+        "esforco": 4.205,
+        "discovery": 6.763,
+        "priorizado": 9.04
+      }
+    },
+    {
+      "arquivo": "fala-6beb9f56e4.mp3",
+      "duracao": 16.07,
+      "texto": "A saída foi priorizar em dois momentos. Primeiro, alcance, impacto e confiança decidem onde vale a pena investir um discovery. O discovery traz o esforço. E só então o raice completo decide o que entra em execução.",
+      "marcas": {
+        "ric": 3.787,
+        "discovery": 9.57,
+        "rice": 12.749
+      }
+    },
+    {
+      "arquivo": "fala-763ec5e70e.mp3",
+      "duracao": 14.44,
+      "texto": "E onde fazer isso? Nós já tínhamos um painel de sprint, o Beacon. Só que ninguém abria. Um painel, ninguém abre. Um rito, todo mundo precisa abrir. Então o Beacon virou o rito.",
+      "marcas": {
+        "rito": 9.581,
+        "virou": 13.233
+      }
+    },
+    {
+      "arquivo": "fala-2fb683598c.mp3",
+      "duracao": 5.15,
+      "texto": "Cada peça da tela foi pensada para guiar a reunião. Vamos montar."
+    },
+    {
+      "arquivo": "fala-1c424f5cf2.mp3",
+      "duracao": 6.96,
+      "texto": "Tudo começa pela área. O rito é feito com a área, e a tela mostra só o que é dela."
+    },
+    {
+      "arquivo": "fala-63a096b0a7.mp3",
+      "duracao": 13.86,
+      "texto": "No quadro, quatro colunas contam a história de cada pedido: backlog, discovery, pronto para decidir, e execução. O resto fica recolhido, para não poluir a tela.",
+      "marcas": {
+        "backlog": 4.486,
+        "discovery": 5.67,
+        "decidir": 6.898,
+        "execucao": 8.668,
+        "resto": 10.291
+      }
+    },
+    {
+      "arquivo": "fala-903acfc952.mp3",
+      "duracao": 7.91,
+      "texto": "Cada card tem uma nota. Sem esforço, é o pré-score. Com esforço, vira o raice.",
+      "marcas": {
+        "pre": 2.063,
+        "rice": 5.264
+      }
+    },
+    {
+      "arquivo": "fala-5fbda9406f.mp3",
+      "duracao": 12.5,
+      "texto": "Um clique abre o item. Alcance, impacto e confiança são escolhas fixas, com exemplos. Ninguém digita fórmula. E o próximo passo já aparece ali.",
+      "marcas": {
+        "rice": 1.714,
+        "acoes": 9.615
+      }
+    },
+    {
+      "arquivo": "fala-4a309b1640.mp3",
+      "duracao": 10.34,
+      "texto": "Quer descer o nível? Em mais detalhes estão a solução, os riscos, o card do Pipefy, e o histórico de cada decisão.",
+      "marcas": {
+        "pipefy": 5.76,
+        "historico": 7.699
+      }
+    },
+    {
+      "arquivo": "fala-a31a7c1147.mp3",
+      "duracao": 6.06,
+      "texto": "Em produtos, cada produto abre os projetos e as features que fazem parte dele."
+    },
+    {
+      "arquivo": "fala-f0e1b6c80b.mp3",
+      "duracao": 10.2,
+      "texto": "Na reunião, o modo rito conduz tudo em cinco passos. Primeiro, a execução: o que terminou, o que travou.",
+      "marcas": {
+        "passos": 3.167,
+        "execucao": 4.7
+      }
+    },
+    {
+      "arquivo": "fala-a7d9cffa3d.mp3",
+      "duracao": 8.13,
+      "texto": "Depois, o discovery. Com o esforço na mão, decide-se: entra em execução, ou agora não."
+    },
+    {
+      "arquivo": "fala-e796a8e0c4.mp3",
+      "duracao": 8.27,
+      "texto": "Na triagem, o que chegou de novo ganha alcance, impacto e confiança, ali mesmo, com a área."
+    },
+    {
+      "arquivo": "fala-19c57f15a9.mp3",
+      "duracao": 8.27,
+      "texto": "Na escolha, o backlog aparece em ordem. E a área vê, na hora, por que algo foi escolhido, ou não."
+    },
+    {
+      "arquivo": "fala-b1b1a6f684.mp3",
+      "duracao": 5.83,
+      "texto": "Ao encerrar, a ata se escreve sozinha, com cada decisão do dia."
+    },
+    {
+      "arquivo": "fala-6e278c8932.mp3",
+      "duracao": 11.69,
+      "texto": "E entre as áreas? Isso fica para a reunião interna, com todas lado a lado. O raice decide dentro da área. A estratégia decide entre as áreas.",
+      "marcas": {
+        "estrategia": 8.656
+      }
+    },
+    {
+      "arquivo": "fala-ea845bae51.mp3",
+      "duracao": 7.63,
+      "texto": "A área não manda um pedido e espera. Ela senta e prioriza com a gente. Rito de priorização."
+    }
+  ]
+}

@@ -24,3 +24,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# vídeo gerado (fica fora do Git)
+video/*.mp4

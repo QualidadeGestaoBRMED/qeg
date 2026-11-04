@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rito de Priorização</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+/* Vídeo do rito: um palco 1920×1080 com relógio próprio (seekable), narração por cena e câmera sobre as telas reais. */
+:root {
+  --navy: #153A4C; --teal: #007891; --sky: #7EBFCC; --sky2: #9BD5E1;
+  --paper: #F3F3F3; --ink: #153A4C; --ink2: #4F5B61; --ink3: #8A979D; --rule: #DCE3E6; --alerta: #C8502B;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; background: #0c1f29; overflow: hidden; font-family: "Work Sans", Arial, sans-serif; }
+#palco { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: var(--paper); }
+.cena { position: absolute; inset: 0; opacity: 0; visibility: hidden; }
+.escura { background: radial-gradient(120% 140% at 15% 10%, #1d5068 0%, var(--navy) 55%, #0f2c3a 100%); color: #fff; }
+.clara { background: var(--paper); color: var(--ink); }
+.marca { position: absolute; left: 96px; bottom: 64px; font-weight: 700; letter-spacing: .18em; font-size: 26px; }
+.marca small { display: block; font-weight: 300; letter-spacing: .3em; font-size: 13px; margin-top: 6px; opacity: .7; }
+.eyebrow { font-size: 22px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--teal); }
+.escura .eyebrow { color: var(--sky2); }
+h1, h2 { margin: 0; font-weight: 500; letter-spacing: -.01em; text-wrap: balance; }
+
+/* abertura e fim */
+.centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 0 160px; }
+.titulo-grande { font-size: 132px; line-height: 1.02; font-weight: 500; }
+.sub-grande { font-size: 40px; font-weight: 300; color: #C9E6EC; max-width: 1200px; line-height: 1.3; }
+.rampa { display: flex; width: 420px; height: 6px; }
+.rampa i { flex: 1; }
+.rampa i:nth-child(1) { background: var(--teal); } .rampa i:nth-child(2) { background: var(--sky); } .rampa i:nth-child(3) { background: var(--sky2); } .rampa i:nth-child(4) { background: #fff; }
+
+/* problema: a tabela com colunas vazias */
+.tabela { position: absolute; left: 50%; top: 250px; width: 1280px; margin-left: -640px; background: #fff; border-radius: 16px; box-shadow: 0 30px 80px rgba(21,58,76,.12); overflow: hidden; }
+.tabela .lin { display: grid; grid-template-columns: 1.6fr 1fr .7fr .9fr; align-items: center; height: 74px; padding: 0 36px; border-bottom: 1px solid var(--rule); font-size: 28px; }
+.tabela .cab { height: 64px; font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
+.pill { justify-self: start; font-size: 20px; font-weight: 600; padding: 6px 18px; border-radius: 999px; background: #E1F1F4; color: #005E72; }
+.pill.parado { background: #E7E9EA; color: #414B50; }
+.vazio { height: 100%; position: relative; }
+.vazio::after { content: ""; position: absolute; left: 0; right: 18px; top: 18px; bottom: 18px; border-radius: 10px; border: 3px dashed transparent; }
+.coluna-vazia { position: absolute; top: 0; bottom: 0; border: 4px dashed var(--alerta); border-radius: 14px; background: rgba(200,80,43,.06); }
+.interroga { position: absolute; font-size: 120px; font-weight: 600; color: var(--alerta); }
+.legenda-baixo { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; font-size: 44px; font-weight: 400; color: var(--ink); }
+
+/* impasse: o ciclo */
+.no { position: absolute; width: 470px; padding: 34px 38px; border-radius: 22px; background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.18); font-size: 38px; line-height: 1.25; }
+.no b { display: block; font-size: 20px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; color: var(--sky2); margin-bottom: 10px; }
+.no.on { background: #fff; color: var(--navy); border-color: #fff; }
+.no.on b { color: var(--teal); }
+svg.setas { position: absolute; inset: 0; }
+
+/* saída: o caminho em dois momentos */
+.trilho { position: absolute; left: 120px; right: 120px; top: 360px; display: flex; align-items: center; gap: 0; }
+.etapa { flex: 1; height: 230px; border-radius: 22px; background: #fff; border: 2px solid var(--rule); display: flex; flex-direction: column; justify-content: center; padding: 0 30px; gap: 12px; }
+.etapa b { font-size: 18px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); font-weight: 600; }
+.etapa span { font-size: 36px; font-weight: 500; line-height: 1.15; }
+.etapa.on { border-color: var(--teal); box-shadow: 0 20px 50px rgba(0,120,145,.18); }
+.etapa.on b { color: var(--teal); }
+.liga { width: 70px; height: 4px; background: var(--rule); position: relative; flex: none; }
+.liga i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--teal); }
+.chave { position: absolute; top: 640px; height: 70px; border: 3px solid var(--sky); border-top: none; border-radius: 0 0 18px 18px; }
+.chave-txt { position: absolute; top: 730px; font-size: 26px; color: var(--ink2); text-align: center; }
+.citacao { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-size: 46px; font-weight: 300; color: var(--navy); }
+.citacao em { font-style: normal; font-weight: 600; color: var(--teal); }
+
+/* beacon */
+.frase { position: absolute; left: 0; right: 0; text-align: center; font-size: 84px; font-weight: 400; line-height: 1.1; }
+.frase em { font-style: normal; color: var(--sky2); font-weight: 600; }
+.troca { position: absolute; left: 0; right: 0; top: 700px; display: flex; justify-content: center; align-items: center; gap: 40px; font-size: 64px; font-weight: 600; }
+.troca s { color: rgba(255,255,255,.4); text-decoration-thickness: 5px; }
+
+/* quebra-cabeça */
+.mesa { position: absolute; left: 240px; top: 110px; width: 1440px; height: 900px; }
+.peca { position: absolute; background-size: 1440px 900px; box-shadow: 0 18px 40px rgba(21,58,76,.22); border-radius: 6px; }
+.titulo-peca { position: absolute; left: 0; right: 0; top: 40px; text-align: center; font-size: 34px; font-weight: 500; color: var(--navy); }
+
+/* zoom: legenda à esquerda, câmera à direita */
+.legenda { position: absolute; left: 96px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; gap: 26px; z-index: 2; }
+.legenda h2 { font-size: 64px; line-height: 1.05; color: var(--navy); }
+.legenda p { margin: 0; font-size: 30px; line-height: 1.4; color: var(--ink2); }
+.mapa { display: grid; grid-template-columns: repeat(6, 34px); gap: 6px; }
+.mapa i { height: 34px; border-radius: 6px; background: #E2E7EA; }
+.mapa i.feita { background: var(--sky); }
+.mapa i.agora { background: var(--teal); box-shadow: 0 0 0 4px rgba(0,120,145,.18); }
+.janela { position: absolute; left: 640px; top: 70px; width: 1220px; height: 940px; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 30px 80px rgba(21,58,76,.16); }
+.mundo { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; transform-origin: 0 0; }
+.mundo img { width: 1440px; height: 900px; display: block; }
+.foco { position: absolute; border: 4px solid var(--teal); border-radius: 12px; box-shadow: 0 0 0 4000px rgba(21,58,76,.42); opacity: 0; }
+
+/* controles */
+#ctl { position: fixed; left: 0; right: 0; bottom: 0; padding: 14px 22px 18px; display: flex; align-items: center; gap: 16px; background: linear-gradient(transparent, rgba(8,22,30,.85)); color: #fff; font-size: 14px; transition: opacity .3s; z-index: 10; }
+#ctl button { font: inherit; color: #fff; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+#ctl button:focus-visible { outline: 2px solid var(--sky2); outline-offset: 2px; }
+#trk { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); cursor: pointer; }
+#pg { position: absolute; left: 0; top: 0; bottom: 0; background: var(--sky2); border-radius: 3px; }
+#tm { font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+#inicio { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; gap: 16px; background: rgba(8,22,30,.55); z-index: 11; }
+#inicio button { font: 600 20px "Work Sans", sans-serif; border-radius: 12px; padding: 18px 30px; cursor: pointer; border: 0; }
+#comSom { background: #fff; color: var(--navy); }
+#semSom { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5) !important; }
+@media (prefers-reduced-motion: reduce) { #ctl { transition: none; } }
+</style>
+</head>
+<body>
+<div id="palco">
+
+  <!-- 0 abertura -->
+  <section class="cena escura" data-cena="abertura">
+    <div class="centro">
+      <div class="eyebrow" data-k="a-eye">SOTEC · Qualidade e Gestão</div>
+      <div class="titulo-grande" data-k="a-tit">Rito de priorização</div>
+      <div class="rampa" data-k="a-rampa"><i></i><i></i><i></i><i></i></div>
+      <div class="sub-grande" data-k="a-sub">Como decidimos o que construir, junto com cada área.</div>
+    </div>
+    <div class="marca">BR MED<small>SAÚDE CORPORATIVA</small></div>
+  </section>
+
+  <!-- 1 problema -->
+  <section class="cena clara" data-cena="problema">
+    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">Capítulo 1 · O levantamento</div></div>
+    <div class="tabela" id="tab">
+      <div class="lin cab"><span>Produto</span><span>Status</span><span>KPI</span><span>Score RICE</span></div>
+      <div class="lin"><span>Multissistemas</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
+      <div class="lin"><span>Convocação MODEC</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
+      <div class="lin"><span>SLA Abertta Saúde</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
+      <div class="lin"><span>Briefing</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
+      <div class="lin" style="border:0"><span>Convocação SBM</span><span class="pill parado">Parado</span><span class="vazio"></span><span class="vazio"></span></div>
+      <div class="coluna-vazia" id="cv" style="left:770px;width:490px"></div>
+    </div>
+    <div class="interroga" id="q1" style="left:1150px;top:560px">?</div>
+    <div class="legenda-baixo" id="leg1">Como preencher o que ainda ninguém avaliou?</div>
+  </section>
+
+  <!-- 2 impasse -->
+  <section class="cena escura" data-cena="impasse">
+    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Capítulo 2 · O impasse</div></div>
+    <svg class="setas" viewBox="0 0 1920 1080" aria-hidden="true">
+      <defs><marker id="ponta" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9BD5E1"/></marker></defs>
+      <path id="s1" d="M1180,330 C1430,360 1500,520 1420,640" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
+      <path id="s2" d="M1160,850 C1000,960 860,960 720,880" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
+      <path id="s3" d="M480,640 C400,520 470,360 700,320" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
+    </svg>
+    <div class="no" id="n1" style="left:725px;top:220px"><b>RICE</b>precisa do esforço</div>
+    <div class="no" id="n2" style="left:1170px;top:660px"><b>Esforço</b>só sai de um discovery</div>
+    <div class="no" id="n3" style="left:270px;top:660px"><b>Discovery</b>só para o que já foi priorizado</div>
+    <div class="frase" id="f-ciclo" style="top:500px;font-size:54px;color:#F2B49F">um ciclo sem saída</div>
+  </section>
+
+  <!-- 3 saída -->
+  <section class="cena clara" data-cena="saida">
+    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">Capítulo 3 · A saída</div><h2 style="font-size:64px;color:var(--navy)">Priorizar em dois momentos</h2></div>
+    <div class="trilho">
+      <div class="etapa" id="e1"><b>1º momento</b><span>Alcance · Impacto · Confiança</span></div>
+      <div class="liga"><i id="l1"></i></div>
+      <div class="etapa" id="e2"><b>Discovery</b><span>entender o problema</span></div>
+      <div class="liga"><i id="l2"></i></div>
+      <div class="etapa" id="e3"><b>Traz</b><span>o esforço</span></div>
+      <div class="liga"><i id="l3"></i></div>
+      <div class="etapa" id="e4"><b>2º momento</b><span>RICE completo</span></div>
+      <div class="liga"><i id="l4"></i></div>
+      <div class="etapa" id="e5"><b>Decide</b><span>o que entra em execução</span></div>
+    </div>
+    <div class="chave" id="ch1" style="left:120px;width:620px"></div>
+    <div class="chave-txt" id="cht1" style="left:120px;width:620px">decide onde investir discovery</div>
+    <div class="chave" id="ch2" style="left:1180px;width:620px"></div>
+    <div class="chave-txt" id="cht2" style="left:1180px;width:620px">decide o que construir</div>
+    <div class="citacao" id="cit">“Primeiro a gente prioriza <em>o que vale a pena entender</em>.”</div>
+  </section>
+
+  <!-- 4 beacon -->
+  <section class="cena escura" data-cena="beacon">
+    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Capítulo 4 · A ferramenta</div></div>
+    <div class="frase" id="b1" style="top:330px">Um painel, ninguém abre.</div>
+    <div class="frase" id="b2" style="top:470px">Um rito, <em>todo mundo precisa abrir.</em></div>
+    <div class="troca" id="b3"><s>Board Beacon</s><span style="color:var(--sky2)">→</span><span>Rito</span></div>
+  </section>
+
+  <!-- 5 quebra-cabeça -->
+  <section class="cena clara" data-cena="puzzle">
+    <div class="titulo-peca" id="tp">Cada peça foi pensada para guiar a reunião</div>
+    <div class="mesa" id="mesa"></div>
+  </section>
+
+  <!-- 6..17 zoom: preenchidas pelo script -->
+  <div id="zooms"></div>
+
+  <!-- 18 fim -->
+  <section class="cena escura" data-cena="fim">
+    <div class="centro">
+      <div class="sub-grande" id="fim1" style="font-size:56px;color:#fff">A área não manda um pedido e espera.</div>
+      <div class="sub-grande" id="fim2" style="font-size:56px;color:var(--sky2);font-weight:500">Ela senta e prioriza com a gente.</div>
+      <div class="rampa" id="fim3" style="margin-top:30px"><i></i><i></i><i></i><i></i></div>
+      <div class="titulo-grande" id="fim4" style="font-size:96px">Rito de priorização</div>
+    </div>
+    <div class="marca">BR MED<small>SAÚDE CORPORATIVA</small></div>
+  </section>
+</div>
+
+<div id="ctl">
+  <button id="play" type="button" aria-label="Reproduzir">▶ Reproduzir</button>
+  <button id="som" type="button" hidden>🔊 Som</button>
+  <div id="trk" role="slider" aria-label="Posição do vídeo" tabindex="0"><div id="pg"></div></div>
+  <span id="tm">0:00</span>
+</div>
+<div id="inicio" hidden>
+  <button id="comSom" type="button">▶ Assistir com som</button>
+  <button id="semSom" type="button">Sem som</button>
+</div>
+
+<script>
+(async () => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const easeOut = (p) => 1 - Math.pow(1 - p, 3);
+  const lerp = (a, b, p) => a + (b - a) * p;
+  /** progresso suavizado de `a` até `a + d` */
+  const seg = (t, a, d = 0.8, f = ease) => f(clamp((t - a) / d));
+
+  // ---------- palco ----------
+  const palco = $("#palco");
+  const ajustar = () => { const s = Math.min(innerWidth / 1920, innerHeight / 1080); palco.style.transform = `scale(${s}) translate(-50%, -50%)`; palco.style.transform = `translate(-50%,-50%) scale(${s})`; palco.style.transformOrigin = "50% 50%"; palco.style.left = "50%"; palco.style.top = "50%"; palco.style.marginLeft = "0"; };
+  addEventListener("resize", ajustar); ajustar();
+
+  const q = new URLSearchParams(location.search);
+  const RECTS = await fetch("telas/rects.json").then((r) => r.json());
+  const NARR = q.get("voz") === "0" ? null : await fetch("tour/narracao.json").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const ANTES = 0.6, DEPOIS = 1.0;
+
+  // ---------- telas com câmera (uma por cena, em ordem) ----------
+  const R = (k, extra = {}) => ({ ...RECTS[k], ...extra });
+  const ZOOMS = [
+    { img: "areas", titulo: "A área primeiro", texto: "O rito é feito com a área. A tela mostra só o que é dela.",
+      passos: [[0, null], [1.6, R("areas.suporte"), true], [4.6, R("areas.outras"), true]] },
+    { img: "quadro", titulo: "Quatro colunas", texto: "Backlog, discovery, pronto para decidir e execução. O resto fica recolhido.",
+      passos: [[0, null], ["backlog", R("quadro.backlog"), true], ["discovery", R("quadro.discovery"), true], ["decidir", R("quadro.decidir"), true], ["execucao", R("quadro.execucao"), true], ["resto", R("quadro.recolhidos", { y: R("quadro.recolhidos").y - 8, h: 42 }), true]] },
+    { img: "quadro", titulo: "Uma nota por card", texto: "Sem esforço, pré-score. Com esforço, RICE.",
+      passos: [[0, R("quadro.backlog")], ["pre", R("quadro.cardPre"), true], ["rice", R("quadro.cardRice"), true]] },
+    { img: "painel", titulo: "Um clique abre o item", texto: "Escalas fixas, com exemplos. Ninguém digita fórmula.",
+      passos: [[0, null], [1.0, R("painel.todo")], ["rice", R("painel.rice"), true], ["acoes", R("painel.acoes"), true]] },
+    { img: "detalhes", titulo: "Descer o nível", texto: "Solução, riscos, o card do Pipefy e o histórico de cada decisão.",
+      passos: [[0, R("painel.todo")], [1.4, R("detalhes.solucao"), true], ["pipefy", R("detalhes.pipefy"), true], ["historico", R("detalhes.historico"), true]] },
+    { img: "produtos", titulo: "Produto e projetos", texto: "Um produto reúne vários projetos e features.",
+      passos: [[0, null], [1.4, R("produtos.aberto"), true]] },
+    { img: "rito-execucao", titulo: "O modo rito", texto: "Cinco passos guiam a reunião. Primeiro: a execução.",
+      passos: [[0, null], ["passos", R("rito.passos", { h: 40 }), true], ["execucao", R("rito.lista"), true]] },
+    { img: "rito-discovery", titulo: "Discovery", texto: "Com o esforço, decide-se: execução ou agora não.",
+      passos: [[0, null], [1.2, { x: 312, y: 174, w: 816, h: 140 }, true], [4.2, R("discovery.decidir"), true]] },
+    { img: "rito-triagem", titulo: "Triagem", texto: "O que é novo ganha alcance, impacto e confiança, com a área.",
+      passos: [[0, null], [1.0, R("triagem.novo"), true], [3.4, R("triagem.item"), true]] },
+    { img: "rito-escolha", titulo: "Escolha", texto: "O backlog em ordem. A área vê por que algo foi escolhido.",
+      passos: [[0, null], [1.2, R("escolha.lista"), true]] },
+    { img: "rito-ata", titulo: "Ata", texto: "Ao encerrar, a ata se escreve sozinha.",
+      passos: [[0, null], [1.0, R("ata.texto"), true]] },
+    { img: "geral", titulo: "Entre as áreas", texto: "O RICE decide dentro da área. A estratégia decide entre as áreas.",
+      passos: [[0, null], [1.6, R("geral.tabela"), true], ["estrategia", R("geral.candidato"), true]] },
+  ];
+  const zooms = $("#zooms");
+  ZOOMS.forEach((z, i) => {
+    const s = document.createElement("section");
+    s.className = "cena clara"; s.dataset.cena = `z${i}`;
+    s.innerHTML = `<div class="legenda"><div class="eyebrow">Peça ${i + 1} de ${ZOOMS.length}</div><div class="mapa">${ZOOMS.map(() => "<i></i>").join("")}</div><h2></h2><p></p></div>
+      <div class="janela"><div class="mundo"><img alt=""><div class="foco"></div></div></div>`;
+    $("h2", s).textContent = z.titulo; $("p", s).textContent = z.texto;
+    $("img", s).src = `telas/${z.img}.png`;
+    $$(".mapa i", s).forEach((el, k) => el.classList.add(k < i ? "feita" : k === i ? "agora" : "x"));
+    zooms.append(s);
+  });
+
+  // ---------- linha do tempo ----------
+  const CENAS = $$(".cena");
+  const MIN = [6, 10, 9, 11, 10, 9, ...ZOOMS.map(() => 6), 8];
+  const NOMES = ["Abertura", "Levantamento", "Impasse", "Saída", "Ferramenta", "Montagem", "Área", "Quadro", "Nota", "Item", "Detalhes", "Produtos", "Modo rito", "Discovery", "Triagem", "Escolha", "Ata", "Entre áreas", "Fim"];
+  const DUR = CENAS.map((_, i) => Math.max(MIN[i], (NARR?.falas?.[i]?.duracao ?? 0) + ANTES + DEPOIS));
+  const INI = DUR.reduce((acc, d, i) => (acc.push(acc[i] + d), acc), [0]);
+  const TOTAL = INI[INI.length - 1];
+  /** segundo (local da cena i) em que a narração diz a palavra k; sem narração, `reserva` */
+  const marca = (i, k, reserva) => { const m = NARR?.falas?.[i]?.marcas?.[k]; return m != null ? ANTES + m : reserva; };
+
+  // ---------- desenho de cada cena (lt = segundo local, d = duração) ----------
+  const sty = (el, o) => { if (el) for (const k in o) el.style[k] = o[k]; };
+  const entra = (el, t, a, d = 0.8, dy = 30) => { const p = seg(t, a, d, easeOut); sty(el, { opacity: p, transform: `translateY(${(1 - p) * dy}px)` }); };
+
+  const DESENHO = [];
+  DESENHO[0] = (t) => {
+    entra($('[data-k="a-eye"]'), t, 0.3); entra($('[data-k="a-tit"]'), t, 0.6, 1.1, 50);
+    const r = seg(t, 1.3, 1.2); sty($('[data-k="a-rampa"]'), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
+    entra($('[data-k="a-sub"]'), t, 1.9, 1);
+  };
+  DESENHO[1] = (t, d, i) => {
+    const linhas = $$("#tab .lin");
+    linhas.forEach((l, k) => entra(l, t, 0.3 + k * 0.25, 0.6, 20));
+    const tv = marca(i, "vazias", 6.5);
+    const p = seg(t, tv, 0.7, easeOut);
+    sty($("#cv"), { opacity: p, transform: `scale(${lerp(1.08, 1, p)})` });
+    const pulso = t > tv ? 1 + 0.06 * Math.sin((t - tv) * 5) : 1;
+    sty($("#q1"), { opacity: seg(t, tv + 0.5, 0.6), transform: `scale(${seg(t, tv + 0.5, 0.6, easeOut) * pulso}) rotate(${(1 - seg(t, tv + 0.5, 0.6)) * -20}deg)` });
+    entra($("#leg1"), t, tv + 1.4, 0.8);
+  };
+  const traco = (path, p) => { const L = path.getTotalLength(); path.style.strokeDasharray = L; path.style.strokeDashoffset = L * (1 - p); };
+  DESENHO[2] = (t, d, i) => {
+    const t1 = marca(i, "esforco", 3) - 1.6, t2 = marca(i, "esforco", 3), t3 = marca(i, "discovery", 5.5), t4 = marca(i, "priorizado", 8);
+    [[$("#n1"), t1], [$("#n2"), t2], [$("#n3"), t3]].forEach(([el, a]) => { entra(el, t, a, 0.6, 24); el.classList.toggle("on", t >= a && t < a + 2.4); });
+    traco($("#s1"), seg(t, t2 - 0.6, 0.6)); traco($("#s2"), seg(t, t3 - 0.6, 0.6)); traco($("#s3"), seg(t, t4 - 0.3, 0.7));
+    const fc = seg(t, t4 + 0.6, 0.8, easeOut);
+    sty($("#f-ciclo"), { opacity: fc, transform: `scale(${lerp(0.9, 1, fc)})` });
+    // depois de fechado, o ciclo "gira": os nós acendem em sequência
+    if (t > t4 + 0.8) { const k = Math.floor((t - t4) * 1.6) % 3; ["#n1", "#n2", "#n3"].forEach((s, j) => $(s).classList.toggle("on", j === k)); }
+  };
+  DESENHO[3] = (t, d, i) => {
+    const tr = marca(i, "ric", 3), td = marca(i, "discovery", 9), tc = marca(i, "rice", 12);
+    const tempos = [tr, tr + 2.4, td, tc - 0.6, tc + 0.6];
+    ["#e1", "#e2", "#e3", "#e4", "#e5"].forEach((s, k) => { entra($(s), t, 0.4 + k * 0.15, 0.6, 20); $(s).classList.toggle("on", t >= tempos[k]); });
+    ["#l1", "#l2", "#l3", "#l4"].forEach((s, k) => sty($(s), { width: `${seg(t, tempos[k + 1] - 0.5, 0.5) * 100}%` }));
+    [["#ch1", "#cht1", tr + 1.2], ["#ch2", "#cht2", tc + 0.2]].forEach(([c, x, a]) => { sty($(c), { opacity: seg(t, a, 0.6) }); entra($(x), t, a + 0.2, 0.6, 12); });
+    entra($("#cit"), t, Math.min(d - 3.2, tc + 2.2), 1);
+  };
+  DESENHO[4] = (t, d, i) => {
+    const tr = marca(i, "rito", 8), tv = marca(i, "virou", 11);
+    entra($("#b1"), t, tr - 2.4, 0.8); entra($("#b2"), t, tr, 0.8);
+    const p = seg(t, tv - 0.3, 0.9, easeOut); sty($("#b3"), { opacity: p, transform: `scale(${lerp(0.85, 1, p)})` });
+  };
+  // quebra-cabeça: a tela do quadro em 6×4 peças que voam até o lugar
+  const COL = 6, LIN = 4, PW = 1440 / COL, PH = 900 / LIN, pecas = [];
+  let semente = 7; const rnd = () => ((semente = (semente * 16807) % 2147483647) / 2147483647);
+  for (let y = 0; y < LIN; y++) for (let x = 0; x < COL; x++) {
+    const el = document.createElement("div"); el.className = "peca";
+    sty(el, { left: `${x * PW}px`, top: `${y * PH}px`, width: `${PW}px`, height: `${PH}px`, backgroundImage: "url(telas/quadro.png)", backgroundPosition: `${-x * PW}px ${-y * PH}px` });
+    $("#mesa").append(el);
+    const ang = rnd() * Math.PI * 2, dist = 700 + rnd() * 500;
+    pecas.push({ el, dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist * 0.7, rot: (rnd() - 0.5) * 70, atraso: 0.4 + (x + y) * 0.18 + rnd() * 0.25 });
+  }
+  DESENHO[5] = (t, d) => {
+    entra($("#tp"), t, 0.2, 0.6, 12);
+    for (const p of pecas) {
+      const k = seg(t, p.atraso, 1.3, easeOut), junta = seg(t, d - 2.6, 1);
+      sty(p.el, { opacity: clamp(k * 3), transform: `translate(${(1 - k) * p.dx}px, ${(1 - k) * p.dy}px) rotate(${(1 - k) * p.rot}deg) scale(${lerp(0.97, 1, junta)})`, boxShadow: `0 ${lerp(18, 0, junta)}px ${lerp(40, 0, junta)}px rgba(21,58,76,${lerp(0.22, 0, junta)})`, borderRadius: `${lerp(6, 0, junta)}px` });
+    }
+  };
+  // câmera: enquadra um retângulo do mundo (1440×900) na janela 1220×940
+  const JW = 1220, JH = 940;
+  const foco = (r, pad = 36) => {
+    if (!r) { const s = Math.min(JW / 1440, JH / 900); return { s, x: (JW - 1440 * s) / 2, y: (JH - 900 * s) / 2 }; }
+    const s = Math.min(JW / (r.w + 2 * pad), JH / (r.h + 2 * pad), 2.4);
+    return { s, x: JW / 2 - (r.x + r.w / 2) * s, y: JH / 2 - (r.y + r.h / 2) * s };
+  };
+  ZOOMS.forEach((z, zi) => {
+    const i = 6 + zi;
+    DESENHO[i] = (t, d) => {
+      const sec = CENAS[i];
+      const passos = z.passos.map(([quando, r, destaque]) => [typeof quando === "number" ? quando : marca(i, quando, 2), r, destaque]).sort((a, b) => a[0] - b[0]);
+      // câmera: de um enquadramento ao próximo em 1,1 s
+      let cam = foco(passos[0][1]), ativo = passos[0];
+      for (let k = 1; k < passos.length; k++) {
+        const [q0, r] = passos[k]; if (t < q0) break;
+        const p = seg(t, q0, 1.1), alvo = foco(r);
+        cam = { s: lerp(cam.s, alvo.s, p), x: lerp(cam.x, alvo.x, p), y: lerp(cam.y, alvo.y, p) }; ativo = passos[k];
+      }
+      // entrada: a tela chega como uma peça que encaixa
+      const e = seg(t, 0, 0.9, easeOut);
+      sty($(".janela", sec), { transform: `translateX(${(1 - e) * 120}px) rotate(${(1 - e) * 3}deg)`, opacity: e });
+      sty($(".mundo", sec), { transform: `translate(${cam.x}px,${cam.y}px) scale(${cam.s})` });
+      const fo = $(".foco", sec), r = ativo[1];
+      if (r && ativo[2]) { const p = seg(t, ativo[0] + 0.5, 0.6); sty(fo, { left: `${r.x - 8}px`, top: `${r.y - 8}px`, width: `${r.w + 16}px`, height: `${r.h + 16}px`, opacity: p, borderWidth: `${4 / cam.s}px` }); }
+      else sty(fo, { opacity: 0 });
+      entra($(".legenda", sec), t, 0.3, 0.8, 20);
+    };
+  });
+  DESENHO[18] = (t) => {
+    entra($("#fim1"), t, 0.5, 0.9); entra($("#fim2"), t, 2.6, 0.9);
+    const r = seg(t, 4.4, 1); sty($("#fim3"), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
+    entra($("#fim4"), t, 4.8, 1.1, 40);
+  };
+
+  const FADE = 0.45;
+  const render = (T) => {
+    CENAS.forEach((c, i) => {
+      const lt = T - INI[i], d = DUR[i];
+      const vis = lt > -0.001 && lt < d + FADE;
+      c.style.visibility = vis ? "visible" : "hidden";
+      if (!vis) return;
+      c.style.opacity = i === 0 ? clamp((d + FADE - lt) / FADE) : Math.min(clamp(lt / FADE), clamp((d + FADE - lt) / FADE));
+      c.style.zIndex = String(i);
+      DESENHO[i]?.(Math.min(lt, d), d, i);
+    });
+  };
+
+  // ---------- áudio ----------
+  const falas = (NARR?.falas ?? []).map((f, i) => f && { a: Object.assign(new Audio(`tour/${f.arquivo}`), { preload: "auto" }), ini: INI[i] + ANTES, dur: f.duracao });
+  const MUSICA = { src: "tour/trilha.mp3", db: -16, abaixa: -7 };
+  const musica = NARR && Object.assign(new Audio(MUSICA.src), { preload: "auto" });
+  const ganho = (r) => {
+    const fala = Math.max(0, ...falas.map((f) => (f ? clamp(Math.min((r - f.ini + 0.3) / 0.3, (f.ini + f.dur + 0.5 - r) / 0.5)) : 0)));
+    return 10 ** ((MUSICA.db + MUSICA.abaixa * fala) / 20) * clamp(Math.min(r / 1.5, (TOTAL - r) / 3));
+  };
+  let som = !!NARR, tocando = false, base = 0, inicio = 0;
+  const agora = () => (tocando ? Math.min(TOTAL, base + (performance.now() - inicio) / 1000) : base);
+  const sincronizar = (r) => {
+    if (musica) {
+      if (tocando && som && r < TOTAL) { if (musica.paused) { musica.currentTime = r; musica.play().catch(() => {}); } else if (Math.abs(musica.currentTime - r) > 0.3) musica.currentTime = r; musica.volume = ganho(r); }
+      else if (!musica.paused) musica.pause();
+    }
+    for (const f of falas) {
+      if (!f) continue;
+      if (tocando && som && r >= f.ini && r < f.ini + f.dur) { const alvo = r - f.ini; if (f.a.paused) { f.a.currentTime = alvo; f.a.play().catch(() => {}); } else if (Math.abs(f.a.currentTime - alvo) > 0.3) f.a.currentTime = alvo; }
+      else if (!f.a.paused) f.a.pause();
+    }
+  };
+
+  // ---------- controles ----------
+  const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+  const desenhar = () => { const r = agora(); render(r); $("#pg").style.width = `${(r / TOTAL) * 100}%`; $("#tm").textContent = `${mmss(r)} / ${mmss(TOTAL)}`; sincronizar(r); if (r >= TOTAL && tocando) pausar(); };
+  const laco = () => { desenhar(); if (tocando) requestAnimationFrame(laco); };
+  const ir = (r) => { base = clamp(r, 0, TOTAL); inicio = performance.now(); desenhar(); };
+  const tocar = () => { if (base >= TOTAL - 0.05) base = 0; inicio = performance.now(); tocando = true; $("#play").textContent = "❚❚ Pausar"; laco(); };
+  const pausar = () => { base = agora(); tocando = false; $("#play").textContent = base >= TOTAL - 0.05 ? "↺ Rever" : "▶ Continuar"; desenhar(); };
+  $("#play").onclick = () => (tocando ? pausar() : tocar());
+  const rotularSom = () => ($("#som").textContent = som ? "🔊 Som" : "🔇 Sem som");
+  if (NARR) { $("#som").hidden = false; rotularSom(); $("#som").onclick = () => { som = !som; rotularSom(); desenhar(); }; }
+  $("#trk").onclick = (e) => { const b = e.currentTarget.getBoundingClientRect(); ir(((e.clientX - b.left) / b.width) * TOTAL); };
+  addEventListener("keydown", (e) => {
+    if (e.code === "Space") { e.preventDefault(); tocando ? pausar() : tocar(); }
+    const i = INI.findLastIndex((v, k) => k < CENAS.length && v <= agora() + 0.01);
+    if (e.key === "ArrowRight" && i < CENAS.length - 1) ir(INI[i + 1]);
+    if (e.key === "ArrowLeft") ir(INI[Math.max(0, agora() - INI[i] < 1 ? i - 1 : i)]);
+  });
+  document.addEventListener("visibilitychange", () => document.hidden && tocando && pausar());
+  let sumir; const mostrar = () => { $("#ctl").style.opacity = "1"; clearTimeout(sumir); sumir = setTimeout(() => tocando && ($("#ctl").style.opacity = "0"), 2500); };
+  addEventListener("pointermove", mostrar);
+
+  // gravação (video/scripts/gravar-video.mjs): posiciona num segundo exato, quadro a quadro
+  window.tour = { falas, musica: musica && MUSICA, TOTAL_REAL: TOTAL, INI, NOMES, irReal: (r) => { base = r; render(r); } };
+  await Promise.all($$("img").map((im) => (im.complete ? 0 : new Promise((r) => (im.onload = im.onerror = r)))));
+  await document.fonts.ready;
+  if (q.has("gravar")) { $("#ctl").hidden = true; render(0); window.tour.pronto = true; }
+  else if (q.get("t")) { ir(Number(q.get("t"))); }
+  else if (NARR) { render(0); $("#inicio").hidden = false; const comecar = (c) => { som = c; rotularSom(); $("#inicio").hidden = true; tocar(); }; $("#comSom").onclick = () => comecar(true); $("#semSom").onclick = () => comecar(false); }
+  else tocar();
+})();
+</script>
+</body>
+</html>
