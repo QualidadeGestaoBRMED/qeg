@@ -14,7 +14,7 @@ values
    'Convocação OOG-TK', 'Convocação de periódicos da OOG-TK ainda é manual.', 'Suporte', 'eficiencia', 'backlog', 150, 2, 0.5, null, 'https://app.pipefy.com/open-cards/1350901870'),
   ((select id from s), (select id from p where nome = 'Convocações (novos clientes)'),
    'Convocação Prosafe', 'Convocação de periódicos da Prosafe ainda é manual.', 'Suporte', 'eficiencia', 'backlog', null, null, null, null, 'https://app.pipefy.com/open-cards/1405916113'),
-  ((select id from s), null,
+  ((select id from s), (select id from p where nome = 'Gestão de exames alterados'),
    'Exames alterados International SOS', 'Exames alterados chegam ao cliente sem acompanhamento.', 'Suporte', 'decisao', 'backlog', null, null, null, null, 'https://app.pipefy.com/open-cards/1405891062'),
   ((select id from s), (select id from p where nome = 'Multissistemas'),
    'Novo BI Multissistemas', 'Falta visão das pendências de lançamento por cliente.', 'Suporte', 'decisao', 'backlog', 30, 1, 0.8, null, 'https://app.pipefy.com/open-cards/1225007661'),

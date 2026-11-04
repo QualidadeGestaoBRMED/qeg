@@ -223,16 +223,19 @@ export function ItemPainel({
                   if (id) void salvar({ produtoId: id });
                   return;
                 }
-                void salvar({ produtoId: v ? Number(v) : null });
+                if (v) void salvar({ produtoId: Number(v) });
               }}
               className={estiloEntrada}
             >
-              <option value="">Sem produto</option>
+              <option value="" disabled>
+                Escolha o produto
+              </option>
               {produtos.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nome}
                 </option>
               ))}
+              <option value="__novo">+ Novo produto</option>
             </select>
           </Campo>
 

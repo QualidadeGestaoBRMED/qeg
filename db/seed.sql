@@ -20,7 +20,8 @@ insert into produtos (nome, descricao, status) values
   ('BI do Suporte', 'Painel gerencial com reprovações, urgências, SLA, retornos e NPS.', 'entregue'),
   ('BI do Cliente', 'Painéis de acompanhamento entregues aos clientes, como MODEC, International SOS e IKM.', 'entregue'),
   ('Pipefy SST e Concremat', 'Pipes, portais, formulários e automações do dia a dia do Suporte.', 'entregue'),
-  ('Convocações (novos clientes)', 'Convocação automática para clientes que ainda não têm.', 'em_construcao')
+  ('Convocações (novos clientes)', 'Convocação automática para clientes que ainda não têm.', 'em_construcao'),
+  ('Gestão de exames alterados', 'Acompanhamento e comunicação dos exames alterados aos clientes.', 'em_construcao')
 on conflict (nome) do nothing;
 
 insert into produto_areas (produto_id, area_id)

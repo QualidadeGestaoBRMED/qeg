@@ -71,12 +71,51 @@ export function bloqueioDaMudanca(item: ItemRice, para: Etapa, nota = ""): strin
 export const NOMES_ETAPA: Record<Etapa, string> = {
   backlog: "Backlog",
   discovery: "Em discovery",
-  decidir: "Pronto para decidir",
+  decidir: "Priorizar execução",
   execucao: "Em execução",
   pausado: "Pausado",
   entregue: "Entregue",
   descartado: "Descartado",
 };
+
+/**
+ * Fases do fluxo, na ordem em que uma feature anda. O backlog se divide em dois:
+ * sem R, I e C ("nova") e com eles, esperando a escolha do discovery.
+ */
+export const FASES = ["nova", "priorizar_discovery", "discovery", "priorizar_execucao", "execucao"] as const;
+export type Fase = (typeof FASES)[number];
+
+export const NOMES_FASE: Record<Fase, string> = {
+  nova: "Features novas",
+  priorizar_discovery: "Priorizar discovery",
+  discovery: "Em discovery",
+  priorizar_execucao: "Priorizar execução",
+  execucao: "Em execução",
+};
+
+export const PROXIMO_PASSO: Record<Fase, string> = {
+  nova: "Definir alcance, impacto e confiança",
+  priorizar_discovery: "Escolher para discovery",
+  discovery: "Definir o esforço",
+  priorizar_execucao: "Escolher para execução",
+  execucao: "Entregar",
+};
+
+/** Fase do fluxo em que o item aparece no quadro (null = fora do fluxo: pausado, entregue, descartado). */
+export function faseDoItem(item: ItemRice): Fase | null {
+  switch (item.etapa) {
+    case "backlog":
+      return preScore(item) == null ? "nova" : "priorizar_discovery";
+    case "discovery":
+      return "discovery";
+    case "decidir":
+      return "priorizar_execucao";
+    case "execucao":
+      return "execucao";
+    default:
+      return null;
+  }
+}
 
 export const NOMES_PILAR: Record<Pilar, string> = {
   eficiencia: "Eficiência operacional",
@@ -128,10 +167,10 @@ export function montarAta(area: string, data: Date, movimentos: MovimentoDaAta[]
   const grupos: [string, (m: MovimentoDaAta) => boolean][] = [
     ["Entraram em execução", (m) => m.para === "execucao"],
     ["Começaram discovery", (m) => m.para === "discovery"],
-    ["Prontos para decidir", (m) => m.para === "decidir"],
+    ["Discovery concluído (vão para priorizar execução)", (m) => m.para === "decidir"],
     ["Entregues", (m) => m.para === "entregue"],
     ["Pausados", (m) => m.para === "pausado"],
-    ["Entraram no backlog", (m) => m.para === "backlog" && m.de == null],
+    ["Features novas", (m) => m.para === "backlog" && m.de == null],
     ["Voltaram para o backlog", (m) => m.para === "backlog" && m.de != null],
     ["Descartados", (m) => m.para === "descartado"],
   ];

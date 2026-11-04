@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { ArrowLeftRight, Play } from "lucide-react";
+import { ArrowLeftRight, Play, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ritoApi } from "./api";
 import { ItemPainel } from "./componentes/ItemPainel";
 import { ModoRito } from "./componentes/ModoRito";
+import { NovaFeature } from "./componentes/NovaFeature";
 import { Atas, EscolhaArea, ListaProdutos, VisaoGeral } from "./componentes/Paineis";
 import { Quadro } from "./componentes/Quadro";
 import { Aviso, Botao } from "./componentes/ui";
@@ -30,6 +31,7 @@ export function RitoScreen() {
   const [aberto, setAberto] = useState<number | null>(null);
   const [emRito, setEmRito] = useState(false);
   const [aba, setAba] = useState("quadro");
+  const [novaFeature, setNovaFeature] = useState<{ produtoId: number | null } | null>(null);
   const estado = useRito(selecao ?? null);
 
   const carregarAreas = useCallback(() => {
@@ -75,7 +77,7 @@ export function RitoScreen() {
     );
   }
 
-  const criarRapido = (titulo: string) => estado.criar({ titulo, solicitante: nomeArea });
+  const criarFeature = (campos: Parameters<typeof estado.criar>[0]) => estado.criar({ ...campos, solicitante: nomeArea });
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,6 +92,11 @@ export function RitoScreen() {
           <Botao onClick={() => escolher(undefined)}>
             <ArrowLeftRight className="h-3.5 w-3.5" /> Trocar área
           </Botao>
+          {selecao !== null && (
+            <Botao onClick={() => setNovaFeature({ produtoId: null })}>
+              <Plus className="h-3.5 w-3.5" /> Feature
+            </Botao>
+          )}
           {selecao !== null && (
             <Botao variante="primario" onClick={() => void iniciar()}>
               <Play className="h-3.5 w-3.5" /> {estado.rito ? "Continuar rito" : "Iniciar rito"}
@@ -123,10 +130,16 @@ export function RitoScreen() {
             <TabsTrigger value="atas">Atas</TabsTrigger>
           </TabsList>
           <TabsContent value="quadro">
-            <Quadro itens={estado.itens} produtos={estado.produtos} onAbrir={setAberto} onCriar={criarRapido} />
+            <Quadro itens={estado.itens} produtos={estado.produtos} onAbrir={setAberto} />
           </TabsContent>
           <TabsContent value="produtos">
-            <ListaProdutos produtos={estado.produtos} itens={estado.itens} onAbrirItem={setAberto} />
+            <ListaProdutos
+              produtos={estado.produtos}
+              itens={estado.itens}
+              onAbrirItem={setAberto}
+              onNovoProduto={estado.criarProduto}
+              onNovaFeature={(produtoId) => setNovaFeature({ produtoId })}
+            />
           </TabsContent>
           <TabsContent value="atas">
             <Atas areaId={selecao} />
@@ -141,10 +154,20 @@ export function RitoScreen() {
           produtos={estado.produtos}
           onMover={estado.mover}
           onAtualizar={estado.atualizar}
-          onCriar={criarRapido}
+          onNovaFeature={() => setNovaFeature({ produtoId: null })}
           onAbrir={setAberto}
           onEncerrar={estado.encerrarRito}
           onSair={sairDoRito}
+        />
+      )}
+
+      {novaFeature && (
+        <NovaFeature
+          produtos={estado.produtos}
+          produtoInicial={novaFeature.produtoId}
+          onCriarProduto={estado.criarProduto}
+          onCriar={criarFeature}
+          onFechar={() => setNovaFeature(null)}
         />
       )}
 

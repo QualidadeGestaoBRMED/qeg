@@ -1,15 +1,14 @@
 import type React from "react";
 import { useState } from "react";
-import { Check, Copy, X } from "lucide-react";
+import { Check, Copy, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSprintMonitor } from "@/features/sprint-monitor/useSprintMonitor";
-import { bloqueioDaMudanca, ordenar, preScore, type Etapa } from "../regras";
+import { bloqueioDaMudanca, faseDoItem, ordenar, type Etapa, type Fase } from "../regras";
 import type { CamposItem, Item, Produto } from "../tipos";
 import { RiceCampos } from "./RiceCampos";
 import { Aviso, Botao, estiloEntrada, Score } from "./ui";
 
-const normalizar = (t: string) =>
-  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+const normalizar = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
 /** O que o Beacon já mostra da execução no Pipefy, filtrado pela área do rito. */
 function PipefyDaArea({ area }: { area: string }) {
@@ -37,33 +36,23 @@ function PipefyDaArea({ area }: { area: string }) {
   );
 }
 
+// O rito segue o mesmo fluxo da feature; a execução fecha a reunião.
 const PASSOS = [
+  { titulo: "Produtos e features", pergunta: "O que chegou de novo? Adicione no produto certo." },
+  { titulo: "Priorizar discovery", pergunta: "Defina alcance, impacto e confiança. Depois, escolha o que vale entender." },
+  { titulo: "Discovery", pergunta: "O que já foi entendido? Defina o esforço." },
+  { titulo: "Priorizar execução", pergunta: "Com o RICE completo, o que entra em execução?" },
   { titulo: "Execução", pergunta: "O que está rodando? Algo terminou ou travou?" },
-  { titulo: "Discovery", pergunta: "O que já foi entendido? Entra em execução?" },
-  { titulo: "Triagem", pergunta: "O que chegou de novo? Dê alcance, impacto e confiança." },
-  { titulo: "Escolha", pergunta: "Qual discovery começa agora?" },
   { titulo: "Ata", pergunta: "O que decidimos hoje." },
 ];
 
-function Linha({
-  item,
-  produto,
-  onAbrir,
-  children,
-  rodape,
-}: {
-  item: Item;
-  produto?: Produto;
-  onAbrir: () => void;
-  children?: React.ReactNode;
-  rodape?: React.ReactNode;
-}) {
+function Linha({ item, produto, onAbrir, children, rodape }: { item: Item; produto?: Produto; onAbrir: () => void; children?: React.ReactNode; rodape?: React.ReactNode }) {
   return (
     <li className="flex flex-col gap-3 rounded-lg border border-border bg-white px-4 py-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button type="button" onClick={onAbrir} className="flex min-w-0 flex-col text-left hover:underline">
-          <span className="text-sm font-medium text-foreground">{item.titulo}</span>
           <span className="text-xs text-muted-foreground">{produto?.nome ?? "Sem produto"}</span>
+          <span className="text-sm font-medium text-foreground">{item.titulo}</span>
         </button>
         <div className="flex shrink-0 flex-wrap items-center gap-3">
           <Score item={item} />
@@ -79,13 +68,17 @@ function Vazio({ texto }: { texto: string }) {
   return <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">{texto}</p>;
 }
 
+function Titulo({ children }: { children: React.ReactNode }) {
+  return <h3 className="text-sm font-semibold text-foreground">{children}</h3>;
+}
+
 export function ModoRito({
   area,
   itens,
   produtos,
   onMover,
   onAtualizar,
-  onCriar,
+  onNovaFeature,
   onAbrir,
   onEncerrar,
   onSair,
@@ -95,7 +88,7 @@ export function ModoRito({
   produtos: Produto[];
   onMover: (id: number, para: Etapa, nota?: string) => Promise<string | null>;
   onAtualizar: (id: number, campos: CamposItem) => Promise<string | null>;
-  onCriar: (titulo: string) => Promise<string | null>;
+  onNovaFeature: () => void;
   onAbrir: (id: number) => void;
   onEncerrar: () => Promise<string | null>;
   onSair: () => void;
@@ -104,13 +97,12 @@ export function ModoRito({
   const [erro, setErro] = useState<string | null>(null);
   const [ata, setAta] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const [novo, setNovo] = useState("");
   const produto = (id: number | null) => produtos.find((p) => p.id === id);
-  const da = (e: Etapa) => ordenar(itens.filter((i) => i.etapa === e));
+  const naFase = (f: Fase) => ordenar(itens.filter((i) => faseDoItem(i) === f));
+  const daEtapa = (e: Etapa) => ordenar(itens.filter((i) => i.etapa === e));
 
   const mover = async (id: number, para: Etapa) => setErro(await onMover(id, para));
   const atualizar = async (id: number, c: CamposItem) => setErro(await onAtualizar(id, c));
-
   const acao = (item: Item, para: Etapa, rotulo: string, primario = true) => {
     const bloqueio = bloqueioDaMudanca(item, para);
     return (
@@ -120,14 +112,10 @@ export function ModoRito({
     );
   };
 
-  const triagem = itens.filter((i) => i.etapa === "backlog" && preScore(i) == null);
-  const candidatos = da("backlog").filter((i) => preScore(i) != null);
-
   const encerrar = async () => {
     const texto = await onEncerrar();
     if (texto != null) setAta(texto);
   };
-
   const copiar = async () => {
     if (!ata) return;
     try {
@@ -138,6 +126,10 @@ export function ModoRito({
       setErro("Não consegui copiar. Selecione o texto e copie.");
     }
   };
+
+  const novas = naFase("nova");
+  const candidatos = naFase("priorizar_discovery");
+  const ultimo = PASSOS.length - 1;
 
   return (
     <div className="fixed inset-0 z-30 overflow-y-auto bg-background">
@@ -153,15 +145,10 @@ export function ModoRito({
           </Botao>
         </header>
 
-        <ol className="grid grid-cols-5 gap-1.5" aria-label="Etapas do rito">
+        <ol className="grid grid-cols-6 gap-1.5" aria-label="Etapas do rito">
           {PASSOS.map((p, i) => (
             <li key={p.titulo}>
-              <button
-                type="button"
-                onClick={() => !ata && setPasso(i)}
-                aria-current={i === passo ? "step" : undefined}
-                className="flex w-full flex-col gap-1.5 text-left"
-              >
+              <button type="button" onClick={() => !ata && setPasso(i)} aria-current={i === passo ? "step" : undefined} className="flex w-full flex-col gap-1.5 text-left">
                 <span className={cn("h-1 rounded-full", i < passo ? "bg-primary/50" : i === passo ? "bg-primary" : "bg-border")} />
                 <span className={cn("hidden text-xs sm:block", i === passo ? "font-medium text-foreground" : "text-muted-foreground")}>
                   {i + 1}. {p.titulo}
@@ -174,125 +161,115 @@ export function ModoRito({
         {erro && <Aviso texto={erro} onFechar={() => setErro(null)} />}
 
         {passo === 0 && (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-4">
+            <Botao variante="primario" className="self-start" onClick={onNovaFeature}>
+              <Plus className="h-4 w-4" /> Nova feature
+            </Botao>
+            <Titulo>Features novas, ainda sem nota</Titulo>
             <ul className="flex flex-col gap-2">
-              {da("execucao").map((i) => (
-                <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
-                  {acao(i, "entregue", "Entregue")}
-                  {acao(i, "pausado", "Pausar", false)}
-                </Linha>
+              {novas.map((i) => (
+                <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} />
               ))}
-              {da("pausado").map((i) => (
-                <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
-                  <span className="text-xs text-muted-foreground">Pausado</span>
-                  {acao(i, "execucao", "Retomar", false)}
-                </Linha>
-              ))}
-              {da("execucao").length + da("pausado").length === 0 && <Vazio texto="Nada em execução para esta área." />}
+              {novas.length === 0 && <Vazio texto="Nenhuma feature nova. Adicione o que a área trouxe hoje." />}
             </ul>
-            <PipefyDaArea area={area} />
           </div>
         )}
 
         {passo === 1 && (
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-6">
             <section className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-foreground">Em discovery</h3>
+              <Titulo>Definir alcance, impacto e confiança</Titulo>
               <ul className="flex flex-col gap-2">
-                {da("discovery").map((i) => (
-                  <Linha
-                    key={i.id}
-                    item={i}
-                    produto={produto(i.produtoId)}
-                    onAbrir={() => onAbrir(i.id)}
-                    rodape={
-                      <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        Esforço (pessoa-semana)
-                        <input
-                          inputMode="decimal"
-                          defaultValue={i.effort ?? ""}
-                          onBlur={(e) => {
-                            const v = e.target.value.trim().replace(",", ".");
-                            const n = v === "" ? null : Number(v);
-                            if (n !== i.effort && (n == null || (Number.isFinite(n) && n > 0))) void atualizar(i.id, { effort: n });
-                          }}
-                          className={`${estiloEntrada.replace("w-full", "w-24")} tabular-nums`}
-                        />
-                      </label>
-                    }
-                  >
-                    {acao(i, "decidir", "Discovery concluído")}
-                  </Linha>
+                {novas.map((i) => (
+                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} rodape={<RiceCampos item={i} comEsforco={false} onSalvar={(c) => void atualizar(i.id, c)} />} />
                 ))}
-                {da("discovery").length === 0 && <Vazio texto="Nenhum discovery em andamento." />}
+                {novas.length === 0 && <Vazio texto="Todas as features já têm nota." />}
               </ul>
             </section>
             <section className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold text-foreground">Prontos para decidir</h3>
+              <Titulo>Escolher o que vai para discovery</Titulo>
               <ul className="flex flex-col gap-2">
-                {da("decidir").map((i) => (
+                {candidatos.map((i, n) => (
                   <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
-                    {acao(i, "execucao", "Entrar em execução")}
-                    {acao(i, "backlog", "Agora não", false)}
+                    <span className="text-xs tabular-nums text-muted-foreground">#{n + 1}</span>
+                    {acao(i, "discovery", "Abrir discovery")}
                   </Linha>
                 ))}
-                {da("decidir").length === 0 && <Vazio texto="Nada esperando decisão." />}
+                {candidatos.length === 0 && <Vazio texto="Nenhuma feature com nota esperando discovery." />}
               </ul>
             </section>
           </div>
         )}
 
         {passo === 2 && (
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-2">
-              <input
-                value={novo}
-                onChange={(e) => setNovo(e.target.value)}
-                onKeyDown={async (e) => {
-                  if (e.key === "Enter" && novo.trim()) {
-                    const er = await onCriar(novo.trim());
-                    setErro(er);
-                    if (!er) setNovo("");
-                  }
-                }}
-                placeholder="Chegou algo novo? Escreva e aperte Enter"
-                aria-label="Novo item"
-                className={estiloEntrada}
-              />
-            </div>
-            <ul className="flex flex-col gap-2">
-              {triagem.map((i) => (
-                <Linha
-                  key={i.id}
-                  item={i}
-                  produto={produto(i.produtoId)}
-                  onAbrir={() => onAbrir(i.id)}
-                  rodape={<RiceCampos item={i} comEsforco={false} onSalvar={(c) => void atualizar(i.id, c)} />}
-                />
-              ))}
-              {triagem.length === 0 && <Vazio texto="Tudo no backlog já tem nota. Siga para a escolha." />}
-            </ul>
-          </div>
+          <ul className="flex flex-col gap-2">
+            {daEtapa("discovery").map((i) => (
+              <Linha
+                key={i.id}
+                item={i}
+                produto={produto(i.produtoId)}
+                onAbrir={() => onAbrir(i.id)}
+                rodape={
+                  <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                    Esforço (pessoa-semana)
+                    <input
+                      inputMode="decimal"
+                      defaultValue={i.effort ?? ""}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim().replace(",", ".");
+                        const n = v === "" ? null : Number(v);
+                        if (n !== i.effort && (n == null || (Number.isFinite(n) && n > 0))) void atualizar(i.id, { effort: n });
+                      }}
+                      className={`${estiloEntrada.replace("w-full", "w-24")} tabular-nums`}
+                    />
+                  </label>
+                }
+              >
+                {acao(i, "decidir", "Discovery concluído")}
+              </Linha>
+            ))}
+            {daEtapa("discovery").length === 0 && <Vazio texto="Nenhum discovery em andamento." />}
+          </ul>
         )}
 
         {passo === 3 && (
           <ul className="flex flex-col gap-2">
-            {candidatos.map((i, n) => (
+            {daEtapa("decidir").map((i, n) => (
               <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
                 <span className="text-xs tabular-nums text-muted-foreground">#{n + 1}</span>
-                {acao(i, "discovery", "Abrir discovery")}
+                {acao(i, "execucao", "Entrar em execução")}
+                {acao(i, "backlog", "Agora não", false)}
               </Linha>
             ))}
-            {candidatos.length === 0 && <Vazio texto="Sem itens com nota no backlog. Faça a triagem primeiro." />}
+            {daEtapa("decidir").length === 0 && <Vazio texto="Nada esperando decisão de execução." />}
           </ul>
         )}
 
-        {passo === 4 &&
+        {passo === 4 && (
+          <div className="flex flex-col gap-5">
+            <ul className="flex flex-col gap-2">
+              {daEtapa("execucao").map((i) => (
+                <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
+                  {acao(i, "entregue", "Entregue")}
+                  {acao(i, "pausado", "Pausar", false)}
+                </Linha>
+              ))}
+              {daEtapa("pausado").map((i) => (
+                <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
+                  <span className="text-xs text-muted-foreground">Pausado</span>
+                  {acao(i, "execucao", "Retomar", false)}
+                </Linha>
+              ))}
+              {daEtapa("execucao").length + daEtapa("pausado").length === 0 && <Vazio texto="Nada em execução para esta área." />}
+            </ul>
+            <PipefyDaArea area={area} />
+          </div>
+        )}
+
+        {passo === ultimo &&
           (ata == null ? (
             <div className="flex flex-col items-start gap-3 rounded-lg border border-border bg-white px-5 py-5">
-              <p className="text-sm text-foreground">
-                Ao encerrar, a ata é montada com tudo o que mudou de etapa durante este rito e fica guardada em Atas.
-              </p>
+              <p className="text-sm text-foreground">Ao encerrar, a ata é montada com tudo o que mudou durante este rito e fica guardada em Atas.</p>
               <Botao variante="primario" onClick={() => void encerrar()}>
                 Encerrar rito e gerar ata
               </Botao>
@@ -312,7 +289,7 @@ export function ModoRito({
             </div>
           ))}
 
-        {passo < 4 && (
+        {passo < ultimo && (
           <div className="flex justify-between gap-2 border-t border-border pt-5">
             <Botao variante="fantasma" disabled={passo === 0} onClick={() => setPasso(passo - 1)}>
               Voltar

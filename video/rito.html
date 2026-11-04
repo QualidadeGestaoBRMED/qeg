@@ -83,7 +83,7 @@ svg.setas { position: absolute; inset: 0; }
 .legenda { position: absolute; left: 96px; top: 0; bottom: 0; width: 470px; display: flex; flex-direction: column; justify-content: center; gap: 26px; z-index: 2; }
 .legenda h2 { font-size: 64px; line-height: 1.05; color: var(--navy); }
 .legenda p { margin: 0; font-size: 30px; line-height: 1.4; color: var(--ink2); }
-.mapa { display: grid; grid-template-columns: repeat(6, 34px); gap: 6px; }
+.mapa { display: grid; grid-template-columns: repeat(7, 34px); gap: 6px; }
 .mapa i { height: 34px; border-radius: 6px; background: #E2E7EA; }
 .mapa i.feita { background: var(--sky); }
 .mapa i.agora { background: var(--teal); box-shadow: 0 0 0 4px rgba(0,120,145,.18); }
@@ -120,40 +120,9 @@ svg.setas { position: absolute; inset: 0; }
     <div class="marca">BR MED<small>SAÚDE CORPORATIVA</small></div>
   </section>
 
-  <!-- 1 problema -->
-  <section class="cena clara" data-cena="problema">
-    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">Capítulo 1 · O levantamento</div></div>
-    <div class="tabela" id="tab">
-      <div class="lin cab"><span>Produto</span><span>Status</span><span>KPI</span><span>Score RICE</span></div>
-      <div class="lin"><span>Multissistemas</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
-      <div class="lin"><span>Convocação MODEC</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
-      <div class="lin"><span>SLA Abertta Saúde</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
-      <div class="lin"><span>Briefing</span><span class="pill">Entregue</span><span class="vazio"></span><span class="vazio"></span></div>
-      <div class="lin" style="border:0"><span>Convocação SBM</span><span class="pill parado">Parado</span><span class="vazio"></span><span class="vazio"></span></div>
-      <div class="coluna-vazia" id="cv" style="left:770px;width:490px"></div>
-    </div>
-    <div class="interroga" id="q1" style="left:1150px;top:560px">?</div>
-    <div class="legenda-baixo" id="leg1">Como preencher o que ainda ninguém avaliou?</div>
-  </section>
-
-  <!-- 2 impasse -->
-  <section class="cena escura" data-cena="impasse">
-    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Capítulo 2 · O impasse</div></div>
-    <svg class="setas" viewBox="0 0 1920 1080" aria-hidden="true">
-      <defs><marker id="ponta" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#9BD5E1"/></marker></defs>
-      <path id="s1" d="M1180,330 C1430,360 1500,520 1420,640" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
-      <path id="s2" d="M1160,850 C1000,960 860,960 720,880" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
-      <path id="s3" d="M480,640 C400,520 470,360 700,320" fill="none" stroke="#9BD5E1" stroke-width="6" marker-end="url(#ponta)"/>
-    </svg>
-    <div class="no" id="n1" style="left:725px;top:220px"><b>RICE</b>precisa do esforço</div>
-    <div class="no" id="n2" style="left:1170px;top:660px"><b>Esforço</b>só sai de um discovery</div>
-    <div class="no" id="n3" style="left:270px;top:660px"><b>Discovery</b>só para o que já foi priorizado</div>
-    <div class="frase" id="f-ciclo" style="top:500px;font-size:54px;color:#F2B49F">um ciclo sem saída</div>
-  </section>
-
   <!-- 3 saída -->
   <section class="cena clara" data-cena="saida">
-    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">Capítulo 3 · A saída</div><h2 style="font-size:64px;color:var(--navy)">Priorizar em dois momentos</h2></div>
+    <div class="centro" style="justify-content:flex-start;padding-top:110px"><div class="eyebrow">O impasse e a saída</div><h2 style="font-size:64px;color:var(--navy)">Priorizar em dois momentos</h2></div>
     <div class="trilho">
       <div class="etapa" id="e1"><b>1º momento</b><span>Alcance · Impacto · Confiança</span></div>
       <div class="liga"><i id="l1"></i></div>
@@ -174,7 +143,7 @@ svg.setas { position: absolute; inset: 0; }
 
   <!-- 4 beacon -->
   <section class="cena escura" data-cena="beacon">
-    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">Capítulo 4 · A ferramenta</div></div>
+    <div class="centro" style="justify-content:flex-start;padding-top:96px"><div class="eyebrow">A ferramenta</div></div>
     <div class="frase" id="b1" style="top:330px">Um painel, ninguém abre.</div>
     <div class="frase" id="b2" style="top:470px">Um rito, <em>todo mundo precisa abrir.</em></div>
     <div class="troca" id="b3"><s>Board Beacon</s><span style="color:var(--sky2)">→</span><span>Rito</span></div>
@@ -193,7 +162,7 @@ svg.setas { position: absolute; inset: 0; }
   <section class="cena escura" data-cena="fim">
     <div class="centro">
       <div class="sub-grande" id="fim1" style="font-size:56px;color:#fff">A área não manda um pedido e espera.</div>
-      <div class="sub-grande" id="fim2" style="font-size:56px;color:var(--sky2);font-weight:500">Ela senta e prioriza com a gente.</div>
+      <div class="sub-grande" id="fim2" style="font-size:56px;color:var(--sky2);font-weight:500">Ela prioriza com a gente.</div>
       <div class="rampa" id="fim3" style="margin-top:30px"><i></i><i></i><i></i><i></i></div>
       <div class="titulo-grande" id="fim4" style="font-size:96px">Rito de priorização</div>
     </div>
@@ -231,35 +200,25 @@ svg.setas { position: absolute; inset: 0; }
   const q = new URLSearchParams(location.search);
   const RECTS = await fetch("telas/rects.json").then((r) => r.json());
   const NARR = q.get("voz") === "0" ? null : await fetch("tour/narracao.json").then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  const ANTES = 0.6, DEPOIS = 1.0;
+  const ANTES = 0.4, DEPOIS = 0.6;
 
   // ---------- telas com câmera (uma por cena, em ordem) ----------
   const R = (k, extra = {}) => ({ ...RECTS[k], ...extra });
   const ZOOMS = [
-    { img: "areas", titulo: "A área primeiro", texto: "O rito é feito com a área. A tela mostra só o que é dela.",
-      passos: [[0, null], [1.6, R("areas.suporte"), true], [4.6, R("areas.outras"), true]] },
-    { img: "quadro", titulo: "Quatro colunas", texto: "Backlog, discovery, pronto para decidir e execução. O resto fica recolhido.",
-      passos: [[0, null], ["backlog", R("quadro.backlog"), true], ["discovery", R("quadro.discovery"), true], ["decidir", R("quadro.decidir"), true], ["execucao", R("quadro.execucao"), true], ["resto", R("quadro.recolhidos", { y: R("quadro.recolhidos").y - 8, h: 42 }), true]] },
-    { img: "quadro", titulo: "Uma nota por card", texto: "Sem esforço, pré-score. Com esforço, RICE.",
-      passos: [[0, R("quadro.backlog")], ["pre", R("quadro.cardPre"), true], ["rice", R("quadro.cardRice"), true]] },
-    { img: "painel", titulo: "Um clique abre o item", texto: "Escalas fixas, com exemplos. Ninguém digita fórmula.",
-      passos: [[0, null], [1.0, R("painel.todo")], ["rice", R("painel.rice"), true], ["acoes", R("painel.acoes"), true]] },
-    { img: "detalhes", titulo: "Descer o nível", texto: "Solução, riscos, o card do Pipefy e o histórico de cada decisão.",
-      passos: [[0, R("painel.todo")], [1.4, R("detalhes.solucao"), true], ["pipefy", R("detalhes.pipefy"), true], ["historico", R("detalhes.historico"), true]] },
-    { img: "produtos", titulo: "Produto e projetos", texto: "Um produto reúne vários projetos e features.",
-      passos: [[0, null], [1.4, R("produtos.aberto"), true]] },
-    { img: "rito-execucao", titulo: "O modo rito", texto: "Cinco passos guiam a reunião. Primeiro: a execução.",
-      passos: [[0, null], ["passos", R("rito.passos", { h: 40 }), true], ["execucao", R("rito.lista"), true]] },
-    { img: "rito-discovery", titulo: "Discovery", texto: "Com o esforço, decide-se: execução ou agora não.",
-      passos: [[0, null], [1.2, { x: 312, y: 174, w: 816, h: 140 }, true], [4.2, R("discovery.decidir"), true]] },
-    { img: "rito-triagem", titulo: "Triagem", texto: "O que é novo ganha alcance, impacto e confiança, com a área.",
-      passos: [[0, null], [1.0, R("triagem.novo"), true], [3.4, R("triagem.item"), true]] },
-    { img: "rito-escolha", titulo: "Escolha", texto: "O backlog em ordem. A área vê por que algo foi escolhido.",
-      passos: [[0, null], [1.2, R("escolha.lista"), true]] },
-    { img: "rito-ata", titulo: "Ata", texto: "Ao encerrar, a ata se escreve sozinha.",
-      passos: [[0, null], [1.0, R("ata.texto"), true]] },
-    { img: "geral", titulo: "Entre as áreas", texto: "O RICE decide dentro da área. A estratégia decide entre as áreas.",
-      passos: [[0, null], [1.6, R("geral.tabela"), true], ["estrategia", R("geral.candidato"), true]] },
+    { img: "quadro", titulo: "O quadro", texto: "Em que fase está cada feature.",
+      passos: [[0, null], [1.4, { x: 52, y: 217, w: 1336, h: 440 }, true]] },
+    { img: "produto-criado", titulo: "1. Produto", texto: "O fluxo começa no produto.",
+      passos: [[0, null], [0.9, R("produtos.aberto"), true]] },
+    { img: "feature", titulo: "2. Feature", texto: "A feature nasce dentro do produto, com o problema que resolve.",
+      passos: [[0, null], [0.9, R("feature.modal"), true]] },
+    { img: "rito-2a", titulo: "3. Priorizar discovery", texto: "Alcance, impacto e confiança, com a área. A nota ordena os discoveries.",
+      passos: [[0, null], [0.9, R("rito2.ric"), true], ["nota", R("rito2.escolha"), true]] },
+    { img: "rito-3", titulo: "4. Discovery", texto: "O discovery traz o esforço.",
+      passos: [[0, null], [0.8, R("rito3.lista"), true]] },
+    { img: "rito-4", titulo: "5. Priorizar execução", texto: "O RICE completo decide o que entra em execução.",
+      passos: [[0, null], [0.8, R("rito4.lista"), true]] },
+    { img: "rito-ata", titulo: "6. Ata", texto: "A ata se escreve sozinha.",
+      passos: [[0, null], [0.8, R("ata.texto"), true]] },
   ];
   const zooms = $("#zooms");
   ZOOMS.forEach((z, i) => {
@@ -275,8 +234,8 @@ svg.setas { position: absolute; inset: 0; }
 
   // ---------- linha do tempo ----------
   const CENAS = $$(".cena");
-  const MIN = [6, 10, 9, 11, 10, 9, ...ZOOMS.map(() => 6), 8];
-  const NOMES = ["Abertura", "Levantamento", "Impasse", "Saída", "Ferramenta", "Montagem", "Área", "Quadro", "Nota", "Item", "Detalhes", "Produtos", "Modo rito", "Discovery", "Triagem", "Escolha", "Ata", "Entre áreas", "Fim"];
+  const MIN = [4.5, 9, 5, 5.5, ...ZOOMS.map(() => 3.6), 6];
+  const NOMES = ["Abertura", "Dois momentos", "Ferramenta", "Montagem", "Quadro", "Produto", "Feature", "Priorizar discovery", "Discovery", "Priorizar execução", "Ata", "Fim"];
   const DUR = CENAS.map((_, i) => Math.max(MIN[i], (NARR?.falas?.[i]?.duracao ?? 0) + ANTES + DEPOIS));
   const INI = DUR.reduce((acc, d, i) => (acc.push(acc[i] + d), acc), [0]);
   const TOTAL = INI[INI.length - 1];
@@ -294,36 +253,16 @@ svg.setas { position: absolute; inset: 0; }
     entra($('[data-k="a-sub"]'), t, 1.9, 1);
   };
   DESENHO[1] = (t, d, i) => {
-    const linhas = $$("#tab .lin");
-    linhas.forEach((l, k) => entra(l, t, 0.3 + k * 0.25, 0.6, 20));
-    const tv = marca(i, "vazias", 6.5);
-    const p = seg(t, tv, 0.7, easeOut);
-    sty($("#cv"), { opacity: p, transform: `scale(${lerp(1.08, 1, p)})` });
-    const pulso = t > tv ? 1 + 0.06 * Math.sin((t - tv) * 5) : 1;
-    sty($("#q1"), { opacity: seg(t, tv + 0.5, 0.6), transform: `scale(${seg(t, tv + 0.5, 0.6, easeOut) * pulso}) rotate(${(1 - seg(t, tv + 0.5, 0.6)) * -20}deg)` });
-    entra($("#leg1"), t, tv + 1.4, 0.8);
-  };
-  const traco = (path, p) => { const L = path.getTotalLength(); path.style.strokeDasharray = L; path.style.strokeDashoffset = L * (1 - p); };
-  DESENHO[2] = (t, d, i) => {
-    const t1 = marca(i, "esforco", 3) - 1.6, t2 = marca(i, "esforco", 3), t3 = marca(i, "discovery", 5.5), t4 = marca(i, "priorizado", 8);
-    [[$("#n1"), t1], [$("#n2"), t2], [$("#n3"), t3]].forEach(([el, a]) => { entra(el, t, a, 0.6, 24); el.classList.toggle("on", t >= a && t < a + 2.4); });
-    traco($("#s1"), seg(t, t2 - 0.6, 0.6)); traco($("#s2"), seg(t, t3 - 0.6, 0.6)); traco($("#s3"), seg(t, t4 - 0.3, 0.7));
-    const fc = seg(t, t4 + 0.6, 0.8, easeOut);
-    sty($("#f-ciclo"), { opacity: fc, transform: `scale(${lerp(0.9, 1, fc)})` });
-    // depois de fechado, o ciclo "gira": os nós acendem em sequência
-    if (t > t4 + 0.8) { const k = Math.floor((t - t4) * 1.6) % 3; ["#n1", "#n2", "#n3"].forEach((s, j) => $(s).classList.toggle("on", j === k)); }
-  };
-  DESENHO[3] = (t, d, i) => {
-    const tr = marca(i, "ric", 3), td = marca(i, "discovery", 9), tc = marca(i, "rice", 12);
-    const tempos = [tr, tr + 2.4, td, tc - 0.6, tc + 0.6];
+    const tr = marca(i, "primeiro", 6), tc = marca(i, "depois", 7.5);
+    const tempos = [tr, tr + 0.5, tc - 0.6, tc, tc + 0.5];
     ["#e1", "#e2", "#e3", "#e4", "#e5"].forEach((s, k) => { entra($(s), t, 0.4 + k * 0.15, 0.6, 20); $(s).classList.toggle("on", t >= tempos[k]); });
     ["#l1", "#l2", "#l3", "#l4"].forEach((s, k) => sty($(s), { width: `${seg(t, tempos[k + 1] - 0.5, 0.5) * 100}%` }));
     [["#ch1", "#cht1", tr + 1.2], ["#ch2", "#cht2", tc + 0.2]].forEach(([c, x, a]) => { sty($(c), { opacity: seg(t, a, 0.6) }); entra($(x), t, a + 0.2, 0.6, 12); });
-    entra($("#cit"), t, Math.min(d - 3.2, tc + 2.2), 1);
+    entra($("#cit"), t, Math.min(d - 1.6, tc + 1.4), 0.8);
   };
-  DESENHO[4] = (t, d, i) => {
-    const tr = marca(i, "rito", 8), tv = marca(i, "virou", 11);
-    entra($("#b1"), t, tr - 2.4, 0.8); entra($("#b2"), t, tr, 0.8);
+  DESENHO[2] = (t, d, i) => {
+    const tv = marca(i, "virou", 2.5);
+    entra($("#b1"), t, 0.3, 0.7); entra($("#b2"), t, Math.max(0.8, tv - 1.2), 0.7);
     const p = seg(t, tv - 0.3, 0.9, easeOut); sty($("#b3"), { opacity: p, transform: `scale(${lerp(0.85, 1, p)})` });
   };
   // quebra-cabeça: a tela do quadro em 6×4 peças que voam até o lugar
@@ -334,12 +273,12 @@ svg.setas { position: absolute; inset: 0; }
     sty(el, { left: `${x * PW}px`, top: `${y * PH}px`, width: `${PW}px`, height: `${PH}px`, backgroundImage: "url(telas/quadro.png)", backgroundPosition: `${-x * PW}px ${-y * PH}px` });
     $("#mesa").append(el);
     const ang = rnd() * Math.PI * 2, dist = 700 + rnd() * 500;
-    pecas.push({ el, dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist * 0.7, rot: (rnd() - 0.5) * 70, atraso: 0.4 + (x + y) * 0.18 + rnd() * 0.25 });
+    pecas.push({ el, dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist * 0.7, rot: (rnd() - 0.5) * 70, atraso: 0.2 + (x + y) * 0.12 + rnd() * 0.18 });
   }
-  DESENHO[5] = (t, d) => {
+  DESENHO[3] = (t, d) => {
     entra($("#tp"), t, 0.2, 0.6, 12);
     for (const p of pecas) {
-      const k = seg(t, p.atraso, 1.3, easeOut), junta = seg(t, d - 2.6, 1);
+      const k = seg(t, p.atraso, 1.0, easeOut), junta = seg(t, d - 1.6, 0.8);
       sty(p.el, { opacity: clamp(k * 3), transform: `translate(${(1 - k) * p.dx}px, ${(1 - k) * p.dy}px) rotate(${(1 - k) * p.rot}deg) scale(${lerp(0.97, 1, junta)})`, boxShadow: `0 ${lerp(18, 0, junta)}px ${lerp(40, 0, junta)}px rgba(21,58,76,${lerp(0.22, 0, junta)})`, borderRadius: `${lerp(6, 0, junta)}px` });
     }
   };
@@ -351,7 +290,7 @@ svg.setas { position: absolute; inset: 0; }
     return { s, x: JW / 2 - (r.x + r.w / 2) * s, y: JH / 2 - (r.y + r.h / 2) * s };
   };
   ZOOMS.forEach((z, zi) => {
-    const i = 6 + zi;
+    const i = 4 + zi;
     DESENHO[i] = (t, d) => {
       const sec = CENAS[i];
       const passos = z.passos.map(([quando, r, destaque]) => [typeof quando === "number" ? quando : marca(i, quando, 2), r, destaque]).sort((a, b) => a[0] - b[0]);
@@ -359,7 +298,7 @@ svg.setas { position: absolute; inset: 0; }
       let cam = foco(passos[0][1]), ativo = passos[0];
       for (let k = 1; k < passos.length; k++) {
         const [q0, r] = passos[k]; if (t < q0) break;
-        const p = seg(t, q0, 1.1), alvo = foco(r);
+        const p = seg(t, q0, 0.9), alvo = foco(r);
         cam = { s: lerp(cam.s, alvo.s, p), x: lerp(cam.x, alvo.x, p), y: lerp(cam.y, alvo.y, p) }; ativo = passos[k];
       }
       // entrada: a tela chega como uma peça que encaixa
@@ -372,10 +311,10 @@ svg.setas { position: absolute; inset: 0; }
       entra($(".legenda", sec), t, 0.3, 0.8, 20);
     };
   });
-  DESENHO[18] = (t) => {
-    entra($("#fim1"), t, 0.5, 0.9); entra($("#fim2"), t, 2.6, 0.9);
-    const r = seg(t, 4.4, 1); sty($("#fim3"), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
-    entra($("#fim4"), t, 4.8, 1.1, 40);
+  DESENHO[11] = (t) => {
+    entra($("#fim1"), t, 0.3, 0.7); entra($("#fim2"), t, 2.0, 0.7);
+    const r = seg(t, 3.4, 0.8); sty($("#fim3"), { transform: `scaleX(${r})`, opacity: r ? 1 : 0 });
+    entra($("#fim4"), t, 3.7, 0.9, 40);
   };
 
   const FADE = 0.45;

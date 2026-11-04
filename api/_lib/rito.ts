@@ -140,7 +140,8 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
       const chave = Object.keys(NOMES_CAMPOS).find((k) => NOMES_CAMPOS[k] === campo) ?? campo;
       if (d[chave] !== undefined) valores[campo] = validar(d[chave]);
     }
-    if (!valores.titulo) throw new ErroDeUso(400, "Dê um título ao item.");
+    if (!valores.titulo) throw new ErroDeUso(400, "Dê um título à feature.");
+    if (!valores.produto_id) throw new ErroDeUso(400, "Escolha o produto da feature.");
     const cols = Object.keys(valores);
     const c = await db().connect();
     try {

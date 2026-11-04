@@ -16,72 +16,35 @@ try {
 
 const API = "https://api.elevenlabs.io/v1";
 const MODELO = "eleven_multilingual_v2";
-// Carla, a mesma voz brasileira do vídeo do Briefing Suporte.
-const VOZ_PADRAO = "m151rjrbWXbBqyq56tly";
+// Roberta ("Casual Sales"), escolhida pelo Gabriel em 2026-11-04.
+const VOZ_PADRAO = "ohZOfA9iwlZ5nOsoY7LB";
 const PERFIL = { velocidade: 1.1, stability: 0.5, style: 0.35, acelerar: 1.03 };
 const SAIDA = new URL("../tour/", import.meta.url);
 const LUFS = -21;
 const FFMPEG = process.env.FFMPEG || "ffmpeg";
 
 // Uma fala por cena de video/rito.html, na mesma ordem. `marcas`: palavras cujo início sincroniza a animação.
-// "RICE" escrito como se fala ("raice"); a tela mantém a grafia certa.
+// Palavras escritas como se falam: "ráice" (RICE), "discouveri" (discovery); a tela mantém a grafia certa.
 export const FALAS = [
-  "Rito de priorização. Como a SOTEC decide o que construir, junto com cada área.",
+  "Rito de priorização: como a SOTEC decide o que construir, junto com cada área.",
   {
     texto:
-      "Tudo começou num levantamento para o Suporte. Listamos tudo o que já tínhamos entregado. Mas, quando criamos as colunas de KPI e de score raice, elas ficaram vazias. A gente não tinha como preencher.",
-    marcas: { vazias: "vazias" },
+      "Para priorizar com ráice, precisamos do esforço. Mas o esforço só sai de um discouveri. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+    marcas: { primeiro: "primeiro", depois: "depois" },
   },
+  { texto: "E o Beacon, um painel que ninguém abria, virou o rito.", marcas: { virou: "virou" } },
+  "Cada peça da tela guia a reunião.",
+  "O quadro mostra em que fase está cada feature.",
+  "O fluxo começa no produto.",
+  "Dentro dele, a feature, com o problema que ela resolve.",
   {
-    texto:
-      "Porque havia um impasse. O raice precisa do esforço. O esforço só sai de um discovery. E o discovery só acontece para o que já foi priorizado.",
-    marcas: { esforco: "esforço só", discovery: "discovery só", priorizado: "priorizado" },
+    texto: "Com a área, definimos alcance, impacto e confiança. A nota diz qual discouveri vem primeiro.",
+    marcas: { nota: "A nota" },
   },
-  {
-    texto:
-      "A saída foi priorizar em dois momentos. Primeiro, alcance, impacto e confiança decidem onde vale a pena investir um discovery. O discovery traz o esforço. E só então o raice completo decide o que entra em execução.",
-    marcas: { ric: "alcance", discovery: "O discovery", rice: "completo" },
-  },
-  {
-    texto:
-      "E onde fazer isso? Nós já tínhamos um painel de sprint, o Beacon. Só que ninguém abria. Um painel, ninguém abre. Um rito, todo mundo precisa abrir. Então o Beacon virou o rito.",
-    marcas: { rito: "Um rito", virou: "virou" },
-  },
-  "Cada peça da tela foi pensada para guiar a reunião. Vamos montar.",
-  "Tudo começa pela área. O rito é feito com a área, e a tela mostra só o que é dela.",
-  {
-    texto:
-      "No quadro, quatro colunas contam a história de cada pedido: backlog, discovery, pronto para decidir, e execução. O resto fica recolhido, para não poluir a tela.",
-    marcas: { backlog: "backlog", discovery: "discovery", decidir: "pronto", execucao: "execução", resto: "resto" },
-  },
-  {
-    texto: "Cada card tem uma nota. Sem esforço, é o pré-score. Com esforço, vira o raice.",
-    marcas: { pre: "Sem esforço", rice: "Com esforço" },
-  },
-  {
-    texto:
-      "Um clique abre o item. Alcance, impacto e confiança são escolhas fixas, com exemplos. Ninguém digita fórmula. E o próximo passo já aparece ali.",
-    marcas: { rice: "Alcance", acoes: "próximo passo" },
-  },
-  {
-    texto: "Quer descer o nível? Em mais detalhes estão a solução, os riscos, o card do Pipefy, e o histórico de cada decisão.",
-    marcas: { pipefy: "card do Pipefy", historico: "histórico" },
-  },
-  "Em produtos, cada produto abre os projetos e as features que fazem parte dele.",
-  {
-    texto: "Na reunião, o modo rito conduz tudo em cinco passos. Primeiro, a execução: o que terminou, o que travou.",
-    marcas: { passos: "cinco passos", execucao: "Primeiro" },
-  },
-  "Depois, o discovery. Com o esforço na mão, decide-se: entra em execução, ou agora não.",
-  "Na triagem, o que chegou de novo ganha alcance, impacto e confiança, ali mesmo, com a área.",
-  "Na escolha, o backlog aparece em ordem. E a área vê, na hora, por que algo foi escolhido, ou não.",
-  "Ao encerrar, a ata se escreve sozinha, com cada decisão do dia.",
-  {
-    texto:
-      "E entre as áreas? Isso fica para a reunião interna, com todas lado a lado. O raice decide dentro da área. A estratégia decide entre as áreas.",
-    marcas: { estrategia: "A estratégia" },
-  },
-  "A área não manda um pedido e espera. Ela senta e prioriza com a gente. Rito de priorização.",
+  "O discouveri traz o esforço.",
+  "E o ráice completo decide o que entra em execução.",
+  "No fim, a ata se escreve sozinha.",
+  "A área não manda um pedido e espera. Ela prioriza com a gente.",
 ];
 
 const chave = process.env.ELEVENLABS_API_KEY?.trim();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bloqueioDaMudanca, montarAta, ordenar, preScore, rice, scoreDoCard, type ItemRice } from "./regras";
+import { bloqueioDaMudanca, faseDoItem, montarAta, ordenar, preScore, rice, scoreDoCard, type ItemRice } from "./regras";
 
 const base: ItemRice = { etapa: "backlog", reach: null, impact: null, confidence: null, effort: null };
 
@@ -42,6 +42,15 @@ describe("regras de mudança de etapa", () => {
   });
 });
 
+describe("fases do fluxo", () => {
+  it("o backlog se divide pelo RIC", () => {
+    expect(faseDoItem(base)).toBe("nova");
+    expect(faseDoItem({ ...base, reach: 1, impact: 1, confidence: 1 })).toBe("priorizar_discovery");
+    expect(faseDoItem({ ...base, etapa: "decidir" })).toBe("priorizar_execucao");
+    expect(faseDoItem({ ...base, etapa: "entregue" })).toBeNull();
+  });
+});
+
 describe("ordem e ata", () => {
   it("ordena por score, sem nota por último", () => {
     const itens = [
@@ -60,7 +69,7 @@ describe("ordem e ata", () => {
     ]);
     expect(ata).toContain("Rito de priorização — Suporte — 04/11/2026");
     expect(ata).toContain("Entraram em execução:\n- Convocação EDF (aprovado)");
-    expect(ata).toContain("Entraram no backlog:\n- Item novo");
+    expect(ata).toContain("Features novas:\n- Item novo");
     expect(ata).toContain("Voltaram para o backlog:\n- BI antigo");
   });
 });
