@@ -1,6 +1,7 @@
 export function dbConnectionOptions(connectionString) {
   const url = new URL(connectionString);
-  const isLocal = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  const hostname = url.hostname.replace(/^\[|\]$/g, "");
+  const isLocal = ["localhost", "127.0.0.1", "::1"].includes(hostname);
 
   if (isLocal) return { ssl: false };
   if (url.searchParams.get("sslmode") !== "verify-full") {
