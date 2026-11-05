@@ -320,7 +320,9 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
     return json(res, 200, await acao(d));
   } catch (e) {
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
-    console.error("rito:", e);
-    return json(res, 500, { error: "Erro ao acessar o banco do rito." });
+    console.error("rito: falha ao acessar o banco", {
+      name: e instanceof Error ? e.name : "unknown",
+    });
+    return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
   }
 }

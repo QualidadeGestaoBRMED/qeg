@@ -48,6 +48,23 @@ describe("API do Rito: segurança", () => {
     expect(mocks.query).not.toHaveBeenCalled();
   });
 
+  it("responde 503 e registra apenas metadados seguros quando a consulta falha", async () => {
+    const databaseUrl = "postgresql://user:secret@db.example/rito";
+    const erroBanco = new Error(`connection failed for ${databaseUrl}`);
+    const logSeguro = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.query.mockRejectedValueOnce(erroBanco);
+    const res = response();
+
+    await ritoHandler(request({ acao: "areas" }) as never, res as never);
+
+    expect(res.statusCode).toBe(503);
+    expect(JSON.parse(res.body)).toEqual({ error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
+    expect(res.body).not.toContain(databaseUrl);
+    expect(logSeguro).toHaveBeenCalledWith("rito: falha ao acessar o banco", { name: "Error" });
+    expect(JSON.stringify(logSeguro.mock.calls)).not.toContain(databaseUrl);
+    logSeguro.mockRestore();
+  });
+
   it("usa parâmetros para valores e rejeita coluna fora de EDITAVEIS sem UPDATE", async () => {
     const res = response();
     await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { titulo: "x'); DROP TABLE itens;--" } }) as never, res as never);
