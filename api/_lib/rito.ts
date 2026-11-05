@@ -177,10 +177,30 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
       sets.push(`${coluna} = $${args.length}`);
     }
     if (sets.length === 0) return { item: await buscarItem(db(), id) };
-    args.push(id);
-    const r = await db().query(`update itens set ${sets.join(", ")}, atualizado_em = now() where id = $${args.length}`, args);
-    if (r.rowCount === 0) throw new ErroDeUso(404, "Item não encontrado.");
-    return { item: await buscarItem(db(), id) };
+    const c = await db().connect();
+    try {
+      await c.query("begin");
+      const item = await buscarItem(c, id);
+      const obrigatoriosPorEtapa: Partial<Record<Etapa, string[]>> = {
+        discovery: ["reach", "impact", "confidence", "effort"],
+        decidir: ["reach", "impact", "confidence", "effort"],
+        execucao: ["reach", "impact", "confidence", "effort"],
+        entregue: ["reach", "impact", "confidence", "effort"],
+      };
+      for (const campo of obrigatoriosPorEtapa[item.etapa as Etapa] ?? []) {
+        if (Object.hasOwn(campos, campo) && (campos[campo] == null || campos[campo] === "")) throw new ErroDeUso(409, `Não é possível limpar ${campo} após avançar a etapa.`);
+      }
+      args.push(id);
+      const r = await c.query(`update itens set ${sets.join(", ")}, atualizado_em = now() where id = $${args.length}`, args);
+      if (r.rowCount === 0) throw new ErroDeUso(404, "Item não encontrado.");
+      await c.query("commit");
+      return { item: await buscarItem(c, id) };
+    } catch (e) {
+      await c.query("rollback");
+      throw e;
+    } finally {
+      c.release();
+    }
   },
 
   /** Muda a etapa respeitando as regras do rito e registra o movimento. */
