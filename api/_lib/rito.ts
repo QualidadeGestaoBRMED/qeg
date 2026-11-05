@@ -180,7 +180,9 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
     const c = await db().connect();
     try {
       await c.query("begin");
-      const item = await buscarItem(c, id);
+      const { rows } = await c.query(`select ${COLUNAS_ITEM} from itens i where i.id = $1 for update`, [id]);
+      const item = rows[0];
+      if (!item) throw new ErroDeUso(404, "Item não encontrado.");
       if (item.etapa !== "backlog") for (const campo of ["reach", "impact", "confidence", "effort"]) {
         if (Object.hasOwn(campos, campo) && (campos[campo] == null || campos[campo] === "")) throw new ErroDeUso(409, `Não é possível limpar ${campo} após avançar a etapa.`);
       }

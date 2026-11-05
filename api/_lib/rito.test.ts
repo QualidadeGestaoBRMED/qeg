@@ -71,6 +71,17 @@ describe("API do Rito: segurança", () => {
     expect(mocks.release).toHaveBeenCalled();
   });
 
+  it("trava a linha antes de validar e atualizar para evitar corrida com mover", async () => {
+    const res = response();
+    await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { titulo: "Atualizado" } }) as never, res as never);
+    const sqls = mocks.query.mock.calls.map(([sql]) => String(sql).toLowerCase());
+    const lock = sqls.findIndex((sql) => sql.includes("for update"));
+    const update = sqls.findIndex((sql) => sql.startsWith("update itens"));
+    expect(lock).toBeGreaterThan(sqls.findIndex((sql) => sql === "begin"));
+    expect(update).toBeGreaterThan(lock);
+    expect(res.statusCode).toBe(200);
+  });
+
   it("não limpa R/I/C/E de item pausado", async () => {
     mocks.query.mockImplementation((sql: string) => /^select/i.test(sql.trim()) ? Promise.resolve({ rows: [{ ...item, etapa: "pausado" }] }) : Promise.resolve({}));
     const res = response();
