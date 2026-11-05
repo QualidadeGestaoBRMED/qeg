@@ -181,13 +181,7 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
     try {
       await c.query("begin");
       const item = await buscarItem(c, id);
-      const obrigatoriosPorEtapa: Partial<Record<Etapa, string[]>> = {
-        discovery: ["reach", "impact", "confidence", "effort"],
-        decidir: ["reach", "impact", "confidence", "effort"],
-        execucao: ["reach", "impact", "confidence", "effort"],
-        entregue: ["reach", "impact", "confidence", "effort"],
-      };
-      for (const campo of obrigatoriosPorEtapa[item.etapa as Etapa] ?? []) {
+      if (item.etapa !== "backlog") for (const campo of ["reach", "impact", "confidence", "effort"]) {
         if (Object.hasOwn(campos, campo) && (campos[campo] == null || campos[campo] === "")) throw new ErroDeUso(409, `Não é possível limpar ${campo} após avançar a etapa.`);
       }
       args.push(id);

@@ -71,11 +71,24 @@ describe("API do Rito: segurança", () => {
     expect(mocks.release).toHaveBeenCalled();
   });
 
-  it("recusa mover sem os pré-requisitos e faz rollback sem gravar", async () => {
-    const semScore = { ...item, etapa: "backlog", reach: null, impact: null, confidence: null };
-    mocks.query.mockImplementation((sql: string) => /^select/i.test(sql.trim()) ? Promise.resolve({ rows: [semScore] }) : Promise.resolve({}));
+  it("não limpa R/I/C/E de item pausado", async () => {
+    mocks.query.mockImplementation((sql: string) => /^select/i.test(sql.trim()) ? Promise.resolve({ rows: [{ ...item, etapa: "pausado" }] }) : Promise.resolve({}));
     const res = response();
-    await ritoHandler(request({ acao: "mover", id: 9, para: "discovery" }) as never, res as never);
+    await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { reach: null } }) as never, res as never);
+    expect(res.statusCode).toBe(409);
+    expect(mocks.query.mock.calls.map(([sql]) => sql)).toContain("rollback");
+    expect(mocks.query.mock.calls.some(([sql]) => String(sql).startsWith("update itens"))).toBe(false);
+  });
+
+  it.each([
+    ["backlog", "discovery", { reach: null, impact: null, confidence: null, effort: null }, ""],
+    ["discovery", "decidir", { effort: null }, ""],
+    ["backlog", "descartado", {}, ""],
+  ])("recusa mover de %s para %s sem pré-requisito e faz rollback sem gravar", async (etapa, para, campos, motivo) => {
+    const itemInvalido = { ...item, etapa, ...campos, motivo };
+    mocks.query.mockImplementation((sql: string) => /^select/i.test(sql.trim()) ? Promise.resolve({ rows: [itemInvalido] }) : Promise.resolve({}));
+    const res = response();
+    await ritoHandler(request({ acao: "mover", id: 9, para }) as never, res as never);
     expect(res.statusCode).toBe(409);
     expect(mocks.query.mock.calls.map(([sql]) => sql)).toContain("rollback");
     expect(mocks.query.mock.calls.some(([sql]) => String(sql).startsWith("update itens") || String(sql).startsWith("insert into movimentos"))).toBe(false);
