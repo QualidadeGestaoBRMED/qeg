@@ -26,14 +26,21 @@ O app abre em `http://localhost:8080`.
 
 O rito guarda itens, produtos, movimentos e atas em Postgres. Em desenvolvimento, use Postgres local sem SSL. Em Preview e produção, configure `DATABASE_URL` com a URL pooled do Neon (hostname com `-pooler`) e `sslmode=verify-full`. O pool de `pg` é criado uma vez por instância serverless aquecida, com no máximo duas conexões; o pooler do Neon absorve a quantidade de conexões das instâncias. Essa opção mantém a API existente baseada em `pg` e suas transações, sem migrar para `@neondatabase/serverless` e adaptar os fluxos de transação.
 
-Defina `DATABASE_URL` no `.env` local e nas variáveis de ambiente do alvo escolhido na Vercel. Use a URL pooled em ambos os ambientes remotos. `scripts/db-setup.mjs` usa a mesma validação: remota requer `sslmode=verify-full`, local desativa SSL. Configure a URL antes de rodar:
+Defina `DATABASE_URL` no `.env` local e na variável do ambiente escolhido na Vercel. Atualize Preview e Production separadamente, cada um com sua URL pooled do Neon e `sslmode=verify-full`. `scripts/db-setup.mjs` usa a mesma validação: remota requer `sslmode=verify-full`, local desativa SSL. Configure a URL antes de rodar:
 
 ```bash
 npm run db:setup              # tabelas, areas e produtos do Suporte
 npm run db:setup -- --exemplos # idem + itens de exemplo do Suporte
 ```
 
-Antes de publicar no ambiente alvo, configure nele a URL pooled do Neon com `sslmode=verify-full` e só então faça o deploy. Após publicar, valide o carregamento do Rito. Se a conexão falhar, reverta o deployment desse ambiente e corrija a `DATABASE_URL` nele antes de uma nova tentativa; mantenha a verificação TLS habilitada.
+Ordem de atualização por ambiente:
+
+1. Escolha Preview ou Production e atualize `DATABASE_URL` naquele ambiente com sua URL pooled do Neon e `sslmode=verify-full`.
+2. Só depois de salvar a variável, faça o deploy para esse ambiente.
+3. Valide o carregamento do Rito após publicar.
+4. Se a conexão falhar, reverta o deployment desse mesmo ambiente, corrija a variável nele e tente novamente com a verificação TLS habilitada.
+
+Ao validar em Preview, não altere Production.
 
 O codigo do rito fica em `src/features/rito/` (regras em `regras.ts`) e a API em `api/_lib/rito.ts` (`POST /api/rito`).
 

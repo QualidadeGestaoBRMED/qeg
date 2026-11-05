@@ -27,12 +27,15 @@ describe("dbConnectionOptions", () => {
       .toThrow("DATABASE_URL remoto precisa incluir sslmode=verify-full.");
   });
 
-  it("cria cliente pg com TLS para URL remota verify-full", () => {
+  it("configura TLS no cliente criado com as opções do pool remoto verify-full", async () => {
     const connectionString = "postgresql://user:pass@ep-example-pooler.neon.tech/rito?sslmode=verify-full";
-    const client = new pg.Client({ connectionString, ...dbConnectionOptions(connectionString) });
+    const pool = new pg.Pool({ connectionString, ...dbConnectionOptions(connectionString) });
+    const client = new pg.Client(pool.options);
     const ssl = (client as unknown as { connectionParameters: { ssl: unknown } }).connectionParameters.ssl;
 
+    expect(pool.options.connectionString).toBe(connectionString);
     expect(ssl).toEqual({});
     expect(ssl).not.toBe(false);
+    await pool.end();
   });
 });
