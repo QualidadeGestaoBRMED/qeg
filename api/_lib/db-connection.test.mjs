@@ -1,0 +1,14 @@
+import { describe, expect, it } from "vitest";
+import { dbConnectionOptions } from "./db-connection.mjs";
+
+describe("dbConnectionOptions", () => {
+  it("desativa SSL para Postgres local", () => {
+    expect(dbConnectionOptions("postgresql://user:pass@localhost:5432/rito")).toEqual({ ssl: false });
+  });
+
+  it("exige verify-full em conexões remotas", () => {
+    expect(dbConnectionOptions("postgresql://user:pass@ep-example-pooler.neon.tech/rito?sslmode=verify-full")).toEqual({});
+    expect(() => dbConnectionOptions("postgresql://user:pass@ep-example-pooler.neon.tech/rito?sslmode=require"))
+      .toThrow("DATABASE_URL remoto precisa incluir sslmode=verify-full.");
+  });
+});
