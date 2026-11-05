@@ -3,6 +3,31 @@ import { ritoApi } from "./api";
 import type { Etapa } from "./regras";
 import type { CamposItem, Item, Produto, Rito } from "./tipos";
 
+export async function carregarDadosRito(
+  areaId: number | null,
+  atualizar: {
+    carregando: (valor: boolean) => void;
+    itens: (valor: Item[]) => void;
+    produtos: (valor: Produto[]) => void;
+    rito: (valor: Rito | null) => void;
+    erro: (valor: string | null) => void;
+  },
+  buscar = ritoApi.dados,
+) {
+  atualizar.carregando(true);
+  try {
+    const d = await buscar(areaId);
+    atualizar.itens(d.itens);
+    atualizar.produtos(d.produtos);
+    atualizar.rito(d.ritoAberto);
+    atualizar.erro(null);
+  } catch (e) {
+    atualizar.erro((e as Error).message);
+  } finally {
+    atualizar.carregando(false);
+  }
+}
+
 /** Estado de uma área (ou de todas, com areaId nulo) e as ações que mudam itens. */
 export function useRito(areaId: number | null) {
   const [itens, setItens] = useState<Item[]>([]);
@@ -12,18 +37,13 @@ export function useRito(areaId: number | null) {
   const [erro, setErro] = useState<string | null>(null);
 
   const recarregar = useCallback(async () => {
-    setCarregando(true);
-    try {
-      const d = await ritoApi.dados(areaId);
-      setItens(d.itens);
-      setProdutos(d.produtos);
-      setRito(d.ritoAberto);
-      setErro(null);
-    } catch (e) {
-      setErro((e as Error).message);
-    } finally {
-      setCarregando(false);
-    }
+    await carregarDadosRito(areaId, {
+      carregando: setCarregando,
+      itens: setItens,
+      produtos: setProdutos,
+      rito: setRito,
+      erro: setErro,
+    });
   }, [areaId]);
 
   useEffect(() => {
