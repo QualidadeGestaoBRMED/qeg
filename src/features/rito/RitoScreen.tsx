@@ -111,7 +111,7 @@ export function RitoScreen() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : estado.erro && estado.itens.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4">
-          <Aviso texto={`Não foi possível carregar os dados do Rito. ${estado.erro}`} />
+          <Aviso texto={estado.erro} />
           <Botao onClick={() => void estado.recarregar()} disabled={estado.carregando}>
             Tentar de novo
           </Botao>

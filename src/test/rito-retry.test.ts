@@ -6,7 +6,7 @@ describe("recarregar dados do Rito", () => {
   it("tenta buscar os dados novamente após uma falha e limpa o erro ao carregar", async () => {
     const buscar = vi
       .fn()
-      .mockRejectedValueOnce(new Error("Sem conexão com o servidor."))
+      .mockRejectedValueOnce(new Error("connection failed: postgresql://user:secret@host/db"))
       .mockResolvedValueOnce({ itens: [], produtos: [], ritoAberto: null });
     const estado = {
       carregando: [] as boolean[],
@@ -24,7 +24,8 @@ describe("recarregar dados do Rito", () => {
     };
 
     await carregarDadosRito(7, atualizar, buscar);
-    expect(estado.erro.at(-1)).toBe("Sem conexão com o servidor.");
+    expect(estado.erro.at(-1)).toBe("Não foi possível carregar os dados do Rito. Tente novamente em instantes.");
+    expect(estado.erro.at(-1)).not.toContain("postgresql://");
 
     await carregarDadosRito(7, atualizar, buscar);
 

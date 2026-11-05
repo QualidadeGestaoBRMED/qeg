@@ -3,6 +3,8 @@ import { ritoApi } from "./api";
 import type { Etapa } from "./regras";
 import type { CamposItem, Item, Produto, Rito } from "./tipos";
 
+const ERRO_CARREGAMENTO_RITO = "Não foi possível carregar os dados do Rito. Tente novamente em instantes.";
+
 export async function carregarDadosRito(
   areaId: number | null,
   atualizar: {
@@ -21,8 +23,8 @@ export async function carregarDadosRito(
     atualizar.produtos(d.produtos);
     atualizar.rito(d.ritoAberto);
     atualizar.erro(null);
-  } catch (e) {
-    atualizar.erro((e as Error).message);
+  } catch {
+    atualizar.erro(ERRO_CARREGAMENTO_RITO);
   } finally {
     atualizar.carregando(false);
   }
