@@ -50,7 +50,7 @@ describe("API do Rito: segurança", () => {
 
   it("responde 503 e registra apenas metadados seguros quando a consulta falha", async () => {
     const databaseUrl = "postgresql://user:secret@db.example/rito";
-    const erroBanco = new Error(`connection failed for ${databaseUrl}`);
+    const erroBanco = new Error(`connection failed for ${databaseUrl} user=rito_user password=supersecret token=abc123`);
     const logSeguro = vi.spyOn(console, "error").mockImplementation(() => {});
     mocks.query.mockRejectedValueOnce(erroBanco);
     const res = response();
@@ -60,8 +60,15 @@ describe("API do Rito: segurança", () => {
     expect(res.statusCode).toBe(503);
     expect(JSON.parse(res.body)).toEqual({ error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
     expect(res.body).not.toContain(databaseUrl);
-    expect(logSeguro).toHaveBeenCalledWith("rito: falha ao acessar o banco", { name: "Error" });
-    expect(JSON.stringify(logSeguro.mock.calls)).not.toContain(databaseUrl);
+    expect(logSeguro).toHaveBeenCalledWith("rito: falha ao acessar o banco", {
+      name: "Error",
+      message: "connection failed for [DATABASE_URL] user=[REDACTED] password=[REDACTED] token=[REDACTED]",
+    });
+    const logSerializado = JSON.stringify(logSeguro.mock.calls);
+    expect(logSerializado).not.toContain(databaseUrl);
+    expect(logSerializado).not.toContain("rito_user");
+    expect(logSerializado).not.toContain("supersecret");
+    expect(logSerializado).not.toContain("abc123");
     logSeguro.mockRestore();
   });
 

@@ -32,6 +32,14 @@ class ErroDeUso extends Error {
   }
 }
 
+function mensagemDeErroSegura(e: unknown): string {
+  if (!(e instanceof Error)) return "Erro desconhecido.";
+  return e.message
+    .replace(/\bpostgres(?:ql)?:\/\/[^\s"'`]+/gi, "[DATABASE_URL]")
+    .replace(/((?:user(?:name)?|password|passwd|pwd|secret|token|api[_-]?key|authorization)\s*[:=]\s*)[^\s,;]+/gi, "$1[REDACTED]")
+    .slice(0, 300);
+}
+
 type Dados = Record<string, unknown>;
 
 function inteiro(v: unknown, campo: string): number {
@@ -322,6 +330,7 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
     console.error("rito: falha ao acessar o banco", {
       name: e instanceof Error ? e.name : "unknown",
+      message: mensagemDeErroSegura(e),
     });
     return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
   }
