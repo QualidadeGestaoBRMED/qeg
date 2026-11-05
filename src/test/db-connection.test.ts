@@ -7,12 +7,22 @@ describe("dbConnectionOptions", () => {
     expect(dbConnectionOptions("postgresql://user:pass@localhost:5432/rito")).toEqual({ ssl: false });
   });
 
+  it("desativa SSL para loopback IPv4", () => {
+    expect(dbConnectionOptions("postgresql://user:pass@127.0.0.1:5432/rito")).toEqual({ ssl: false });
+  });
+
   it("desativa SSL para Postgres local em IPv6", () => {
     expect(dbConnectionOptions("postgresql://user:pass@[::1]:5432/rito")).toEqual({ ssl: false });
   });
 
+  it("rejeita URLs malformadas", () => {
+    expect(() => dbConnectionOptions("not a database URL")).toThrow(TypeError);
+  });
+
   it("exige verify-full em conexões remotas", () => {
     expect(dbConnectionOptions("postgresql://user:pass@ep-example-pooler.neon.tech/rito?sslmode=verify-full")).toEqual({});
+    expect(() => dbConnectionOptions("postgresql://user:pass@ep-example-pooler.neon.tech/rito"))
+      .toThrow("DATABASE_URL remoto precisa incluir sslmode=verify-full.");
     expect(() => dbConnectionOptions("postgresql://user:pass@ep-example-pooler.neon.tech/rito?sslmode=require"))
       .toThrow("DATABASE_URL remoto precisa incluir sslmode=verify-full.");
   });
