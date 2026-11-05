@@ -3,6 +3,7 @@
 //   npm run db:setup -- --exemplos -> idem + itens de exemplo do Suporte (só se não houver itens)
 import { readFileSync } from "node:fs";
 import pg from "pg";
+import { dbConnectionOptions } from "../api/_lib/db-connection.mjs";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -13,7 +14,7 @@ if (!url) {
 const ler = (nome) => readFileSync(new URL(`../db/${nome}`, import.meta.url), "utf8");
 const client = new pg.Client({
   connectionString: url,
-  ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false },
+  ...dbConnectionOptions(url),
 });
 
 await client.connect();
