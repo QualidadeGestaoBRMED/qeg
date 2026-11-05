@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dbConnectionOptions } from "./db-connection.mjs";
+import { dbConnectionOptions } from "../../api/_lib/db-connection.mjs";
 
 describe("dbConnectionOptions", () => {
   it("desativa SSL para Postgres local", () => {
