@@ -358,15 +358,54 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
   },
 };
 
+const acoesLogaveis = new Set(Object.keys(acoes));
+
+export function formatRitoActionLog(action: string, areaId: unknown, result: "ok" | "error", durationMs: number) {
+  const area = normalizarAreaId(areaId);
+  const duration = Number.isFinite(durationMs) ? Math.max(0, Math.round(durationMs)) : 0;
+
+  return JSON.stringify({
+    action: acoesLogaveis.has(action) ? action : "unknown",
+    area,
+    result: result === "ok" ? "ok" : "error",
+    duration_ms: duration,
+  });
+}
+
+function normalizarAreaId(value: unknown): number | null {
+  const areaNumber = typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value))
+    ? Number(value)
+    : Number.NaN;
+  return Number.isSafeInteger(areaNumber) && areaNumber > 0 ? areaNumber : null;
+}
+
+function areaIdDaResposta(response: unknown): unknown {
+  if (!response || typeof response !== "object") return null;
+  const item = (response as { item?: unknown }).item;
+  if (!item || typeof item !== "object") return null;
+  return (item as { areaId?: unknown }).areaId;
+}
+
+function areaLogavel(areaRequisitada: unknown, response: unknown): number | null {
+  return areaRequisitada === undefined
+    ? normalizarAreaId(areaIdDaResposta(response))
+    : normalizarAreaId(areaRequisitada);
+}
+
 export async function ritoHandler(req: Req, res: ServerResponse) {
   if (req.method !== "POST") return json(res, 405, { error: "Método não permitido." });
   if (!isAuthed(req)) return json(res, 401, { error: "Não autenticado." });
   const d = await readJsonBody(req);
-  const acao = acoes[String(d.acao ?? "")];
-  if (!acao) return json(res, 400, { error: "Ação desconhecida." });
+  const action = String(d.acao ?? "");
+  if (!Object.prototype.hasOwnProperty.call(acoes, action)) return json(res, 400, { error: "Ação desconhecida." });
+  const acao = acoes[action];
+  const startedAt = performance.now();
   try {
-    return json(res, 200, await acao(d));
+    const result = await acao(d);
+    console.log(formatRitoActionLog(action, areaLogavel(d.areaId, result), "ok", performance.now() - startedAt));
+    return json(res, 200, result);
   } catch (e) {
+    console.log(formatRitoActionLog(action, d.areaId, "error", performance.now() - startedAt));
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
     registrarFalha("rito: falha ao processar a ação", e);
     if (bancoIndisponivel(e)) {
