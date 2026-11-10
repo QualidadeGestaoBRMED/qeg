@@ -19,6 +19,8 @@ async function print(page: Page, passo: number, nome: string) {
 test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async ({ page }) => {
   test.skip(!usuario || !senha, "Defina E2E_USERNAME e E2E_PASSWORD (credenciais fictícias).");
 
+  await page.route("**/api/pipefy", (rota) => rota.fulfill({ status: 502, json: { error: "Pipefy indisponível (simulado pelo teste)." } }));
+
   await page.goto("/");
   await page.getByLabel("Usuário").fill(usuario!);
   await page.getByLabel("Senha").fill(senha!);
@@ -101,7 +103,8 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Execução", level: 2 })).toBeVisible();
     await expect(linha).toBeVisible();
-    await expect(page.getByText(/Pipefy/).first()).toBeVisible();
+    const avisoPipefy = page.getByText(/Não consegui ler o Pipefy agora/);
+    await expect(avisoPipefy).toBeVisible();
     await print(page, 7, "execucao-manual");
     await linha.getByRole("button", { name: "Pausar" }).click();
     await expect(linha.getByText("Pausado", { exact: true })).toBeVisible();
@@ -109,6 +112,7 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await expect(linha.getByRole("button", { name: "Entregue" })).toBeVisible();
     await linha.getByRole("button", { name: "Entregue" }).click();
     await expect(linha).toBeHidden();
+    await expect(avisoPipefy).toBeVisible();
   });
 
   await test.step("8. encerrar o rito e gerar a ata", async () => {
