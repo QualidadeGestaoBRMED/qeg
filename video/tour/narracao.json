@@ -1,0 +1,80 @@
+{
+  "voz": "ohZOfA9iwlZ5nOsoY7LB",
+  "modelo": "eleven_multilingual_v2",
+  "gerado_em": "2026-11-04T18:12:45.102Z",
+  "falas": [
+    {
+      "arquivo": "fala-883fb4195c.mp3",
+      "duracao": 5.06,
+      "texto": "Rito de priorização: como a SOTEC decide o que construir, junto com cada área."
+    },
+    {
+      "arquivo": "fala-320369987a.mp3",
+      "duracao": 5.79,
+      "texto": "Hoje, cada área manda seus pedidos e espera, sem saber se eles vão entrar, nem quando.",
+      "marcas": {
+        "espera": 2.176,
+        "quando": 4.667
+      }
+    },
+    {
+      "arquivo": "fala-de81723168.mp3",
+      "duracao": 13.45,
+      "texto": "Para decidir, usamos o ráice. Mas ele precisa do esforço, e o esforço só sai de um discovery. Então priorizamos em dois momentos: primeiro, o que vale entender; depois, o que vale construir.",
+      "marcas": {
+        "esforco": 2.75,
+        "discovery": 5.512,
+        "primeiro": 9.096,
+        "depois": 11.204
+      }
+    },
+    {
+      "arquivo": "fala-71bc114fbf.mp3",
+      "duracao": 4.93,
+      "texto": "Para isso, criamos o rito: uma reunião com a área, guiada por esta tela."
+    },
+    {
+      "arquivo": "fala-120999bd17.mp3",
+      "duracao": 3.62,
+      "texto": "O quadro mostra em que fase está cada feature."
+    },
+    {
+      "arquivo": "fala-5a552d038a.mp3",
+      "duracao": 2.09,
+      "texto": "O fluxo começa no produto."
+    },
+    {
+      "arquivo": "fala-3e45f2d68e.mp3",
+      "duracao": 4.03,
+      "texto": "Dentro dele, a feature, com o problema que ela resolve."
+    },
+    {
+      "arquivo": "fala-3dacd32ac6.mp3",
+      "duracao": 6.96,
+      "texto": "Com a área, definimos alcance, impacto e confiança. A nota diz qual discovery vem primeiro.",
+      "marcas": {
+        "nota": 3.99
+      }
+    },
+    {
+      "arquivo": "fala-73175f7bb2.mp3",
+      "duracao": 2.27,
+      "texto": "O discovery traz o esforço."
+    },
+    {
+      "arquivo": "fala-8233498ebe.mp3",
+      "duracao": 3.44,
+      "texto": "E o ráice completo decide o que entra em execução."
+    },
+    {
+      "arquivo": "fala-1726a072eb.mp3",
+      "duracao": 2.85,
+      "texto": "No fim, a ata se escreve sozinha."
+    },
+    {
+      "arquivo": "fala-9742888975.mp3",
+      "duracao": 3.58,
+      "texto": "Assim, a área sabe o que vem, quando, e por quê."
+    }
+  ]
+}

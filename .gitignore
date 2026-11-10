@@ -24,3 +24,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# vídeo gerado (fica fora do Git)
+video/*.mp4
+
+# Playwright
+test-results
+playwright-report
+e2e-screenshots

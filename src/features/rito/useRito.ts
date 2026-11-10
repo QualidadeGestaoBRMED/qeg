@@ -1,0 +1,126 @@
+import { useCallback, useEffect, useState } from "react";
+import { ritoApi } from "./api";
+import type { Etapa } from "./regras";
+import type { CamposItem, Item, Produto, Rito } from "./tipos";
+
+/** Estado de uma área (ou de todas, com areaId nulo) e as ações que mudam itens. */
+export function useRito(areaId: number | null) {
+  const [itens, setItens] = useState<Item[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [rito, setRito] = useState<Rito | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const recarregar = useCallback(async () => {
+    setCarregando(true);
+    try {
+      const d = await ritoApi.dados(areaId);
+      setItens(d.itens);
+      setProdutos(d.produtos);
+      setRito(d.ritoAberto);
+      setErro(null);
+    } catch (e) {
+      setErro((e as Error).message);
+    } finally {
+      setCarregando(false);
+    }
+  }, [areaId]);
+
+  useEffect(() => {
+    void recarregar();
+  }, [recarregar]);
+
+  const trocar = (item: Item) => setItens((atual) => atual.map((i) => (i.id === item.id ? item : i)));
+
+  /** Cada ação devolve a mensagem de erro, ou null se deu certo. */
+  const atualizar = useCallback(async (id: number, campos: CamposItem) => {
+    try {
+      trocar((await ritoApi.atualizarItem(id, campos)).item);
+      return null;
+    } catch (e) {
+      return (e as Error).message;
+    }
+  }, []);
+
+  const mover = useCallback(
+    async (id: number, para: Etapa, nota = "") => {
+      try {
+        trocar((await ritoApi.mover(id, para, nota, rito?.id)).item);
+        return null;
+      } catch (e) {
+        return (e as Error).message;
+      }
+    },
+    [rito],
+  );
+
+  const criar = useCallback(
+    async (campos: CamposItem) => {
+      if (areaId == null) return "Escolha uma área para criar o item.";
+      try {
+        const { item } = await ritoApi.criarItem(areaId, campos, rito?.id);
+        setItens((atual) => [...atual, item]);
+        return null;
+      } catch (e) {
+        return (e as Error).message;
+      }
+    },
+    [areaId, rito],
+  );
+
+  const criarProduto = useCallback(
+    async (nome: string) => {
+      if (areaId == null) return null;
+      try {
+        const { id } = await ritoApi.criarProduto(areaId, nome);
+        await recarregar();
+        return id;
+      } catch (e) {
+        setErro((e as Error).message);
+        return null;
+      }
+    },
+    [areaId, recarregar],
+  );
+
+  const iniciarRito = useCallback(async () => {
+    try {
+      const r = (await ritoApi.iniciarRito(areaId)).rito;
+      setRito(r);
+      return r;
+    } catch (e) {
+      setErro((e as Error).message);
+      return null;
+    }
+  }, [areaId]);
+
+  const encerrarRito = useCallback(async () => {
+    if (!rito) return null;
+    try {
+      const { ata } = await ritoApi.encerrarRito(rito.id);
+      setRito(null);
+      return ata;
+    } catch (e) {
+      setErro((e as Error).message);
+      return null;
+    }
+  }, [rito]);
+
+  return {
+    itens,
+    produtos,
+    rito,
+    carregando,
+    erro,
+    limparErro: () => setErro(null),
+    recarregar,
+    atualizar,
+    mover,
+    criar,
+    criarProduto,
+    iniciarRito,
+    encerrarRito,
+  };
+}
+
+export type EstadoRito = ReturnType<typeof useRito>;

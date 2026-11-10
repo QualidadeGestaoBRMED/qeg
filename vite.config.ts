@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   // Expõe as vars de servidor ao middleware de dev — NÃO ao bundle do cliente
   // (o Vite só injeta no client as variáveis com prefixo VITE_).
-  for (const key of ["PIPEFY_TOKEN", "AUTH_USERNAME", "AUTH_PASSWORD", "SESSION_SECRET"]) {
+  for (const key of ["PIPEFY_TOKEN", "AUTH_USERNAME", "AUTH_PASSWORD", "SESSION_SECRET", "DATABASE_URL"]) {
     if (env[key] && !process.env[key]) process.env[key] = env[key];
   }
 
