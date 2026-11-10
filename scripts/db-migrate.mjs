@@ -22,6 +22,7 @@ if (!isLocal && parsedUrl.searchParams.get("sslmode") !== "verify-full") {
 const client = new pg.Client({ connectionString: url, ssl: isLocal ? false : { rejectUnauthorized: true } });
 await client.connect();
 try {
+  await client.query("select pg_advisory_lock(hashtext('rito_migrations'))");
   await client.query("create table if not exists schema_migrations (version text primary key, applied_at timestamptz not null default now())");
   for (const name of migrations) {
     await client.query("begin");
@@ -40,5 +41,6 @@ try {
     }
   }
 } finally {
+  await client.query("select pg_advisory_unlock(hashtext('rito_migrations'))").catch(() => {});
   await client.end();
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -63,13 +63,30 @@ try {
   const renamed = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: orderedDir } });
   assert.equal(renamed.status, 0, renamed.stderr);
   assert.equal((await client.query("select to_regclass('public.should_not_reapply') as table_name")).rows[0].table_name, null);
+  const concDir = join(tmp, "concurrent");
+  mkdirSync(concDir);
+  writeFileSync(join(concDir, "3_conc.sql"), "create table conc_probe (id int); select pg_sleep(1);");
+  const concorrente = () => new Promise((resolve) => {
+    const child = spawn(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: concDir } });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (d) => { stdout += d; });
+    child.stderr.on("data", (d) => { stderr += d; });
+    child.on("close", (status) => resolve({ status, stdout, stderr }));
+  });
+  const [c1, c2] = await Promise.all([concorrente(), concorrente()]);
+  assert.equal(c1.status, 0, c1.stderr);
+  assert.equal(c2.status, 0, c2.stderr);
+  assert.equal(((c1.stdout + c2.stdout).match(/Aplicada:/g) ?? []).length, 1);
+  assert.equal((await client.query("select count(*)::int as n from schema_migrations where version = '3'")).rows[0].n, 1);
+  assert.notEqual((await client.query("select to_regclass('public.conc_probe') as table_name")).rows[0].table_name, null);
   const dupDir = join(tmp, "duplicates");
   mkdirSync(dupDir);
   writeFileSync(join(dupDir, "2_first.sql"), "select 1;");
   writeFileSync(join(dupDir, "02_second.sql"), "select 2;");
   const duplicate = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://example.invalid/db?sslmode=verify-full", RITO_MIGRATIONS_DIR: dupDir } });
   assert.match(duplicate.stderr, /duplicadas/);
-  console.log("db:migrate local: db:setup compatível; repetição/renomeação não reaplicam; rollback, ordenação 2/10, loopback IPv6, TLS remoto e duplicatas validados.");
+  console.log("db:migrate local: db:setup compatível; repetição/renomeação não reaplicam; rollback, execuções concorrentes, ordenação 2/10, loopback IPv6, TLS remoto e duplicatas validados.");
 } finally {
   if (client) await client.end().catch(() => {});
   spawnSync("docker", ["rm", "--force", container], { stdio: "ignore" });
