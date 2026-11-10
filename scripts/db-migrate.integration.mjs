@@ -58,6 +58,7 @@ try {
   const ordered = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: orderedDir } });
   assert.equal(ordered.status, 0, ordered.stderr);
   assert.deepEqual((await client.query("select version from schema_migrations where version in ('2','10') order by version::bigint")).rows.map((r) => r.version), ["2", "10"]);
+  rmSync(join(orderedDir, "2_first.sql"));
   writeFileSync(join(orderedDir, "2_renamed.sql"), "create table should_not_reapply (id integer);");
   const renamed = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: orderedDir } });
   assert.equal(renamed.status, 0, renamed.stderr);
