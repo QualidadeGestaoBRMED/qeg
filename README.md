@@ -134,3 +134,19 @@ npm test
 ### Smoke de Preview
 
 `npm run smoke:preview` verifica autenticação, sessão e leitura da API, medindo o cold start da função e a primeira consulta ao banco. Defina `BASE_URL`, `SMOKE_USERNAME` e `SMOKE_PASSWORD` no ambiente; configure `SMOKE_BLOCKED_HOSTS` com a lista correta e completa dos domínios de produção, separados por vírgula. Sem essa lista o script recusa executar; uma lista incorreta ou incompleta não identifica todos os hosts de Production. Não informe segredos no repositório. O smoke é somente de leitura e não valida criação ou encerramento de rito. O fluxo completo fica para Playwright/QA, com coordenação para não interferir em rito existente. O script recusa `VERCEL_ENV=production` e hosts bloqueados; `--allow-production` é reservado à STC-1007.
+
+### Fluxo do rito no navegador (Playwright)
+
+`npm run test:e2e` percorre o fluxo do rito de ponta a ponta com itens cadastrados manualmente (o Pipefy pode estar indisponível). Fora do `npm test`.
+
+Dados de exemplo apenas: use um Postgres local ou a branch `dev` do banco, nunca Production. Credenciais fictícias vêm do ambiente; nada é versionado.
+
+```bash
+# Local: sobe o Vite com um banco local já preparado (RITO_DB_BRANCH=dev npm run db:setup -- --exemplos)
+DATABASE_URL=postgresql://... E2E_USERNAME=<usuario> E2E_PASSWORD=<senha> npm run test:e2e
+
+# Preview: aponte para a URL; o usuário e a senha são os do Preview, que usa a branch dev do banco
+BASE_URL=https://<preview>.vercel.app E2E_USERNAME=<usuario> E2E_PASSWORD=<senha> npm run test:e2e
+```
+
+Na primeira vez: `npx playwright install chromium`. Opcionais: `E2E_AREA` (padrão `Suporte`), `E2E_SCREENSHOT_DIR` (padrão `e2e-screenshots`, um print por passo), `E2E_CHROMIUM_PATH`.
