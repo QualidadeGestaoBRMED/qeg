@@ -20,6 +20,7 @@ export function bloqueioDeProducao(baseUrl, env) {
   if (env.VERCEL_ENV === "production") return `VERCEL_ENV=production: o smoke do Preview não roda em Production. ${aviso}`;
   const host = new URL(baseUrl).hostname.toLowerCase();
   const bloqueados = (env.SMOKE_BLOCKED_HOSTS ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+  if (!bloqueados.length) return `Defina SMOKE_BLOCKED_HOSTS com os domínios de Production. ${aviso}`;
   const hit = bloqueados.find((h) => host === h || host.endsWith(`.${h}`));
   return hit ? `O host ${host} está em SMOKE_BLOCKED_HOSTS (${hit}). ${aviso}` : null;
 }

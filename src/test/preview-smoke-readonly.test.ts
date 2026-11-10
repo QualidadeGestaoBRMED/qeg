@@ -26,7 +26,7 @@ describe("smoke de preview", () => {
       const address = server.address();
       if (!address || typeof address === "string") throw new Error("servidor indisponível");
       const child = spawn(process.execPath, ["scripts/preview-smoke.mjs"], {
-        env: { ...process.env, BASE_URL: `http://127.0.0.1:${address.port}`, SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "secret", VERCEL_ENV: "preview", SMOKE_BLOCKED_HOSTS: "" },
+        env: { ...process.env, BASE_URL: `http://127.0.0.1:${address.port}`, SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "secret", VERCEL_ENV: "preview", SMOKE_BLOCKED_HOSTS: "production.example.com" },
         stdio: "pipe",
       });
       let output = "";
@@ -36,6 +36,16 @@ describe("smoke de preview", () => {
       expect(output).toContain("somente leitura");
       expect(output).not.toContain("secret");
       expect(chamadas).toEqual(["POST /api/rito areas", "POST /api/login", "GET /api/session", "POST /api/rito areas"]);
+      const semLista = spawn(process.execPath, ["scripts/preview-smoke.mjs"], {
+        env: { ...process.env, BASE_URL: `http://127.0.0.1:${address.port}`, SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "secret", VERCEL_ENV: "preview", SMOKE_BLOCKED_HOSTS: " , " },
+        stdio: "pipe",
+      });
+      let erro = "";
+      semLista.stderr.on("data", (data) => { erro += data; });
+      const [codigoBloqueado] = await once(semLista, "close");
+      expect(codigoBloqueado).toBe(1);
+      expect(erro).toContain("Defina SMOKE_BLOCKED_HOSTS");
+      expect(chamadas).toHaveLength(4);
     } finally {
       server.close();
     }

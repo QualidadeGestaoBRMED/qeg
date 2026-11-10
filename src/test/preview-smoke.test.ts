@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { classificarPrimeiraChamada, coldStartStatus, formatReport, parseArgs, PREVIEW_PROTEGIDO, redact, runSteps } from "../../scripts/preview-smoke-lib.mjs";
 
-const env = { BASE_URL: "https://preview.example.com/", SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "s3cret-pass" };
+const env = { BASE_URL: "https://preview.example.com/", SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "s3cret-pass", SMOKE_BLOCKED_HOSTS: "production.example.com" };
 
 describe("parseArgs", () => {
   it("lê o ambiente e normaliza a URL", () => {
@@ -26,7 +26,15 @@ describe("trava contra Production", () => {
     expect(parseArgs([], { ...env, VERCEL_ENV: "production" }).bloqueio).toMatch(/VERCEL_ENV=production/);
     const bloqueados = { ...env, BASE_URL: "https://app.Prod.example.com", SMOKE_BLOCKED_HOSTS: " other.com, PROD.example.com " };
     expect(parseArgs([], bloqueados).bloqueio).toMatch(/SMOKE_BLOCKED_HOSTS \(prod.example.com\)/);
+    expect(parseArgs([], { ...bloqueados, BASE_URL: "https://prod.example.com" }).bloqueio).toMatch(/SMOKE_BLOCKED_HOSTS/);
     expect(parseArgs([], { ...bloqueados, BASE_URL: "https://notprod.example.com" }).bloqueio).toBeNull();
+  });
+
+  it("exige lista não vazia, salvo com --allow-production", () => {
+    for (const hosts of [undefined, "", " ,  , "]) {
+      expect(parseArgs([], { ...env, SMOKE_BLOCKED_HOSTS: hosts }).bloqueio).toMatch(/Defina SMOKE_BLOCKED_HOSTS/);
+      expect(parseArgs(["--allow-production"], { ...env, SMOKE_BLOCKED_HOSTS: hosts }).bloqueio).toBeNull();
+    }
   });
 
   it("libera só com --allow-production e deixa passar um Preview comum", () => {

@@ -1,6 +1,6 @@
 // Smoke do Preview: BASE_URL, SMOKE_USERNAME e SMOKE_PASSWORD vêm do ambiente; nada disso é impresso.
 //   BASE_URL=https://... SMOKE_USERNAME=... SMOKE_PASSWORD=... npm run smoke:preview
-// Recusa Production (VERCEL_ENV=production ou hosts em SMOKE_BLOCKED_HOSTS, separados por vírgula); só --allow-production libera.
+// Exige SMOKE_BLOCKED_HOSTS e recusa Production (VERCEL_ENV=production ou host listado); só --allow-production libera.
 import { classificarPrimeiraChamada, coldStartStatus, formatReport, parseArgs, runSteps } from "./preview-smoke-lib.mjs";
 
 const config = parseArgs(process.argv.slice(2), process.env);
