@@ -9,10 +9,16 @@ if (!url) {
 
 const directory = process.env.RITO_MIGRATIONS_DIR ? new URL(`file://${process.env.RITO_MIGRATIONS_DIR.replace(/\\/g, "/")}/`) : new URL("../db/migrations/", import.meta.url);
 const migrations = readdirSync(directory).filter((name) => /^\d+_[\w-]+\.sql$/.test(name)).sort();
-if (migrations.some((name, index) => index > 0 && name.slice(0, 4) === migrations[index - 1].slice(0, 4))) {
+const versions = migrations.map((name) => name.match(/^(\d+)_/)[1]);
+if (new Set(versions).size !== versions.length) {
   throw new Error("Versões de migration duplicadas.");
 }
-const client = new pg.Client({ connectionString: url, ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false } });
+const parsedUrl = new URL(url);
+const isLocal = ["localhost", "127.0.0.1", "::1"].includes(parsedUrl.hostname);
+if (!isLocal && parsedUrl.searchParams.get("sslmode") !== "verify-full") {
+  throw new Error("Conexões remotas de migration exigem sslmode=verify-full e conexão direta.");
+}
+const client = new pg.Client({ connectionString: url, ssl: isLocal ? false : { rejectUnauthorized: true } });
 await client.connect();
 try {
   await client.query("create table if not exists schema_migrations (version text primary key, applied_at timestamptz not null default now())");

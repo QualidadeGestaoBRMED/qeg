@@ -29,7 +29,7 @@ try {
   assert.equal(again.status, 0, again.stderr);
   assert.doesNotMatch(again.stdout, /Aplicada:/);
   const applied = await client.query("select version from schema_migrations order by version");
-  assert.deepEqual(applied.rows.map((r) => r.version), ["0001_initial.sql"]);
+  assert.deepEqual(applied.rows.map((r) => r.version), ["0001_rito_schema.sql"]);
 
   const badDir = join(tmp, "db", "migrations");
   mkdirSync(badDir, { recursive: true });
@@ -39,7 +39,7 @@ try {
   const probe = await client.query("select to_regclass('public.rollback_probe') as table_name");
   assert.equal(probe.rows[0].table_name, null);
   const history = await client.query("select version from schema_migrations order by version");
-  assert.deepEqual(history.rows.map((r) => r.version), ["0001_initial.sql"]);
+  assert.deepEqual(history.rows.map((r) => r.version), ["0001_rito_schema.sql"]);
   console.log("db:migrate local: segunda execução não reaplicou; migration com erro não deixou tabela nem registro.");
 } finally {
   if (client) await client.end().catch(() => {});
