@@ -52,6 +52,19 @@ describe("runSteps e formatReport", () => {
     expect(relatorio).toContain("Resultado: PASSOU (1 aviso(s))");
   });
 
+  it("mostra os dois tempos de cold start e avisa cada um acima de 3 s", async () => {
+    const passos = await runSteps([
+      { nome: "Cold start da função", executar: async () => ({ ...coldStartStatus(1200), detalhe: "1200 ms" }) },
+      { nome: "Primeira consulta ao banco", executar: async () => ({ ...coldStartStatus(4500), detalhe: "4500 ms, acima de 3 s" }) },
+    ]);
+    const relatorio = formatReport(passos, { baseUrl: "https://x.com", cleanup: false });
+    expect(relatorio).toContain("OK   Cold start da função");
+    expect(relatorio).toContain("1200 ms");
+    expect(relatorio).toContain("WARN Primeira consulta ao banco");
+    expect(relatorio).toContain("4500 ms, acima de 3 s");
+    expect(relatorio).toContain("Resultado: PASSOU (1 aviso(s))");
+  });
+
   it("redact troca todas as ocorrências", () => {
     expect(redact("a b a", ["a"])).toBe("*** b ***");
   });

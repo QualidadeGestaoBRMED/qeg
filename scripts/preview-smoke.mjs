@@ -35,7 +35,7 @@ const mover = async (para, nota = "") => {
 
 const passos = [
   {
-    nome: "Cold start: 1ª chamada a /api/rito",
+    nome: "Cold start da função: 1ª chamada a /api/rito (sem sessão)",
     async executar() {
       const inicio = Date.now();
       const res = await post("/api/rito", { acao: "areas" }, false);
@@ -63,13 +63,16 @@ const passos = [
     },
   },
   {
-    nome: "Áreas",
+    nome: "Primeira consulta ao banco: areas (após o login)",
     async executar() {
+      const inicio = Date.now();
       const { areas } = await rito("areas");
+      const ms = Date.now() - inicio;
       const alvo = areas.find((a) => a.nome === area);
       if (!alvo) throw new Error(`área "${area}" não encontrada (defina SMOKE_AREA)`);
       estado.areaId = alvo.id;
-      return { detalhe: area };
+      const r = coldStartStatus(ms);
+      return { status: r.status, detalhe: `${ms} ms${r.detalhe ? `, ${r.detalhe}` : ""}` };
     },
   },
   {
