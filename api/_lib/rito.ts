@@ -1,6 +1,7 @@
 // API do rito: um único endpoint POST /api/rito com { acao, ...dados }.
 import type { ServerResponse } from "node:http";
 import pg from "pg";
+import { dbConnectionOptions } from "./db-connection.mjs";
 import {
   bloqueioDaMudanca,
   CONFIANCAS,
@@ -19,8 +20,8 @@ function db(): pg.Pool {
   if (!pool) {
     pool = new pg.Pool({
       connectionString: url,
-      ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false },
-      max: 3,
+      ...dbConnectionOptions(url),
+      max: 2,
     });
   }
   return pool;
