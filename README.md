@@ -78,7 +78,7 @@ Migrations ficam em `db/migrations/NNNN_nome.sql` (número crescente, ex.: `0002
 
 1. Crie o arquivo com o próximo número.
 2. Rode localmente contra um Postgres local: `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rito npm run db:migrate`.
-3. Em Neon, use a URL **direta** (sem `-pooler`) com `sslmode=verify-full`; o migrador recusa conexão remota sem isso. A API continua usando a URL pooled.
+3. Em Neon, use a URL **direta** (sem `-pooler`) com `sslmode=verify-full`; o migrador exige só `sslmode=verify-full` em conexão remota. Quem recusa host sem `-pooler` é a API, que continua usando a URL pooled.
 4. Aplique primeiro na branch `dev`; só depois de validar, em `main`.
 
 `npm run db:setup` continua disponível para criar o schema inicial e os dados base.
