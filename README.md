@@ -68,8 +68,8 @@ A API (`DATABASE_URL`) usa a URL pooled do Neon com `sslmode=verify-full`.
 ### Deploy na Vercel
 
 1. Atualize as variáveis do ambiente alvo (Preview ou Production).
-2. Faça o deploy: pull requests geram Preview; Production sai da `main`.
-3. Aplique as migrations da branch Neon correspondente (abaixo) antes de validar.
+2. Aplique as migrations na branch Neon correspondente (abaixo) antes do deploy: o código novo pode depender do schema.
+3. Faça o deploy: pull requests geram Preview; Production sai da `main`.
 4. Valide o carregamento do Rito. Se falhar, reverta o deployment desse ambiente.
 
 ### Migrations
