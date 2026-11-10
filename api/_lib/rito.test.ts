@@ -48,31 +48,53 @@ describe("API do Rito: segurança", () => {
     expect(mocks.query).not.toHaveBeenCalled();
   });
 
-  it("responde 503 e registra diagnóstico útil sem dados sensíveis quando a consulta falha", async () => {
-    const databaseUrl = "postgresql://user:secret@db.example/rito";
-    const erroBanco = Object.assign(
-      new Error(`connection failed for ${databaseUrl} user=rito_user password=supersecret token=abc123`),
-      { code: "ECONNREFUSED" },
-    );
+  const urlBanco = "postgresql://rito_user:supersecret@db.example/rito";
+  const mensagemDriver = `connection failed for ${urlBanco} user=rito_user password=supersecret token=abc123`;
+
+  function expectaSemSegredos(...saidas: unknown[]) {
+    const serializado = JSON.stringify(saidas);
+    for (const segredo of [urlBanco, "rito_user", "supersecret", "abc123", "db.example", "connection failed"]) {
+      expect(serializado).not.toContain(segredo);
+    }
+  }
+
+  it.each(["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "ECONNRESET", "57P01", "57P03", "08006", "08001"])(
+    "responde 503 e loga só name, code e mensagem fixa quando o banco está indisponível (%s)",
+    async (code) => {
+      const logSeguro = vi.spyOn(console, "error").mockImplementation(() => {});
+      mocks.query.mockRejectedValueOnce(Object.assign(new Error(mensagemDriver), { code }));
+      const res = response();
+
+      await ritoHandler(request({ acao: "areas" }) as never, res as never);
+
+      expect(res.statusCode).toBe(503);
+      expect(JSON.parse(res.body)).toEqual({ error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
+      expect(logSeguro).toHaveBeenCalledWith("rito: falha ao processar a ação", {
+        name: "Error",
+        code,
+        message: "Falha ao processar a ação no banco do Rito.",
+      });
+      expectaSemSegredos(res.body, logSeguro.mock.calls);
+      logSeguro.mockRestore();
+    },
+  );
+
+  it.each([
+    ["erro SQL (violação de unicidade)", Object.assign(new Error(mensagemDriver), { code: "23505" })],
+    ["erro sem código", new TypeError(mensagemDriver)],
+    ["valor que não é Error", mensagemDriver],
+  ])("responde 500 genérico e sem detalhes para %s", async (_nome, erro) => {
     const logSeguro = vi.spyOn(console, "error").mockImplementation(() => {});
-    mocks.query.mockRejectedValueOnce(erroBanco);
+    mocks.query.mockRejectedValueOnce(erro);
     const res = response();
 
     await ritoHandler(request({ acao: "areas" }) as never, res as never);
 
-    expect(res.statusCode).toBe(503);
-    expect(JSON.parse(res.body)).toEqual({ error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
-    expect(res.body).not.toContain(databaseUrl);
-    expect(logSeguro).toHaveBeenCalledWith("rito: falha ao acessar o banco", {
-      name: "Error",
-      code: "ECONNREFUSED",
-      message: "connection failed for [DATABASE_URL] user=[REDACTED] password=[REDACTED] token=[REDACTED]",
-    });
-    const logSerializado = JSON.stringify(logSeguro.mock.calls);
-    expect(logSerializado).not.toContain(databaseUrl);
-    expect(logSerializado).not.toContain("rito_user");
-    expect(logSerializado).not.toContain("supersecret");
-    expect(logSerializado).not.toContain("abc123");
+    expect(res.statusCode).toBe(500);
+    expect(JSON.parse(res.body)).toEqual({ error: "Erro interno no Rito" });
+    expect(logSeguro).toHaveBeenCalledTimes(1);
+    expect(logSeguro.mock.calls[0][1]).toMatchObject({ message: "Falha ao processar a ação no banco do Rito." });
+    expectaSemSegredos(res.body, logSeguro.mock.calls);
     logSeguro.mockRestore();
   });
 

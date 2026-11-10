@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeftRight, Play, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ritoApi } from "./api";
@@ -9,7 +9,7 @@ import { Atas, EscolhaArea, ListaProdutos, VisaoGeral } from "./componentes/Pain
 import { Quadro } from "./componentes/Quadro";
 import { Aviso, Botao } from "./componentes/ui";
 import type { Area } from "./tipos";
-import { useRito } from "./useRito";
+import { carregarAreasRito, executarUmaVez, useRito } from "./useRito";
 
 const CHAVE_AREA = "rito:area";
 type Selecao = number | null | undefined; // undefined = ainda não escolheu; null = todas as áreas
@@ -24,9 +24,29 @@ function lerArea(): Selecao {
   }
 }
 
+function FalhaComRetry({
+  texto,
+  pendente,
+  onRetry,
+}: {
+  texto: string;
+  pendente: boolean;
+  onRetry: () => Promise<unknown>;
+}) {
+  return (
+    <div className="flex flex-col items-start gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4">
+      <Aviso texto={texto} />
+      <Botao onClick={() => void onRetry()} disabled={pendente}>
+        {pendente ? "Tentando…" : "Tentar de novo"}
+      </Botao>
+    </div>
+  );
+}
+
 export function RitoScreen() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [erroAreas, setErroAreas] = useState<string | null>(null);
+  const [carregandoAreas, setCarregandoAreas] = useState(true);
   const [selecao, setSelecao] = useState<Selecao>(lerArea);
   const [aberto, setAberto] = useState<number | null>(null);
   const [emRito, setEmRito] = useState(false);
@@ -34,16 +54,19 @@ export function RitoScreen() {
   const [novaFeature, setNovaFeature] = useState<{ produtoId: number | null } | null>(null);
   const estado = useRito(selecao ?? null);
 
-  const carregarAreas = useCallback(() => {
-    ritoApi
-      .areas()
-      .then((r) => {
-        setAreas(r.areas);
-        setErroAreas(null);
-      })
-      .catch((e) => setErroAreas((e as Error).message));
-  }, []);
-  useEffect(carregarAreas, [carregarAreas]);
+  const carregarAreas = useMemo(
+    () =>
+      executarUmaVez(() =>
+        carregarAreasRito(
+          { carregando: setCarregandoAreas, areas: setAreas, erro: setErroAreas },
+          ritoApi.areas,
+        ),
+      ),
+    [],
+  );
+  useEffect(() => {
+    void carregarAreas();
+  }, [carregarAreas]);
 
   const escolher = (s: Selecao) => {
     setSelecao(s);
@@ -65,13 +88,14 @@ export function RitoScreen() {
   };
   const sairDoRito = () => {
     setEmRito(false);
-    carregarAreas();
+    void carregarAreas();
   };
 
   if (selecao === undefined) {
     return (
       <div className="flex flex-col gap-6">
-        {erroAreas && <Aviso texto={erroAreas} />}
+        {erroAreas && <FalhaComRetry texto={erroAreas} pendente={carregandoAreas} onRetry={carregarAreas} />}
+        {carregandoAreas && !erroAreas && <p className="text-sm text-muted-foreground">Carregando áreas…</p>}
         <EscolhaArea areas={areas} onEscolher={escolher} />
       </div>
     );
@@ -105,11 +129,15 @@ export function RitoScreen() {
         </div>
       </header>
 
+      {erroAreas && <FalhaComRetry texto={erroAreas} pendente={carregandoAreas} onRetry={carregarAreas} />}
       {estado.erro && <Aviso texto={estado.erro} onFechar={estado.limparErro} />}
+      {estado.erroCarregamento && (
+        <FalhaComRetry texto={estado.erroCarregamento} pendente={estado.carregando} onRetry={estado.recarregar} />
+      )}
 
-      {estado.carregando && estado.itens.length === 0 ? (
+      {estado.carregando && estado.itens.length === 0 && !estado.erroCarregamento ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
-      ) : selecao === null ? (
+      ) : estado.erroCarregamento && estado.itens.length === 0 ? null : selecao === null ? (
         <Tabs value={aba} onValueChange={(v) => setAba(String(v))}>
           <TabsList>
             <TabsTrigger value="geral">Áreas lado a lado</TabsTrigger>
