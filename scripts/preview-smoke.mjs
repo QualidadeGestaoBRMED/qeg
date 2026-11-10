@@ -1,11 +1,16 @@
 // Smoke do Preview: BASE_URL, SMOKE_USERNAME e SMOKE_PASSWORD vêm do ambiente; nada disso é impresso.
 //   BASE_URL=https://... SMOKE_USERNAME=... SMOKE_PASSWORD=... npm run smoke:preview [-- --cleanup]
-import { coldStartStatus, formatReport, parseArgs, runSteps } from "./preview-smoke-lib.mjs";
+// Recusa Production (VERCEL_ENV=production ou hosts em SMOKE_BLOCKED_HOSTS, separados por vírgula); só --allow-production libera.
+import { classificarPrimeiraChamada, coldStartStatus, formatReport, parseArgs, runSteps } from "./preview-smoke-lib.mjs";
 
 const config = parseArgs(process.argv.slice(2), process.env);
 if (config.erros.length) {
   console.error(config.erros.join("\n"));
   process.exit(2);
+}
+if (config.bloqueio) {
+  console.error(config.bloqueio);
+  process.exit(1);
 }
 const { baseUrl, username, password, cleanup, area } = config;
 
@@ -40,7 +45,9 @@ const passos = [
       const inicio = Date.now();
       const res = await post("/api/rito", { acao: "areas" }, false);
       const ms = Date.now() - inicio;
-      if (res.status !== 401) throw new Error(`esperado 401 sem sessão, veio HTTP ${res.status}`);
+      const corpo = await res.json().catch(() => null);
+      const veredito = classificarPrimeiraChamada({ status: res.status, contentType: res.headers.get("content-type"), corpo });
+      if (!veredito.ok) throw new Error(veredito.mensagem);
       const r = coldStartStatus(ms);
       return { status: r.status, detalhe: `${ms} ms${r.detalhe ? `, ${r.detalhe}` : ""}` };
     },

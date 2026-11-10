@@ -3,14 +3,36 @@ export const COLD_START_LIMIT_MS = 3000;
 export function parseArgs(argv, env) {
   const erros = [];
   const cleanup = argv.includes("--cleanup");
-  for (const arg of argv) if (arg !== "--cleanup") erros.push(`Argumento desconhecido: ${arg}`);
+  const allowProduction = argv.includes("--allow-production");
+  for (const arg of argv) if (arg !== "--cleanup" && arg !== "--allow-production") erros.push(`Argumento desconhecido: ${arg}`);
   const baseUrl = (env.BASE_URL ?? "").trim().replace(/\/+$/, "");
   if (!baseUrl) erros.push("Defina BASE_URL.");
   else if (!/^https?:\/\/[^/\s]+$/.test(baseUrl)) erros.push("BASE_URL deve ser uma origem http(s), sem caminho.");
   const username = env.SMOKE_USERNAME ?? "";
   const password = env.SMOKE_PASSWORD ?? "";
   if (!username || !password) erros.push("Defina SMOKE_USERNAME e SMOKE_PASSWORD.");
-  return { baseUrl, username, password, cleanup, area: env.SMOKE_AREA || "Suporte", erros };
+  const bloqueio = allowProduction || erros.length ? null : bloqueioDeProducao(baseUrl, env);
+  return { baseUrl, username, password, cleanup, allowProduction, area: env.SMOKE_AREA || "Suporte", erros, bloqueio };
+}
+
+/** Motivo para recusar o smoke contra Production; null quando pode rodar. */
+export function bloqueioDeProducao(baseUrl, env) {
+  const aviso = "Use --allow-production só na STC-1007.";
+  if (env.VERCEL_ENV === "production") return `VERCEL_ENV=production: o smoke do Preview não roda em Production. ${aviso}`;
+  const host = new URL(baseUrl).hostname.toLowerCase();
+  const bloqueados = (env.SMOKE_BLOCKED_HOSTS ?? "").split(",").map((h) => h.trim().toLowerCase()).filter(Boolean);
+  const hit = bloqueados.find((h) => host === h || host.endsWith(`.${h}`));
+  return hit ? `O host ${host} está em SMOKE_BLOCKED_HOSTS (${hit}). ${aviso}` : null;
+}
+
+export const PREVIEW_PROTEGIDO = "Preview protegido: configure o acesso ao deployment";
+
+/** O 1º passo precisa de um 401 JSON da própria API; o 401 HTML da proteção da Vercel não vale. */
+export function classificarPrimeiraChamada({ status, contentType, corpo }) {
+  if (status !== 401) return { ok: false, mensagem: `esperado 401 sem sessão, veio HTTP ${status}` };
+  const json = /application\/json/i.test(contentType ?? "");
+  if (!json || typeof corpo?.error !== "string") return { ok: false, mensagem: PREVIEW_PROTEGIDO };
+  return { ok: true };
 }
 
 export function redact(texto, segredos) {

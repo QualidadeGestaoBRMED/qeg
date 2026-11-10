@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coldStartStatus, formatReport, parseArgs, redact, runSteps } from "../../scripts/preview-smoke-lib.mjs";
+import { classificarPrimeiraChamada, coldStartStatus, formatReport, parseArgs, PREVIEW_PROTEGIDO, redact, runSteps } from "../../scripts/preview-smoke-lib.mjs";
 
 const env = { BASE_URL: "https://preview.example.com/", SMOKE_USERNAME: "tester", SMOKE_PASSWORD: "s3cret-pass" };
 
@@ -18,6 +18,38 @@ describe("parseArgs", () => {
       "Argumento desconhecido: --x",
       "BASE_URL deve ser uma origem http(s), sem caminho.",
     ]);
+  });
+});
+
+describe("trava contra Production", () => {
+  it("recusa VERCEL_ENV=production e hosts bloqueados, inclusive subdomínios", () => {
+    expect(parseArgs([], { ...env, VERCEL_ENV: "production" }).bloqueio).toMatch(/VERCEL_ENV=production/);
+    const bloqueados = { ...env, BASE_URL: "https://app.Prod.example.com", SMOKE_BLOCKED_HOSTS: " other.com, PROD.example.com " };
+    expect(parseArgs([], bloqueados).bloqueio).toMatch(/SMOKE_BLOCKED_HOSTS \(prod.example.com\)/);
+    expect(parseArgs([], { ...bloqueados, BASE_URL: "https://notprod.example.com" }).bloqueio).toBeNull();
+  });
+
+  it("libera só com --allow-production e deixa passar um Preview comum", () => {
+    expect(parseArgs([], env).bloqueio).toBeNull();
+    const producao = { ...env, VERCEL_ENV: "production", SMOKE_BLOCKED_HOSTS: "preview.example.com" };
+    expect(parseArgs([], producao).bloqueio).not.toBeNull();
+    expect(parseArgs(["--allow-production"], producao)).toMatchObject({ allowProduction: true, bloqueio: null, erros: [] });
+  });
+});
+
+describe("classificarPrimeiraChamada", () => {
+  it("aceita só o 401 JSON da API", () => {
+    expect(classificarPrimeiraChamada({ status: 401, contentType: "application/json; charset=utf-8", corpo: { error: "Não autenticado." } })).toEqual({ ok: true });
+  });
+
+  it("trata o 401 HTML da proteção da Vercel como Preview protegido", () => {
+    expect(classificarPrimeiraChamada({ status: 401, contentType: "text/html", corpo: null })).toEqual({ ok: false, mensagem: PREVIEW_PROTEGIDO });
+    expect(classificarPrimeiraChamada({ status: 401, contentType: "application/json", corpo: {} })).toEqual({ ok: false, mensagem: PREVIEW_PROTEGIDO });
+    expect(classificarPrimeiraChamada({ status: 401, contentType: null, corpo: { error: "x" } }).ok).toBe(false);
+  });
+
+  it("rejeita status diferente de 401", () => {
+    expect(classificarPrimeiraChamada({ status: 200, contentType: "application/json", corpo: { error: "x" } })).toEqual({ ok: false, mensagem: "esperado 401 sem sessão, veio HTTP 200" });
   });
 });
 
