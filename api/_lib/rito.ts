@@ -297,10 +297,7 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
 const acoesLogaveis = new Set(Object.keys(acoes));
 
 export function formatRitoActionLog(action: string, areaId: unknown, result: "ok" | "error", durationMs: number) {
-  const areaNumber = typeof areaId === "number" || (typeof areaId === "string" && /^\d+$/.test(areaId))
-    ? Number(areaId)
-    : Number.NaN;
-  const area = Number.isSafeInteger(areaNumber) && areaNumber > 0 ? areaNumber : null;
+  const area = normalizarAreaId(areaId);
   const duration = Number.isFinite(durationMs) ? Math.max(0, Math.round(durationMs)) : 0;
 
   return JSON.stringify({
@@ -309,6 +306,26 @@ export function formatRitoActionLog(action: string, areaId: unknown, result: "ok
     result: result === "ok" ? "ok" : "error",
     duration_ms: duration,
   });
+}
+
+function normalizarAreaId(value: unknown): number | null {
+  const areaNumber = typeof value === "number" || (typeof value === "string" && /^\d+$/.test(value))
+    ? Number(value)
+    : Number.NaN;
+  return Number.isSafeInteger(areaNumber) && areaNumber > 0 ? areaNumber : null;
+}
+
+function areaIdDaResposta(response: unknown): unknown {
+  if (!response || typeof response !== "object") return null;
+  const item = (response as { item?: unknown }).item;
+  if (!item || typeof item !== "object") return null;
+  return (item as { areaId?: unknown }).areaId;
+}
+
+function areaLogavel(areaRequisitada: unknown, response: unknown): number | null {
+  return areaRequisitada === undefined
+    ? normalizarAreaId(areaIdDaResposta(response))
+    : normalizarAreaId(areaRequisitada);
 }
 
 export async function ritoHandler(req: Req, res: ServerResponse) {
@@ -321,7 +338,7 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
   const startedAt = performance.now();
   try {
     const result = await acao(d);
-    console.log(formatRitoActionLog(action, d.areaId, "ok", performance.now() - startedAt));
+    console.log(formatRitoActionLog(action, areaLogavel(d.areaId, result), "ok", performance.now() - startedAt));
     return json(res, 200, result);
   } catch (e) {
     console.log(formatRitoActionLog(action, d.areaId, "error", performance.now() - startedAt));
