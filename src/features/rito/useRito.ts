@@ -1,7 +1,68 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ritoApi } from "./api";
 import type { Etapa } from "./regras";
-import type { CamposItem, Item, Produto, Rito } from "./tipos";
+import type { Area, CamposItem, Item, Produto, Rito } from "./tipos";
+
+const ERRO_CARREGAMENTO_RITO = "Não foi possível carregar os dados do Rito. Tente novamente em instantes.";
+const ERRO_CARREGAMENTO_AREAS = "Não foi possível carregar as áreas. Tente novamente em instantes.";
+
+export function executarUmaVez<T>(acao: () => Promise<T>) {
+  let emAndamento = false;
+  return async () => {
+    if (emAndamento) return;
+    emAndamento = true;
+    try {
+      return await acao();
+    } finally {
+      emAndamento = false;
+    }
+  };
+}
+
+export async function carregarAreasRito(
+  atualizar: {
+    carregando: (valor: boolean) => void;
+    areas: (valor: Area[]) => void;
+    erro: (valor: string | null) => void;
+  },
+  buscar = ritoApi.areas,
+) {
+  atualizar.carregando(true);
+  try {
+    const resultado = await buscar();
+    atualizar.areas(resultado.areas);
+    atualizar.erro(null);
+  } catch {
+    atualizar.erro(ERRO_CARREGAMENTO_AREAS);
+  } finally {
+    atualizar.carregando(false);
+  }
+}
+
+export async function carregarDadosRito(
+  areaId: number | null,
+  atualizar: {
+    carregando: (valor: boolean) => void;
+    itens: (valor: Item[]) => void;
+    produtos: (valor: Produto[]) => void;
+    rito: (valor: Rito | null) => void;
+    erro: (valor: string | null) => void;
+  },
+  buscar = ritoApi.dados,
+) {
+  atualizar.carregando(true);
+  try {
+    const d = await buscar(areaId);
+    atualizar.itens(d.itens);
+    atualizar.produtos(d.produtos);
+    atualizar.rito(d.ritoAberto);
+    atualizar.erro(null);
+  } catch {
+    atualizar.erro(ERRO_CARREGAMENTO_RITO);
+  } finally {
+    atualizar.carregando(false);
+  }
+}
 
 /** Estado de uma área (ou de todas, com areaId nulo) e as ações que mudam itens. */
 export function useRito(areaId: number | null) {
@@ -10,21 +71,21 @@ export function useRito(areaId: number | null) {
   const [rito, setRito] = useState<Rito | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
 
-  const recarregar = useCallback(async () => {
-    setCarregando(true);
-    try {
-      const d = await ritoApi.dados(areaId);
-      setItens(d.itens);
-      setProdutos(d.produtos);
-      setRito(d.ritoAberto);
-      setErro(null);
-    } catch (e) {
-      setErro((e as Error).message);
-    } finally {
-      setCarregando(false);
-    }
-  }, [areaId]);
+  const recarregar = useMemo(
+    () =>
+      executarUmaVez(() =>
+        carregarDadosRito(areaId, {
+          carregando: setCarregando,
+          itens: setItens,
+          produtos: setProdutos,
+          rito: setRito,
+          erro: setErroCarregamento,
+        }),
+      ),
+    [areaId],
+  );
 
   useEffect(() => {
     void recarregar();
@@ -112,6 +173,7 @@ export function useRito(areaId: number | null) {
     rito,
     carregando,
     erro,
+    erroCarregamento,
     limparErro: () => setErro(null),
     recarregar,
     atualizar,

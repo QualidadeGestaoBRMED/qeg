@@ -22,7 +22,9 @@ function db(): pg.Pool {
       connectionString: url,
       ...dbConnectionOptions(url),
       max: 2,
+      connectionTimeoutMillis: 5000,
     });
+    pool.on("error", (e) => registrarFalha("rito: erro no pool do banco", e));
   }
   return pool;
 }
@@ -31,6 +33,51 @@ class ErroDeUso extends Error {
   constructor(public status: number, message: string) {
     super(message);
   }
+}
+
+function codigoDeErro(e: unknown): string | undefined {
+  if (typeof e !== "object" || e === null || !("code" in e)) return undefined;
+  const code = e.code;
+  return typeof code === "string" && /^[A-Z0-9_-]{1,32}$/i.test(code) ? code : undefined;
+}
+
+const CODIGOS_BANCO_INDISPONIVEL = new Set(["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "ECONNRESET", "57P01", "57P03"]);
+const TIMEOUT_DE_CONEXAO = "timeout exceeded when trying to connect";
+
+function bancoIndisponivel(e: unknown): boolean {
+  const code = codigoDeErro(e);
+  if (code !== undefined && (CODIGOS_BANCO_INDISPONIVEL.has(code.toUpperCase()) || code.startsWith("08"))) return true;
+  return e instanceof Error && e.message === TIMEOUT_DE_CONEXAO;
+}
+
+/** Campos estruturais do erro do pg: identificam onde falhou, sem carregar valores. */
+const CAMPOS_ESTRUTURAIS = ["severity", "routine", "constraint", "table", "column", "schema"] as const;
+
+function diagnosticoDeErro(e: unknown) {
+  const code = codigoDeErro(e);
+  const estruturais: Record<string, string> = {};
+  if (typeof e === "object" && e !== null) {
+    for (const campo of CAMPOS_ESTRUTURAIS) {
+      const valor = (e as Record<string, unknown>)[campo];
+      if (typeof valor === "string" && /^[\w$.-]{1,128}$/.test(valor)) estruturais[campo] = valor;
+    }
+  }
+  // O stack começa pela mensagem (que pode ter várias linhas): ela sai, só os frames "at ..." ficam.
+  const bruto = e instanceof Error && typeof e.stack === "string" ? e.stack : "";
+  const stack = e instanceof Error && e.message ? bruto.replace(e.message, "") : bruto;
+  const primeiroFrame = stack.search(/^\s+at /m);
+  const frames = primeiroFrame < 0 ? [] : stack.slice(primeiroFrame).split("\n").map((l) => l.trim()).slice(0, 10);
+  return {
+    name: e instanceof Error ? e.name : "unknown",
+    ...(code ? { code } : {}),
+    ...estruturais,
+    message: "Falha ao processar a ação no banco do Rito.",
+    stack: frames,
+  };
+}
+
+function registrarFalha(contexto: string, e: unknown) {
+  console.error(contexto, diagnosticoDeErro(e));
 }
 
 type Dados = Record<string, unknown>;
@@ -321,7 +368,10 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
     return json(res, 200, await acao(d));
   } catch (e) {
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
-    console.error("rito:", e);
-    return json(res, 500, { error: "Erro ao acessar o banco do rito." });
+    registrarFalha("rito: falha ao processar a ação", e);
+    if (bancoIndisponivel(e)) {
+      return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
+    }
+    return json(res, 500, { error: "Erro interno no Rito" });
   }
 }
