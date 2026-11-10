@@ -294,17 +294,38 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
   },
 };
 
+const acoesLogaveis = new Set(Object.keys(acoes));
+
+export function formatRitoActionLog(action: string, areaId: unknown, result: "ok" | "error", durationMs: number) {
+  const areaNumber = typeof areaId === "number" || (typeof areaId === "string" && /^\d+$/.test(areaId))
+    ? Number(areaId)
+    : Number.NaN;
+  const area = Number.isSafeInteger(areaNumber) && areaNumber > 0 ? areaNumber : null;
+  const duration = Number.isFinite(durationMs) ? Math.max(0, Math.round(durationMs)) : 0;
+
+  return JSON.stringify({
+    action: acoesLogaveis.has(action) ? action : "unknown",
+    area,
+    result: result === "ok" ? "ok" : "error",
+    duration_ms: duration,
+  });
+}
+
 export async function ritoHandler(req: Req, res: ServerResponse) {
   if (req.method !== "POST") return json(res, 405, { error: "Método não permitido." });
   if (!isAuthed(req)) return json(res, 401, { error: "Não autenticado." });
   const d = await readJsonBody(req);
-  const acao = acoes[String(d.acao ?? "")];
-  if (!acao) return json(res, 400, { error: "Ação desconhecida." });
+  const action = String(d.acao ?? "");
+  if (!Object.prototype.hasOwnProperty.call(acoes, action)) return json(res, 400, { error: "Ação desconhecida." });
+  const acao = acoes[action];
+  const startedAt = performance.now();
   try {
-    return json(res, 200, await acao(d));
+    const result = await acao(d);
+    console.log(formatRitoActionLog(action, d.areaId, "ok", performance.now() - startedAt));
+    return json(res, 200, result);
   } catch (e) {
+    console.log(formatRitoActionLog(action, d.areaId, "error", performance.now() - startedAt));
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
-    console.error("rito:", e);
     return json(res, 500, { error: "Erro ao acessar o banco do rito." });
   }
 }
