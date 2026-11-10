@@ -23,7 +23,7 @@ vi.mock("pg", () => ({
   },
 }));
 
-vi.mock("../../api/_lib/server.js", () => ({
+vi.mock("./server.js", () => ({
   isAuthed: mocks.isAuthed,
   json: (res: { statusCode?: number; body?: unknown }, status: number, body: unknown) => {
     res.statusCode = status;
@@ -32,7 +32,7 @@ vi.mock("../../api/_lib/server.js", () => ({
   readJsonBody: mocks.readJsonBody,
 }));
 
-import { ritoHandler } from "../../api/_lib/rito.js";
+import { ritoHandler } from "./rito.js";
 
 const item = {
   id: 11,
@@ -132,5 +132,28 @@ describe("ritoHandler logging", () => {
       area: null,
       result: "error",
     });
+  });
+
+  it("em erro de banco devolve 503, registra diagnóstico sanitizado e uma linha estruturada", async () => {
+    const databaseUrl = "postgresql://rito_user:supersecret@db.example/rito";
+    mocks.poolQuery.mockRejectedValue(
+      Object.assign(new Error(`connect failed ${databaseUrl} password=supersecret token=abc123`), { code: "ECONNREFUSED" }),
+    );
+    mocks.readJsonBody.mockResolvedValue({ acao: "dados", areaId: 23 });
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const logErro = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const res = resposta();
+
+    await ritoHandler({ method: "POST", headers: {} } as never, res as never);
+
+    expect(res.statusCode).toBe(503);
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(assertCamposPermitidos(String(log.mock.calls[0][0]))).toMatchObject({ action: "dados", area: 23, result: "error" });
+    expect(logErro).toHaveBeenCalledTimes(1);
+    const [, diagnostico] = logErro.mock.calls[0] as [string, { name: string; code?: string; message: string }];
+    expect(diagnostico).toMatchObject({ name: "Error", code: "ECONNREFUSED" });
+    expect(diagnostico.message).toMatch(/connect failed/);
+    const saidas = JSON.stringify([log.mock.calls, logErro.mock.calls, res.body]);
+    expect(saidas).not.toMatch(/rito_user|supersecret|abc123|db\.example|postgres(ql)?:\/\//i);
   });
 });
