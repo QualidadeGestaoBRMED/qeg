@@ -5,11 +5,11 @@ const env = { BASE_URL: "https://preview.example.com/", SMOKE_USERNAME: "tester"
 
 describe("parseArgs", () => {
   it("lê o ambiente e normaliza a URL", () => {
-    expect(parseArgs([], env)).toMatchObject({ baseUrl: "https://preview.example.com", cleanup: false, area: "Suporte", erros: [] });
+    expect(parseArgs([], env)).toMatchObject({ baseUrl: "https://preview.example.com", erros: [] });
   });
 
-  it("aceita --cleanup e SMOKE_AREA", () => {
-    expect(parseArgs(["--cleanup"], { ...env, SMOKE_AREA: "Sales" })).toMatchObject({ cleanup: true, area: "Sales", erros: [] });
+  it("rejeita a antiga opção de limpeza", () => {
+    expect(parseArgs(["--cleanup"], env).erros).toContain("Argumento desconhecido: --cleanup");
   });
 
   it("reporta variáveis ausentes, URL inválida e argumentos desconhecidos", () => {
@@ -71,7 +71,7 @@ describe("runSteps e formatReport", () => {
       [env.SMOKE_PASSWORD],
     );
     expect(passos.map((p) => p.status)).toEqual(["ok", "falha", "pulado"]);
-    const relatorio = formatReport(passos, { baseUrl: "https://preview.example.com", cleanup: false });
+    const relatorio = formatReport(passos, { baseUrl: "https://preview.example.com" });
     expect(relatorio).not.toContain("s3cret-pass");
     expect(relatorio).toContain("FAIL dois");
     expect(relatorio).toContain("SKIP tres");
@@ -79,8 +79,8 @@ describe("runSteps e formatReport", () => {
   });
 
   it("conta avisos como aprovação", () => {
-    const relatorio = formatReport([{ nome: "cold", status: "aviso", detalhe: "4000 ms", ms: 4000 }], { baseUrl: "https://x.com", cleanup: true });
-    expect(relatorio).toContain("(com --cleanup)");
+    const relatorio = formatReport([{ nome: "cold", status: "aviso", detalhe: "4000 ms", ms: 4000 }], { baseUrl: "https://x.com" });
+    expect(relatorio).toContain("(somente leitura)");
     expect(relatorio).toContain("Resultado: PASSOU (1 aviso(s))");
   });
 
@@ -89,7 +89,7 @@ describe("runSteps e formatReport", () => {
       { nome: "Cold start da função", executar: async () => ({ ...coldStartStatus(1200), detalhe: "1200 ms" }) },
       { nome: "Primeira consulta ao banco", executar: async () => ({ ...coldStartStatus(4500), detalhe: "4500 ms, acima de 3 s" }) },
     ]);
-    const relatorio = formatReport(passos, { baseUrl: "https://x.com", cleanup: false });
+    const relatorio = formatReport(passos, { baseUrl: "https://x.com" });
     expect(relatorio).toContain("OK   Cold start da função");
     expect(relatorio).toContain("1200 ms");
     expect(relatorio).toContain("WARN Primeira consulta ao banco");

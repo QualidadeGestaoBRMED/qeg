@@ -130,3 +130,7 @@ O codigo principal vive em `src/features/sprint-monitor/`:
 ```bash
 npm test
 ```
+
+### Smoke de Preview
+
+`npm run smoke:preview` verifica autenticação, sessão e leitura da API, medindo o cold start da função e a primeira consulta ao banco. Defina `BASE_URL`, `SMOKE_USERNAME` e `SMOKE_PASSWORD` no ambiente; configure `SMOKE_BLOCKED_HOSTS` com os domínios de produção, separados por vírgula. Não informe segredos no repositório. O smoke é somente de leitura e não valida criação ou encerramento de rito. O fluxo completo fica para Playwright/QA, com coordenação para não interferir em rito existente. O script recusa `VERCEL_ENV=production` e hosts bloqueados; `--allow-production` é reservado à STC-1007.

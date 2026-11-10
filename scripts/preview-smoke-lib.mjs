@@ -2,9 +2,8 @@ export const COLD_START_LIMIT_MS = 3000;
 
 export function parseArgs(argv, env) {
   const erros = [];
-  const cleanup = argv.includes("--cleanup");
   const allowProduction = argv.includes("--allow-production");
-  for (const arg of argv) if (arg !== "--cleanup" && arg !== "--allow-production") erros.push(`Argumento desconhecido: ${arg}`);
+  for (const arg of argv) if (arg !== "--allow-production") erros.push(`Argumento desconhecido: ${arg}`);
   const baseUrl = (env.BASE_URL ?? "").trim().replace(/\/+$/, "");
   if (!baseUrl) erros.push("Defina BASE_URL.");
   else if (!/^https?:\/\/[^/\s]+$/.test(baseUrl)) erros.push("BASE_URL deve ser uma origem http(s), sem caminho.");
@@ -12,7 +11,7 @@ export function parseArgs(argv, env) {
   const password = env.SMOKE_PASSWORD ?? "";
   if (!username || !password) erros.push("Defina SMOKE_USERNAME e SMOKE_PASSWORD.");
   const bloqueio = allowProduction || erros.length ? null : bloqueioDeProducao(baseUrl, env);
-  return { baseUrl, username, password, cleanup, allowProduction, area: env.SMOKE_AREA || "Suporte", erros, bloqueio };
+  return { baseUrl, username, password, allowProduction, erros, bloqueio };
 }
 
 /** Motivo para recusar o smoke contra Production; null quando pode rodar. */
@@ -41,9 +40,9 @@ export function redact(texto, segredos) {
   return saida;
 }
 
-export function formatReport(passos, { baseUrl, cleanup }) {
+export function formatReport(passos, { baseUrl }) {
   const icone = { ok: "OK  ", aviso: "WARN", falha: "FAIL", pulado: "SKIP" };
-  const linhas = [`Smoke do Preview: ${baseUrl}${cleanup ? " (com --cleanup)" : ""}`, ""];
+  const linhas = [`Smoke do Preview: ${baseUrl} (somente leitura)`, ""];
   passos.forEach((p, i) => {
     const tempo = p.ms == null ? "" : ` (${p.ms} ms)`;
     const detalhe = p.detalhe ? ` - ${p.detalhe}` : "";
