@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -11,7 +12,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("pg", () => ({
   default: {
-    Pool: class {
+    Pool: class extends EventEmitter {
       query(...args: unknown[]) {
         return mocks.poolQuery(...args);
       }
@@ -157,6 +158,7 @@ describe("ritoHandler logging", () => {
       name: "Error",
       code,
       message: "Falha ao processar a ação no banco do Rito.",
+      stack: expect.any(Array),
     });
     const saidas = JSON.stringify([log.mock.calls, logErro.mock.calls, res.body]);
     expect(saidas).not.toMatch(/rito_user|supersecret|abc123|db\.example|connect failed|postgres(ql)?:\/\//i);
