@@ -12,6 +12,8 @@
     "test": "vitest run",
     "db:setup": "node --env-file-if-exists=.env scripts/db-setup.mjs",
     "db:setup:test": "node scripts/db-setup.integration.mjs",
+    "db:migrate": "node --env-file-if-exists=.env scripts/db-migrate.mjs",
+    "db:migrate:test": "node scripts/db-migrate.integration.mjs",
     "smoke:preview": "node scripts/preview-smoke.mjs"
   },
   "dependencies": {
