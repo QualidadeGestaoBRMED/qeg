@@ -1,6 +1,7 @@
 // API do rito: um único endpoint POST /api/rito com { acao, ...dados }.
 import type { ServerResponse } from "node:http";
 import pg from "pg";
+import { dbConnectionOptions } from "./db-connection.mjs";
 import {
   bloqueioDaMudanca,
   CONFIANCAS,
@@ -19,8 +20,8 @@ function db(): pg.Pool {
   if (!pool) {
     pool = new pg.Pool({
       connectionString: url,
-      ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false },
-      max: 3,
+      ...dbConnectionOptions(url),
+      max: 2,
     });
   }
   return pool;
@@ -30,6 +31,20 @@ class ErroDeUso extends Error {
   constructor(public status: number, message: string) {
     super(message);
   }
+}
+
+function mensagemDeErroSegura(e: unknown): string {
+  if (!(e instanceof Error)) return "Erro desconhecido.";
+  return e.message
+    .replace(/\bpostgres(?:ql)?:\/\/[^\s"'`]+/gi, "[DATABASE_URL]")
+    .replace(/((?:user(?:name)?|password|passwd|pwd|secret|token|api[_-]?key|authorization)\s*[:=]\s*)[^\s,;]+/gi, "$1[REDACTED]")
+    .slice(0, 300);
+}
+
+function codigoDeErro(e: unknown): string | undefined {
+  if (typeof e !== "object" || e === null || !("code" in e)) return undefined;
+  const code = e.code;
+  return typeof code === "string" && /^[A-Z0-9_-]{1,32}$/i.test(code) ? code : undefined;
 }
 
 type Dados = Record<string, unknown>;
@@ -177,10 +192,26 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
       sets.push(`${coluna} = $${args.length}`);
     }
     if (sets.length === 0) return { item: await buscarItem(db(), id) };
-    args.push(id);
-    const r = await db().query(`update itens set ${sets.join(", ")}, atualizado_em = now() where id = $${args.length}`, args);
-    if (r.rowCount === 0) throw new ErroDeUso(404, "Item não encontrado.");
-    return { item: await buscarItem(db(), id) };
+    const c = await db().connect();
+    try {
+      await c.query("begin");
+      const { rows } = await c.query(`select ${COLUNAS_ITEM} from itens i where i.id = $1 for update`, [id]);
+      const item = rows[0];
+      if (!item) throw new ErroDeUso(404, "Item não encontrado.");
+      if (item.etapa !== "backlog") for (const campo of ["reach", "impact", "confidence", "effort"]) {
+        if (Object.hasOwn(campos, campo) && (campos[campo] == null || campos[campo] === "")) throw new ErroDeUso(409, `Não é possível limpar ${campo} após avançar a etapa.`);
+      }
+      args.push(id);
+      const r = await c.query(`update itens set ${sets.join(", ")}, atualizado_em = now() where id = $${args.length}`, args);
+      if (r.rowCount === 0) throw new ErroDeUso(404, "Item não encontrado.");
+      await c.query("commit");
+      return { item: await buscarItem(c, id) };
+    } catch (e) {
+      await c.query("rollback");
+      throw e;
+    } finally {
+      c.release();
+    }
   },
 
   /** Muda a etapa respeitando as regras do rito e registra o movimento. */
@@ -343,6 +374,12 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
   } catch (e) {
     console.log(formatRitoActionLog(action, d.areaId, "error", performance.now() - startedAt));
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
-    return json(res, 500, { error: "Erro ao acessar o banco do rito." });
+    const code = codigoDeErro(e);
+    console.error("rito: falha ao acessar o banco", {
+      name: e instanceof Error ? e.name : "unknown",
+      ...(code ? { code } : {}),
+      message: mensagemDeErroSegura(e),
+    });
+    return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
   }
 }
