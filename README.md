@@ -82,7 +82,9 @@ Migrations ficam em `db/migrations/NNNN_nome.sql` (número crescente, ex.: `0002
 3. Em Neon, use a URL **direta** (sem `-pooler`) com `sslmode=verify-full`; o migrador exige só `sslmode=verify-full` em conexão remota. Quem recusa host sem `-pooler` é a API, que continua usando a URL pooled.
 4. Aplique primeiro na branch `dev`; só depois de validar, em `main`.
 
-`npm run db:setup` continua disponível para criar o schema inicial e os dados base.
+Banco novo: use `npm run db:migrate`. `db:setup` fica para o setup legado e para `--exemplos` na `dev`. Mudança de schema nova só por migration; `db/schema.sql` é a base congelada (= 0001).
+
+O migrador exige `sslmode=verify-full` em conexão remota, mesmo quando o `db:setup` aceita `sslmode=require`.
 
 ### Resetar a branch `dev` do Neon a partir da `main`
 
