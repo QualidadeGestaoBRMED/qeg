@@ -44,6 +44,56 @@ Ao validar em Preview, não altere Production.
 
 O codigo do rito fica em `src/features/rito/` (regras em `regras.ts`) e a API em `api/_lib/rito.ts` (`POST /api/rito`).
 
+## Deploy e operação
+
+### Ambientes
+
+| Ambiente Vercel | Branch Neon (projeto `rito`) |
+| --- | --- |
+| Preview | `dev` |
+| Production | `main` |
+
+Cada ambiente da Vercel tem sua própria `DATABASE_URL`, apontando para a branch Neon da tabela acima. Nunca use a URL de `main` em Preview.
+
+### Variáveis de ambiente
+
+Configure na Vercel (por ambiente) só os nomes listados em `.env.example`; os valores ficam no painel, nunca no repositório.
+
+- Obrigatórias em Production e Preview: `DATABASE_URL`, `PIPEFY_TOKEN`, `AUTH_USERNAME`, `AUTH_PASSWORD`, `SESSION_SECRET`.
+- Opcionais (têm default): `VITE_PIPEFY_ACTIVE_PHASES`, `VITE_PIPEFY_PRIORITIZED_PHASES`, `VITE_PIPEFY_PIPES`, `VITE_RESPONSIBLE_FIELDS`, `VITE_PROJECT_AREA_FIELDS`, `VITE_NON_PERSON_NAMES`, `VITE_NON_PERSON_KEYWORDS`.
+- Só para scripts de vídeo em desenvolvimento: `FFMPEG`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`.
+
+A API (`DATABASE_URL`) usa a URL pooled do Neon com `sslmode=verify-full`.
+
+### Deploy na Vercel
+
+1. Atualize as variáveis do ambiente alvo (Preview ou Production).
+2. Faça o deploy: pull requests geram Preview; Production sai da `main`.
+3. Aplique as migrations da branch Neon correspondente (abaixo) antes de validar.
+4. Valide o carregamento do Rito. Se falhar, reverta o deployment desse ambiente.
+
+### Migrations
+
+Migrations ficam em `db/migrations/NNNN_nome.sql` (número crescente, ex.: `0002_adiciona_coluna.sql`; versões duplicadas são rejeitadas). Cada arquivo roda em uma transação e é registrado em `schema_migrations`; rodar de novo não reaplica o que já foi aplicado.
+
+1. Crie o arquivo com o próximo número.
+2. Rode localmente contra um Postgres local: `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rito npm run db:migrate`.
+3. Em Neon, use a URL **direta** (sem `-pooler`) com `sslmode=verify-full`; o migrador recusa conexão remota sem isso. A API continua usando a URL pooled.
+4. Aplique primeiro na branch `dev`; só depois de validar, em `main`.
+
+`npm run db:setup` continua disponível para criar o schema inicial e os dados base.
+
+### Resetar a branch `dev` do Neon a partir da `main`
+
+Descrição do procedimento; execute só com o responsável pelo banco.
+
+1. No console do Neon, projeto `rito`, abra a branch `dev`.
+2. Use "Reset from parent" (pai: `main`). Isso descarta tudo o que existe em `dev` e a recria com o estado atual de `main`.
+3. Se a connection string mudar, atualize `DATABASE_URL` de Preview na Vercel e refaça o deploy de Preview.
+4. Rode `npm run db:migrate` na `dev` para aplicar migrations pendentes ainda não existentes em `main`.
+
+Nunca faça o reset no sentido contrário nem em `main`.
+
 ## Configuracao
 
 O app le tudo do `.env` via Vite:
