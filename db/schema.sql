@@ -1,3 +1,4 @@
+-- Base congelada = migration 0001. Mudanças novas de schema vão em db/migrations/NNNN_nome.sql, não aqui.
 -- Rito de priorização: o que entra, o que vale um discovery e o que vale construir.
 -- Idempotente: pode rodar de novo sem perder dados.
 
