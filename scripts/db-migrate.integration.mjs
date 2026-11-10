@@ -48,13 +48,27 @@ try {
 
   const tls = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://example.invalid/db" } });
   assert.match(tls.stderr, /sslmode=verify-full/);
+  const ipv6 = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://user:pass@[::1]:1/db" } });
+  assert.doesNotMatch(ipv6.stderr, /sslmode=verify-full/);
+
+  const orderedDir = join(tmp, "ordered");
+  mkdirSync(orderedDir);
+  writeFileSync(join(orderedDir, "10_second.sql"), "insert into order_probe values ('10');");
+  writeFileSync(join(orderedDir, "2_first.sql"), "create table order_probe (value text);");
+  const ordered = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: orderedDir } });
+  assert.equal(ordered.status, 0, ordered.stderr);
+  assert.deepEqual((await client.query("select version from schema_migrations where version in ('2','10') order by version::bigint")).rows.map((r) => r.version), ["2", "10"]);
+  writeFileSync(join(orderedDir, "2_renamed.sql"), "create table should_not_reapply (id integer);");
+  const renamed = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url, RITO_MIGRATIONS_DIR: orderedDir } });
+  assert.equal(renamed.status, 0, renamed.stderr);
+  assert.equal((await client.query("select to_regclass('public.should_not_reapply') as table_name")).rows[0].table_name, null);
   const dupDir = join(tmp, "duplicates");
   mkdirSync(dupDir);
   writeFileSync(join(dupDir, "2_first.sql"), "select 1;");
   writeFileSync(join(dupDir, "02_second.sql"), "select 2;");
   const duplicate = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://example.invalid/db?sslmode=verify-full", RITO_MIGRATIONS_DIR: dupDir } });
   assert.match(duplicate.stderr, /duplicadas/);
-  console.log("db:migrate local: db:setup preservado; segunda execução não reaplicou; erro fez rollback; TLS remoto e versões duplicadas validados.");
+  console.log("db:migrate local: db:setup compatível; repetição/renomeação não reaplicam; rollback, ordenação 2/10, loopback IPv6, TLS remoto e duplicatas validados.");
 } finally {
   if (client) await client.end().catch(() => {});
   spawnSync("docker", ["rm", "--force", container], { stdio: "ignore" });
