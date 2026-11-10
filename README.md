@@ -30,7 +30,7 @@ Defina `DATABASE_URL` no `.env` local e na variável do ambiente escolhido na Ve
 
 ```bash
 npm run db:setup              # tabelas, areas e produtos do Suporte
-npm run db:setup -- --exemplos # idem + itens de exemplo do Suporte
+RITO_DB_BRANCH=dev npm run db:setup -- --exemplos # idem + itens de exemplo; só na branch dev (exige RITO_DB_BRANCH=dev)
 ```
 
 Ordem de atualização por ambiente:
@@ -61,6 +61,7 @@ Configure na Vercel (por ambiente) só os nomes listados em `.env.example`; os v
 
 - Obrigatórias em Production e Preview: `DATABASE_URL`, `PIPEFY_TOKEN`, `AUTH_USERNAME`, `AUTH_PASSWORD`, `SESSION_SECRET`.
 - Opcionais (têm default): `VITE_PIPEFY_ACTIVE_PHASES`, `VITE_PIPEFY_PRIORITIZED_PHASES`, `VITE_PIPEFY_PIPES`, `VITE_RESPONSIBLE_FIELDS`, `VITE_PROJECT_AREA_FIELDS`, `VITE_NON_PERSON_NAMES`, `VITE_NON_PERSON_KEYWORDS`.
+- Operação do `db:setup`: `RITO_DB_BRANCH` (você define; só `dev` libera `--exemplos`) e `VERCEL_ENV` (a Vercel define; com `production` a carga de exemplos é bloqueada).
 - Só para scripts de vídeo em desenvolvimento: `FFMPEG`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`.
 
 A API (`DATABASE_URL`) usa a URL pooled do Neon com `sslmode=verify-full`.
@@ -98,7 +99,7 @@ Nunca faça o reset no sentido contrário nem em `main`.
 
 O app le tudo do `.env` via Vite:
 
-- `VITE_PIPEFY_TOKEN`: token da API
+- `PIPEFY_TOKEN`: token da API do Pipefy (lido só no servidor, sem prefixo `VITE_`)
 - `VITE_PIPEFY_ACTIVE_PHASES`: fases ativas padrao
 - `VITE_PIPEFY_PRIORITIZED_PHASES`: fases priorizadas padrao
 - `VITE_PIPEFY_PIPES`: lista JSON com os pipes monitorados
