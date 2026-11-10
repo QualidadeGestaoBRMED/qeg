@@ -292,7 +292,7 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
     );
     if (!r[0]) throw new ErroDeUso(404, "Rito não encontrado.");
     const { rows: movs } = await p.query(
-      `select i.titulo, m.de, m.para, m.nota from movimentos m join itens i on i.id = m.item_id where m.rito_id = $1 order by m.id`,
+      `select m.item_id as "itemId", i.titulo, m.de, m.para, m.nota from movimentos m join itens i on i.id = m.item_id where m.rito_id = $1 order by m.id`,
       [id],
     );
     const ata = montarAta(r[0].area, new Date(r[0].iniciado_em), movs);

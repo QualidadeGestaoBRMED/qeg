@@ -150,13 +150,14 @@ export function ordenar<T extends ItemRice & { id: number }>(itens: T[]): T[] {
 }
 
 export interface MovimentoDaAta {
+  itemId: number;
   titulo: string;
   de: Etapa | null;
   para: Etapa;
   nota: string;
 }
 
-/** Ata do rito, em texto simples, a partir das mudanças feitas durante ele. */
+/** Ata do rito, em texto simples: cada item aparece uma vez, no estado em que terminou o rito. */
 export function montarAta(area: string, data: Date, movimentos: MovimentoDaAta[]): string {
   const dia = data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
   const linhas = [`Rito de priorização — ${area} — ${dia}`, ""];
@@ -164,6 +165,12 @@ export function montarAta(area: string, data: Date, movimentos: MovimentoDaAta[]
     linhas.push("Nenhuma mudança de etapa neste rito.");
     return linhas.join("\n");
   }
+  const ultimos = new Map<number, MovimentoDaAta>();
+  for (const m of movimentos) {
+    ultimos.delete(m.itemId);
+    ultimos.set(m.itemId, m);
+  }
+  const finais = [...ultimos.values()];
   const grupos: [string, (m: MovimentoDaAta) => boolean][] = [
     ["Entraram em execução", (m) => m.para === "execucao"],
     ["Começaram discovery", (m) => m.para === "discovery"],
@@ -175,7 +182,7 @@ export function montarAta(area: string, data: Date, movimentos: MovimentoDaAta[]
     ["Descartados", (m) => m.para === "descartado"],
   ];
   for (const [titulo, filtro] of grupos) {
-    const itens = movimentos.filter(filtro);
+    const itens = finais.filter(filtro);
     if (itens.length === 0) continue;
     linhas.push(`${titulo}:`);
     for (const m of itens) {

@@ -63,13 +63,44 @@ describe("ordem e ata", () => {
 
   it("a ata agrupa por decisão e separa o que é novo do que voltou", () => {
     const ata = montarAta("Suporte", new Date("2026-11-04T15:00:00Z"), [
-      { titulo: "Convocação EDF", de: "decidir", para: "execucao", nota: "aprovado" },
-      { titulo: "Item novo", de: null, para: "backlog", nota: "Entrou no backlog" },
-      { titulo: "BI antigo", de: "decidir", para: "backlog", nota: "" },
+      { itemId: 1, titulo: "Convocação EDF", de: "decidir", para: "execucao", nota: "aprovado" },
+      { itemId: 2, titulo: "Item novo", de: null, para: "backlog", nota: "Entrou no backlog" },
+      { itemId: 3, titulo: "BI antigo", de: "decidir", para: "backlog", nota: "" },
     ]);
     expect(ata).toContain("Rito de priorização — Suporte — 04/11/2026");
     expect(ata).toContain("Entraram em execução:\n- Convocação EDF (aprovado)");
     expect(ata).toContain("Features novas:\n- Item novo");
     expect(ata).toContain("Voltaram para o backlog:\n- BI antigo");
+  });
+
+  it("mostra cada item uma vez, no estado final: execução, pausa, retomada e entrega só em Entregues", () => {
+    const ata = montarAta("Suporte", new Date("2026-11-04T15:00:00Z"), [
+      { itemId: 7, titulo: "Painel X", de: "decidir", para: "execucao", nota: "aprovado" },
+      { itemId: 7, titulo: "Painel X", de: "execucao", para: "pausado", nota: "aguardando cliente" },
+      { itemId: 7, titulo: "Painel X", de: "pausado", para: "execucao", nota: "" },
+      { itemId: 7, titulo: "Painel X", de: "execucao", para: "entregue", nota: "" },
+    ]);
+    expect(ata).toContain("Entregues:\n- Painel X");
+    expect(ata.match(/Painel X/g)).toHaveLength(1);
+    expect(ata).not.toContain("Entraram em execução");
+    expect(ata).not.toContain("Pausados");
+  });
+
+  it("execução seguida de pausa aparece só em Pausados, com a nota da pausa", () => {
+    const ata = montarAta("Suporte", new Date("2026-11-04T15:00:00Z"), [
+      { itemId: 8, titulo: "Painel Y", de: "decidir", para: "execucao", nota: "" },
+      { itemId: 8, titulo: "Painel Y", de: "execucao", para: "pausado", nota: "aguardando cliente" },
+    ]);
+    expect(ata).toContain("Pausados:\n- Painel Y (aguardando cliente)");
+    expect(ata.match(/Painel Y/g)).toHaveLength(1);
+    expect(ata).not.toContain("Entraram em execução");
+  });
+
+  it("itens diferentes com o mesmo título continuam separados", () => {
+    const ata = montarAta("Suporte", new Date("2026-11-04T15:00:00Z"), [
+      { itemId: 1, titulo: "Igual", de: "decidir", para: "execucao", nota: "" },
+      { itemId: 2, titulo: "Igual", de: "decidir", para: "execucao", nota: "" },
+    ]);
+    expect(ata.match(/- Igual/g)).toHaveLength(2);
   });
 });
