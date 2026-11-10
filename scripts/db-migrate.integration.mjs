@@ -23,13 +23,18 @@ try {
     catch { await new Promise((resolve) => setTimeout(resolve, 200)); }
   }
   assert.ok(client, "Postgres efêmero iniciou");
+  const setup = spawnSync(process.execPath, ["scripts/db-setup.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: url } });
+  assert.equal(setup.status, 0, setup.stderr);
+  await client.query("insert into areas (nome) values ('preserved by migration')");
   const ok = run(url);
   assert.equal(ok.status, 0, ok.stderr);
   const again = run(url);
   assert.equal(again.status, 0, again.stderr);
   assert.doesNotMatch(again.stdout, /Aplicada:/);
   const applied = await client.query("select version from schema_migrations order by version");
-  assert.deepEqual(applied.rows.map((r) => r.version), ["0001_rito_schema.sql"]);
+  assert.deepEqual(applied.rows.map((r) => r.version), ["1"]);
+  const preserved = await client.query("select count(*)::int as n from areas where nome = 'preserved by migration'");
+  assert.equal(preserved.rows[0].n, 1);
 
   const badDir = join(tmp, "db", "migrations");
   mkdirSync(badDir, { recursive: true });
@@ -39,8 +44,17 @@ try {
   const probe = await client.query("select to_regclass('public.rollback_probe') as table_name");
   assert.equal(probe.rows[0].table_name, null);
   const history = await client.query("select version from schema_migrations order by version");
-  assert.deepEqual(history.rows.map((r) => r.version), ["0001_rito_schema.sql"]);
-  console.log("db:migrate local: segunda execução não reaplicou; migration com erro não deixou tabela nem registro.");
+  assert.deepEqual(history.rows.map((r) => r.version), ["1"]);
+
+  const tls = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://example.invalid/db" } });
+  assert.match(tls.stderr, /sslmode=verify-full/);
+  const dupDir = join(tmp, "duplicates");
+  mkdirSync(dupDir);
+  writeFileSync(join(dupDir, "2_first.sql"), "select 1;");
+  writeFileSync(join(dupDir, "02_second.sql"), "select 2;");
+  const duplicate = spawnSync(process.execPath, ["scripts/db-migrate.mjs"], { cwd: root, encoding: "utf8", env: { ...process.env, DATABASE_URL: "postgresql://example.invalid/db?sslmode=verify-full", RITO_MIGRATIONS_DIR: dupDir } });
+  assert.match(duplicate.stderr, /duplicadas/);
+  console.log("db:migrate local: db:setup preservado; segunda execução não reaplicou; erro fez rollback; TLS remoto e versões duplicadas validados.");
 } finally {
   if (client) await client.end().catch(() => {});
   spawnSync("docker", ["rm", "--force", container], { stdio: "ignore" });
