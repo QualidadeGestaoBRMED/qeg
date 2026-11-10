@@ -1,3 +1,4 @@
+import { sessaoExpirou } from "@/features/auth/sessionEvents";
 import type { Etapa } from "./regras";
 import type { Area, CamposItem, Item, Movimento, Produto, Rito } from "./tipos";
 
@@ -12,6 +13,10 @@ async function chamar<T>(acao: string, dados: Record<string, unknown> = {}): Pro
     });
   } catch {
     throw new Error("Sem conexão com o servidor.");
+  }
+  if (r.status === 401) {
+    sessaoExpirou();
+    throw new Error("Sessão expirada. Entre novamente.");
   }
   const corpo = (await r.json().catch(() => ({}))) as T & { error?: string };
   if (!r.ok) throw new Error(corpo.error ?? "Algo deu errado. Tente de novo.");
