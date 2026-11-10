@@ -33,18 +33,16 @@ class ErroDeUso extends Error {
   }
 }
 
-function mensagemDeErroSegura(e: unknown): string {
-  if (!(e instanceof Error)) return "Erro desconhecido.";
-  return e.message
-    .replace(/\bpostgres(?:ql)?:\/\/[^\s"'`]+/gi, "[DATABASE_URL]")
-    .replace(/((?:user(?:name)?|password|passwd|pwd|secret|token|api[_-]?key|authorization)\s*[:=]\s*)[^\s,;]+/gi, "$1[REDACTED]")
-    .slice(0, 300);
-}
-
 function codigoDeErro(e: unknown): string | undefined {
   if (typeof e !== "object" || e === null || !("code" in e)) return undefined;
   const code = e.code;
   return typeof code === "string" && /^[A-Z0-9_-]{1,32}$/i.test(code) ? code : undefined;
+}
+
+const CODIGOS_BANCO_INDISPONIVEL = new Set(["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "ECONNRESET", "57P01", "57P03"]);
+
+function bancoIndisponivel(code: string | undefined): boolean {
+  return code !== undefined && (CODIGOS_BANCO_INDISPONIVEL.has(code.toUpperCase()) || code.startsWith("08"));
 }
 
 type Dados = Record<string, unknown>;
@@ -336,11 +334,14 @@ export async function ritoHandler(req: Req, res: ServerResponse) {
   } catch (e) {
     if (e instanceof ErroDeUso) return json(res, e.status, { error: e.message });
     const code = codigoDeErro(e);
-    console.error("rito: falha ao acessar o banco", {
+    console.error("rito: falha ao processar a ação", {
       name: e instanceof Error ? e.name : "unknown",
       ...(code ? { code } : {}),
-      message: mensagemDeErroSegura(e),
+      message: "Falha ao processar a ação no banco do Rito.",
     });
-    return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
+    if (bancoIndisponivel(code)) {
+      return json(res, 503, { error: "Banco do Rito temporariamente indisponível. Tente novamente em instantes." });
+    }
+    return json(res, 500, { error: "Erro interno no Rito" });
   }
 }
