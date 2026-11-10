@@ -134,10 +134,13 @@ describe("ritoHandler logging", () => {
     });
   });
 
-  it("em erro de banco devolve 503, registra diagnóstico sanitizado e uma linha estruturada", async () => {
+  it.each([
+    ["banco indisponível", "ECONNREFUSED", 503],
+    ["erro interno", "23505", 500],
+  ])("em %s devolve %i, loga name/code com mensagem fixa e uma linha estruturada", async (_nome, code, status) => {
     const databaseUrl = "postgresql://rito_user:supersecret@db.example/rito";
     mocks.poolQuery.mockRejectedValue(
-      Object.assign(new Error(`connect failed ${databaseUrl} password=supersecret token=abc123`), { code: "ECONNREFUSED" }),
+      Object.assign(new Error(`connect failed ${databaseUrl} password=supersecret token=abc123`), { code }),
     );
     mocks.readJsonBody.mockResolvedValue({ acao: "dados", areaId: 23 });
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
@@ -146,14 +149,16 @@ describe("ritoHandler logging", () => {
 
     await ritoHandler({ method: "POST", headers: {} } as never, res as never);
 
-    expect(res.statusCode).toBe(503);
+    expect(res.statusCode).toBe(status);
     expect(log).toHaveBeenCalledTimes(1);
     expect(assertCamposPermitidos(String(log.mock.calls[0][0]))).toMatchObject({ action: "dados", area: 23, result: "error" });
     expect(logErro).toHaveBeenCalledTimes(1);
-    const [, diagnostico] = logErro.mock.calls[0] as [string, { name: string; code?: string; message: string }];
-    expect(diagnostico).toMatchObject({ name: "Error", code: "ECONNREFUSED" });
-    expect(diagnostico.message).toMatch(/connect failed/);
+    expect(logErro.mock.calls[0][1]).toEqual({
+      name: "Error",
+      code,
+      message: "Falha ao processar a ação no banco do Rito.",
+    });
     const saidas = JSON.stringify([log.mock.calls, logErro.mock.calls, res.body]);
-    expect(saidas).not.toMatch(/rito_user|supersecret|abc123|db\.example|postgres(ql)?:\/\//i);
+    expect(saidas).not.toMatch(/rito_user|supersecret|abc123|db\.example|connect failed|postgres(ql)?:\/\//i);
   });
 });
