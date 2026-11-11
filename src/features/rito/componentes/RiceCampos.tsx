@@ -51,10 +51,10 @@ export function RiceCampos({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <Campo rotulo="Alcance" dica="Pessoas ou pedidos impactados por mês.">
-        <Numero id={`reach-${item.id}`} valor={item.reach} placeholder="ex.: 300" onSalvar={(v) => onSalvar({ reach: v })} />
+      <Campo rotulo="Alcance: volume por mês" dica="Quantos pedidos, casos ou pessoas passam por esse processo em um mês.">
+        <Numero id={`reach-${item.id}`} valor={item.reach} placeholder="ex.: 300 pedidos" onSalvar={(v) => onSalvar({ reach: v })} />
       </Campo>
-      <Campo rotulo="Impacto">
+      <Campo rotulo="Impacto: economia de headcount">
         <Escolha
           rotulo="Impacto"
           valor={item.impact}
@@ -62,7 +62,7 @@ export function RiceCampos({
           opcoes={ESCALA_IMPACTO.map((e) => ({ valor: e.valor, nome: e.nome, dica: e.exemplo }))}
         />
       </Campo>
-      <Campo rotulo="Confiança">
+      <Campo rotulo="Confiança nos números">
         <Escolha
           rotulo="Confiança"
           valor={item.confidence}
@@ -71,8 +71,8 @@ export function RiceCampos({
         />
       </Campo>
       {comEsforco && (
-        <Campo rotulo="Esforço" dica="Pessoa-semana, estimado no discovery.">
-          <Numero id={`effort-${item.id}`} valor={item.effort} placeholder="ex.: 2" onSalvar={(v) => onSalvar({ effort: v })} />
+        <Campo rotulo="Esforço: tempo de execução" dica="Semanas de trabalho de uma pessoa do time (pessoa-semana), estimadas no discovery.">
+          <Numero id={`effort-${item.id}`} valor={item.effort} placeholder="ex.: 2 semanas" onSalvar={(v) => onSalvar({ effort: v })} />
         </Campo>
       )}
     </div>

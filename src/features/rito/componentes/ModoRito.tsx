@@ -211,7 +211,7 @@ export function ModoRito({
                 onAbrir={() => onAbrir(i.id)}
                 rodape={
                   <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    Esforço (pessoa-semana)
+                    Tempo de execução (pessoa-semana)
                     <input
                       inputMode="decimal"
                       defaultValue={i.effort ?? ""}
