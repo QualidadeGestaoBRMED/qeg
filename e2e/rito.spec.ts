@@ -69,9 +69,9 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     const reach = linha.locator('input[id^="reach-"]');
     await reach.fill("300");
     await reach.press("Enter");
-    await linha.getByRole("radio", { name: "Alto" }).click();
-    await expect(linha.getByRole("radio", { name: "Alto" })).toHaveAttribute("aria-checked", "true");
-    await linha.getByRole("radio", { name: "Média" }).click();
+    await linha.getByRole("radio", { name: "½ headcount" }).click();
+    await expect(linha.getByRole("radio", { name: "½ headcount" })).toHaveAttribute("aria-checked", "true");
+    await linha.getByRole("radio", { name: "Estimado" }).click();
     await expect(linha.getByRole("button", { name: "Abrir discovery" })).toBeVisible();
     await expect(linha.getByText("pré", { exact: true })).toBeVisible();
     await expect(linha.getByTitle(/Pré-score/)).toContainText("480");
@@ -83,7 +83,7 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Discovery", level: 2 })).toBeVisible();
     await expect(linha.getByRole("button", { name: "Discovery concluído" })).toBeDisabled();
-    const esforco = linha.getByLabel("Esforço (pessoa-semana)");
+    const esforco = linha.getByLabel("Tempo de execução (pessoa-semana)");
     await esforco.fill("2");
     await esforco.blur();
     await expect(linha.getByRole("button", { name: "Discovery concluído" })).toBeEnabled();

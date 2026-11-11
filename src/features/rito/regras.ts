@@ -60,7 +60,7 @@ export function bloqueioDaMudanca(item: ItemRice, para: Etapa, nota = ""): strin
     return "Preencha alcance, impacto e confiança antes de abrir o discovery.";
   }
   if (para === "decidir" && (item.effort == null || item.effort <= 0)) {
-    return "O discovery precisa trazer o esforço (pessoa-semana).";
+    return "O discovery precisa trazer o esforço: o tempo de execução, em pessoa-semana.";
   }
   if (para === "descartado" && !nota.trim() && !(item.motivo ?? "").trim()) {
     return "Diga por que o item foi descartado.";
@@ -123,18 +123,19 @@ export const NOMES_PILAR: Record<Pilar, string> = {
   capacitacao: "Capacitação",
 };
 
+// Impacto em economia de headcount (1 headcount ≈ 160 h/mês). Os valores são a escala do RICE (3, 2, 1, 0,5, 0,25).
 export const ESCALA_IMPACTO: { valor: number; nome: string; exemplo: string }[] = [
-  { valor: 3, nome: "Enorme", exemplo: "Recupera receita ou evita perda de cliente" },
-  { valor: 2, nome: "Alto", exemplo: "Tira um processo manual inteiro da equipe" },
-  { valor: 1, nome: "Médio", exemplo: "Melhora visivelmente o dia a dia da área" },
-  { valor: 0.5, nome: "Baixo", exemplo: "Ajuste que poucos vão notar" },
-  { valor: 0.25, nome: "Mínimo", exemplo: "Conforto, sem efeito no resultado" },
+  { valor: 3, nome: "1+ headcount", exemplo: "Libera uma pessoa inteira ou mais (≈ 160 h/mês), ou protege receita e cliente." },
+  { valor: 2, nome: "½ headcount", exemplo: "Libera meia pessoa (≈ 80 h/mês): tira um processo manual inteiro da equipe." },
+  { valor: 1, nome: "Horas por semana", exemplo: "Economiza algumas horas por semana (≈ 20 a 40 h/mês)." },
+  { valor: 0.5, nome: "Horas por mês", exemplo: "Economiza poucas horas por mês (menos de 10 h)." },
+  { valor: 0.25, nome: "Sem economia", exemplo: "Conforto ou qualidade, sem economia de horas." },
 ];
 
 export const ESCALA_CONFIANCA: { valor: number; nome: string; exemplo: string }[] = [
-  { valor: 1, nome: "Alta", exemplo: "Temos dados ou já fizemos parecido" },
-  { valor: 0.8, nome: "Média", exemplo: "Faz sentido, mas há suposições" },
-  { valor: 0.5, nome: "Baixa", exemplo: "É uma aposta" },
+  { valor: 1, nome: "Medido", exemplo: "Os números vêm de dados (Pipefy, BI) ou já fizemos algo parecido." },
+  { valor: 0.8, nome: "Estimado", exemplo: "Estimativa da área, ainda sem medição." },
+  { valor: 0.5, nome: "Hipótese", exemplo: "É uma aposta: o discovery precisa validar." },
 ];
 
 /** Ordem dentro de uma coluna: maior score primeiro; sem score por último, mais antigos antes. */

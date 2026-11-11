@@ -1,4 +1,5 @@
 import type React from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { scoreDoCard, type ItemRice } from "../regras";
 import type { StatusProduto } from "../tipos";
@@ -40,30 +41,40 @@ export function Escolha<T extends string | number>({
   onChange: (v: T | null) => void;
   rotulo: string;
 }) {
+  // a explicação da opção (passando o mouse, ou a escolhida) fica visível embaixo, não só no tooltip
+  const [sobre, setSobre] = useState<T | null>(null);
+  const explicacao = opcoes.find((o) => o.valor === (sobre ?? valor))?.dica;
   return (
-    <div role="radiogroup" aria-label={rotulo} className="flex flex-wrap gap-1.5">
-      {opcoes.map((o) => {
-        const ativo = o.valor === valor;
-        return (
-          <button
-            key={String(o.valor)}
-            type="button"
-            role="radio"
-            aria-checked={ativo}
-            title={o.dica}
-            onClick={() => onChange(ativo ? null : o.valor)}
-            className={cn(
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              foco,
-              ativo
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-white text-muted-foreground hover:border-primary/50 hover:text-foreground",
-            )}
-          >
-            {o.nome}
-          </button>
-        );
-      })}
+    <div className="flex flex-col gap-1.5">
+      <div role="radiogroup" aria-label={rotulo} className="flex flex-wrap gap-1.5">
+        {opcoes.map((o) => {
+          const ativo = o.valor === valor;
+          return (
+            <button
+              key={String(o.valor)}
+              type="button"
+              role="radio"
+              aria-checked={ativo}
+              aria-description={o.dica}
+              onMouseEnter={() => setSobre(o.valor)}
+              onMouseLeave={() => setSobre(null)}
+              onFocus={() => setSobre(o.valor)}
+              onBlur={() => setSobre(null)}
+              onClick={() => onChange(ativo ? null : o.valor)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                foco,
+                ativo
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-white text-muted-foreground hover:border-primary/50 hover:text-foreground",
+              )}
+            >
+              {o.nome}
+            </button>
+          );
+        })}
+      </div>
+      {explicacao && <span className="text-xs text-muted-foreground">{explicacao}</span>}
     </div>
   );
 }
