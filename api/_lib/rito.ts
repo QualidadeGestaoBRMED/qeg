@@ -10,6 +10,7 @@ import {
   FAIXAS_VALOR,
   ganhoDaFicha,
   montarAta,
+  NIVEIS_RISCO,
   PILARES,
   TIERS,
   TIPOS_GANHO,
@@ -109,7 +110,7 @@ const COLUNAS_ITEM = `i.id, i.area_id as "areaId", i.produto_id as "produtoId", 
   i.solicitante, i.pilar, i.etapa, i.reach::float, i.impact::float, i.confidence::float, i.effort::float,
   i.solucao, i.riscos, i.motivo, i.pipefy_url as "pipefyUrl", i.criado_em as "criadoEm",
   i.atualizado_em as "atualizadoEm", i.ganho_tipo as "ganhoTipo", i.horas_mes::float as "horasMes",
-  i.valor_hora::float as "valorHora", i.cliente, i.tier, i.risco_perda as "riscoPerda",
+  i.valor_hora::float as "valorHora", i.clientes, i.nivel_risco as "nivelRisco", i.risco_perda as "riscoPerda",
   i.faixa_receita as "faixaReceita", i.justificativa, i.ajuste_score::float as "ajusteScore",
   i.ajuste_motivo as "ajusteMotivo"`;
 
@@ -131,7 +132,19 @@ function decimalOuNulo(v: unknown, campo: string): number | null {
 }
 
 /** Campos da ficha que definem o ganho: quando um deles muda, o ganho (impact) é recalculado. */
-const CAMPOS_DO_GANHO = ["ganho_tipo", "horas_mes", "valor_hora", "tier", "risco_perda", "faixa_receita"];
+const CAMPOS_DO_GANHO = ["ganho_tipo", "horas_mes", "valor_hora", "clientes", "risco_perda", "faixa_receita", "nivel_risco"];
+
+/** Lista de clientes da ficha: até 30, cada um com nome e tier (o tier pode faltar enquanto a área preenche). */
+function listaDeClientes(v: unknown): string {
+  if (v === null || v === undefined) return "[]";
+  if (!Array.isArray(v) || v.length > 30) throw new ErroDeUso(400, "Lista de clientes inválida.");
+  const lista = v.map((c) => {
+    if (typeof c !== "object" || c === null) throw new ErroDeUso(400, "Lista de clientes inválida.");
+    const { nome, tier } = c as { nome?: unknown; tier?: unknown };
+    return { nome: texto(nome, 200), tier: opcao(tier, "tier", TIERS) };
+  });
+  return JSON.stringify(lista);
+}
 
 // Campos editáveis e como validar cada um.
 const EDITAVEIS: Record<string, (v: unknown) => unknown> = {
@@ -158,8 +171,8 @@ const EDITAVEIS: Record<string, (v: unknown) => unknown> = {
   ganho_tipo: (v) => opcao(v, "tipo de ganho", TIPOS_GANHO),
   horas_mes: (v) => numeroOuNulo(v, "horas por mês"),
   valor_hora: (v) => numeroOuNulo(v, "valor da hora"),
-  cliente: (v) => texto(v, 200),
-  tier: (v) => opcao(v, "tier", TIERS),
+  clientes: (v) => listaDeClientes(v),
+  nivel_risco: (v) => numeroOuNulo(v, "nível de risco", NIVEIS_RISCO.map((n) => n.nota)),
   risco_perda: (v) => booleanoOuNulo(v, "risco de perda"),
   faixa_receita: (v) => numeroOuNulo(v, "faixa de receita", FAIXAS_VALOR.map((f) => f.nota)),
   justificativa: (v) => texto(v),
@@ -181,6 +194,7 @@ const NOMES_CAMPOS: Record<string, string> = {
   valorHora: "valor_hora",
   riscoPerda: "risco_perda",
   faixaReceita: "faixa_receita",
+  nivelRisco: "nivel_risco",
   ajusteScore: "ajuste_score",
   ajusteMotivo: "ajuste_motivo",
 };

@@ -28,7 +28,7 @@ export interface ItemRice {
 
 // ---- Ficha guiada: de onde vem o ganho ----
 
-export const TIPOS_GANHO = ["tempo", "cliente", "receita"] as const;
+export const TIPOS_GANHO = ["tempo", "cliente", "receita", "risco"] as const;
 export type TipoGanho = (typeof TIPOS_GANHO)[number];
 
 export const TIERS = ["bronze", "prata", "ouro", "diamante"] as const;
@@ -47,14 +47,28 @@ export function faixaDeValor(anual: number): number {
   return anual > 500_000 ? 4 : anual > 200_000 ? 3 : anual > 50_000 ? 2 : 1;
 }
 
+export interface ClienteDaFicha {
+  nome: string;
+  tier: Tier | null;
+}
+
 export interface FichaGanho {
   ganhoTipo: TipoGanho | null;
   horasMes: number | null;
   valorHora: number | null;
-  tier: Tier | null;
+  clientes: ClienteDaFicha[];
   riscoPerda: boolean | null;
   faixaReceita: number | null;
+  nivelRisco: number | null;
 }
+
+/** Projetos que não economizam horas, mas evitam erro, multa ou perda de contrato. */
+export const NIVEIS_RISCO: { nota: number; nome: string; exemplo: string }[] = [
+  { nota: 1, nome: "Incômodo", exemplo: "Retrabalho pequeno, ninguém de fora percebe." },
+  { nota: 2, nome: "Erro visível", exemplo: "Retrabalho frequente ou erro que o cliente vê." },
+  { nota: 3, nome: "Multa ou reclamação", exemplo: "Multa, reclamação formal ou perda de prazo contratual." },
+  { nota: 4, nome: "Risco grave", exemplo: "Risco legal, de saúde do trabalhador ou de perder contrato." },
+];
 
 /** Economia anual de um projeto que economiza tempo: horas por mês × valor da hora × 12. */
 export function economiaAnual(f: Pick<FichaGanho, "horasMes" | "valorHora">): number | null {
@@ -77,8 +91,15 @@ export function ganhoDaFicha(f: FichaGanho): { nota: number; texto: string } | n
     return faixa ? { nota: faixa.nota, texto: faixa.nome } : null;
   }
   if (f.ganhoTipo === "cliente") {
-    if (!f.tier || f.riscoPerda == null) return null;
-    return { nota: NOTA_TIER[f.tier] + (f.riscoPerda ? 1 : 0), texto: `${NOMES_TIER[f.tier]}${f.riscoPerda ? " + risco de perda" : ""}` };
+    const tiers = f.clientes.map((c) => c.tier).filter((t): t is Tier => t != null);
+    if (tiers.length === 0 || tiers.length < f.clientes.length || f.riscoPerda == null) return null;
+    const maior = tiers.reduce((a, b) => (NOTA_TIER[b] > NOTA_TIER[a] ? b : a));
+    const qtd = f.clientes.length > 1 ? ` (maior de ${f.clientes.length} clientes)` : "";
+    return { nota: NOTA_TIER[maior] + (f.riscoPerda ? 1 : 0), texto: `${NOMES_TIER[maior]}${qtd}${f.riscoPerda ? " + risco de perda" : ""}` };
+  }
+  if (f.ganhoTipo === "risco") {
+    const nivel = NIVEIS_RISCO.find((n) => n.nota === f.nivelRisco);
+    return nivel ? { nota: nivel.nota, texto: nivel.nome } : null;
   }
   return null;
 }
@@ -196,8 +217,19 @@ export const NOMES_PILAR: Record<Pilar, string> = {
 export const ESCALA_ALCANCE: { valor: number; nome: string; exemplo: string }[] = [
   { valor: 1, nome: "Uma área", exemplo: "Só a área que pediu usa ou sente o resultado." },
   { valor: 3, nome: "Várias áreas", exemplo: "Duas ou mais áreas ganham. Ex.: Suporte, Operações e Credenciamento." },
-  { valor: 5, nome: "A empresa toda", exemplo: "Muda algo para todos ou para todos os clientes." },
+  { valor: 5, nome: "A empresa toda", exemplo: "Muda algo para todas as áreas." },
 ];
+
+/** Em projetos para clientes, o alcance conta clientes, não áreas. */
+export const ESCALA_ALCANCE_CLIENTES: { valor: number; nome: string; exemplo: string }[] = [
+  { valor: 1, nome: "Um cliente", exemplo: "Feito para um cliente específico." },
+  { valor: 3, nome: "Alguns clientes", exemplo: "Serve a dois ou mais clientes. Ex.: a mesma convocação para EDF, Log-In e OOG-TK." },
+  { valor: 5, nome: "Todos os clientes", exemplo: "Muda algo para toda a carteira." },
+];
+
+export function escalaDeAlcance(tipo: TipoGanho | null) {
+  return tipo === "cliente" ? ESCALA_ALCANCE_CLIENTES : ESCALA_ALCANCE;
+}
 
 export const ESCALA_CONFIANCA: { valor: number; nome: string; exemplo: string }[] = [
   { valor: 1, nome: "Medido", exemplo: "Os números vêm do Pipefy, do BI ou de uma planilha." },

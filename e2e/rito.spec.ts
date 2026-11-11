@@ -70,14 +70,14 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     const ficha = page.getByRole("dialog", { name: feature });
     await expect(ficha).toBeVisible();
     const continuar = () => ficha.getByRole("button", { name: "Continuar" }).click();
-    await ficha.getByRole("radio", { name: /Atende ou retém um cliente/ }).click();
+    await ficha.getByRole("radio", { name: /Atende ou retém clientes externos/ }).click();
     await continuar();
     await ficha.getByRole("radio", { name: "Ouro" }).click();
     await ficha.getByRole("radio", { name: /^Sim/ }).click();
     await expect(ficha.getByRole("radio", { name: /^Sim/ })).toHaveAttribute("aria-checked", "true");
     await print(page, 4, "ficha-ganho-cliente");
     await continuar();
-    await ficha.getByRole("radio", { name: /Várias áreas/ }).click();
+    await ficha.getByRole("radio", { name: /Alguns clientes/ }).click();
     await continuar();
     await ficha.getByRole("radio", { name: /Estimado/ }).click();
     await continuar();

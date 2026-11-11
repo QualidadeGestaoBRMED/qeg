@@ -1,4 +1,4 @@
-import type { Etapa, Pilar, Tier, TipoGanho } from "./regras";
+import type { ClienteDaFicha, Etapa, Pilar, TipoGanho } from "./regras";
 
 export interface Area {
   id: number;
@@ -41,8 +41,8 @@ export interface Item {
   ganhoTipo: TipoGanho | null;
   horasMes: number | null;
   valorHora: number | null;
-  cliente: string;
-  tier: Tier | null;
+  clientes: ClienteDaFicha[];
+  nivelRisco: number | null;
   riscoPerda: boolean | null;
   faixaReceita: number | null;
   /** "Por que vale a pena?" */
@@ -84,8 +84,8 @@ export type CamposItem = Partial<
     | "ganhoTipo"
     | "horasMes"
     | "valorHora"
-    | "cliente"
-    | "tier"
+    | "clientes"
+    | "nivelRisco"
     | "riscoPerda"
     | "faixaReceita"
     | "justificativa"

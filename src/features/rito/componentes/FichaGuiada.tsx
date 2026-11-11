@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
-import { Pencil, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   economiaAnual,
-  ESCALA_ALCANCE,
   ESCALA_CONFIANCA,
+  escalaDeAlcance,
   FAIXAS_VALOR,
   ganhoDaFicha,
+  NIVEIS_RISCO,
   NOMES_TIER,
   preScore,
   TIERS,
+  type ClienteDaFicha,
   type TipoGanho,
 } from "../regras";
 import type { CamposItem, Item } from "../tipos";
@@ -19,9 +21,53 @@ const reais = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curr
 
 const TIPOS: { valor: TipoGanho; nome: string; exemplo: string }[] = [
   { valor: "tempo", nome: "Economiza tempo da equipe", exemplo: "Tira trabalho manual de um processo interno." },
-  { valor: "cliente", nome: "Atende ou retém um cliente", exemplo: "Resolve um problema de um cliente específico." },
+  { valor: "cliente", nome: "Atende ou retém clientes externos", exemplo: "Resolve um problema de um ou mais clientes da carteira." },
   { valor: "receita", nome: "Gera receita nova", exemplo: "Abre venda, serviço novo ou cobrança." },
+  { valor: "risco", nome: "Reduz risco ou melhora o controle", exemplo: "Evita erro, multa ou perda de prazo, sem economizar horas." },
 ];
+
+/** Editor da lista de clientes: nome e tier de cada um. Grava a lista inteira a cada mudança. */
+function ListaClientes({ item, onSalvar }: { item: Item; onSalvar: (campos: CamposItem) => void }) {
+  const [lista, setLista] = useState<ClienteDaFicha[]>(item.clientes.length ? item.clientes : [{ nome: "", tier: null }]);
+  useEffect(() => {
+    if (item.clientes.length) setLista(item.clientes);
+  }, [item.clientes]);
+  const gravar = (nova: ClienteDaFicha[]) => {
+    setLista(nova);
+    onSalvar({ clientes: nova });
+  };
+  return (
+    <div className="flex flex-col gap-3">
+      {lista.map((c, n) => (
+        <div key={n} className="flex flex-col gap-2 rounded-lg border border-border p-3">
+          <div className="flex items-center gap-2">
+            <input
+              aria-label={`Cliente ${n + 1}`}
+              value={c.nome}
+              placeholder="ex.: International SOS"
+              onChange={(e) => setLista(lista.map((x, i) => (i === n ? { ...x, nome: e.target.value } : x)))}
+              onBlur={() => c.nome !== (item.clientes[n]?.nome ?? "") && gravar(lista)}
+              className={estiloEntrada}
+            />
+            {lista.length > 1 && (
+              <Botao variante="fantasma" className="px-2" aria-label={`Remover cliente ${n + 1}`} onClick={() => gravar(lista.filter((_, i) => i !== n))}>
+                <Trash2 className="h-4 w-4" />
+              </Botao>
+            )}
+          </div>
+          <div role="radiogroup" aria-label={`Tier do cliente ${n + 1}`} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {TIERS.map((t) => (
+              <Opcao key={t} ativo={c.tier === t} nome={NOMES_TIER[t]} onClick={() => gravar(lista.map((x, i) => (i === n ? { ...x, tier: t } : x)))} />
+            ))}
+          </div>
+        </div>
+      ))}
+      <Botao className="self-start" onClick={() => setLista([...lista, { nome: "", tier: null }])}>
+        <Plus className="h-3.5 w-3.5" /> Adicionar cliente
+      </Botao>
+    </div>
+  );
+}
 
 const PASSOS = ["Tipo de ganho", "Ganho", "Alcance", "Confiança", "Por que vale a pena"] as const;
 
@@ -136,7 +182,10 @@ function PassosDaFicha({
       </div>
 
       {passo === 0 && (
-        <Pergunta titulo="Que tipo de ganho esse projeto traz?" dica="Escolha o principal. Se trouxer mais de um, fique com o maior.">
+        <Pergunta
+          titulo="Que tipo de ganho esse projeto traz?"
+          dica="Escolha o principal; se trouxer mais de um, fique com o maior. Para outra área da BR MED (ex.: Operações), use Economiza tempo com as horas e o valor da hora dessa área."
+        >
           <div role="radiogroup" aria-label="Tipo de ganho" className="grid gap-2">
             {TIPOS.map((t) => (
               <Opcao key={t.valor} ativo={item.ganhoTipo === t.valor} nome={t.nome} exemplo={t.exemplo} onClick={() => onSalvar({ ganhoTipo: t.valor })} />
@@ -175,30 +224,25 @@ function PassosDaFicha({
       )}
 
       {passo === 1 && item.ganhoTipo === "cliente" && (
-        <Pergunta titulo="Qual cliente e quanto ele pesa?" dica="O tier vem do BI e já reflete o faturamento do cliente.">
-          <label className="flex flex-col gap-1.5 text-sm font-medium text-foreground">
-            Cliente
-            <input
-              defaultValue={item.cliente}
-              placeholder="ex.: International SOS"
-              onBlur={(e) => e.target.value.trim() !== item.cliente && onSalvar({ cliente: e.target.value.trim() })}
-              className={`${estiloEntrada} max-w-[320px]`}
-            />
-          </label>
+        <Pergunta titulo="Quais clientes e quanto eles pesam?" dica="O tier vem do BI e já reflete o faturamento. Com vários clientes, vale o maior tier.">
+          <ListaClientes item={item} onSalvar={onSalvar} />
           <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-foreground">Tier do cliente</span>
-            <div role="radiogroup" aria-label="Tier do cliente" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {TIERS.map((t) => (
-                <Opcao key={t} ativo={item.tier === t} nome={NOMES_TIER[t]} onClick={() => onSalvar({ tier: t })} />
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-foreground">Se não fizermos, há risco de perder o cliente?</span>
+            <span className="text-sm font-medium text-foreground">Se não fizermos, há risco de perder algum desses clientes?</span>
             <div role="radiogroup" aria-label="Risco de perder o cliente" className="grid grid-cols-2 gap-2 sm:max-w-[420px]">
               <Opcao ativo={item.riscoPerda === true} nome="Sim" exemplo="Sobe uma faixa" onClick={() => onSalvar({ riscoPerda: true })} />
               <Opcao ativo={item.riscoPerda === false} nome="Não" exemplo="Fica no tier" onClick={() => onSalvar({ riscoPerda: false })} />
             </div>
+          </div>
+          {ganho && <p className="rounded-md bg-primary/10 px-3 py-2 text-sm text-foreground">Ganho {ganho.nota} · {ganho.texto}</p>}
+        </Pergunta>
+      )}
+
+      {passo === 1 && item.ganhoTipo === "risco" && (
+        <Pergunta titulo="Se nada mudar, o que acontece de pior?" dica="Pense no pior caso realista dos próximos meses.">
+          <div role="radiogroup" aria-label="Nível de risco" className="grid gap-2">
+            {NIVEIS_RISCO.map((n) => (
+              <Opcao key={n.nota} ativo={item.nivelRisco === n.nota} nome={n.nome} exemplo={n.exemplo} onClick={() => onSalvar({ nivelRisco: n.nota })} />
+            ))}
           </div>
         </Pergunta>
       )}
@@ -214,9 +258,12 @@ function PassosDaFicha({
       )}
 
       {passo === 2 && (
-        <Pergunta titulo="Quem ganha com isso?" dica="Conte as áreas que usam ou sentem o resultado, não só quem pediu.">
+        <Pergunta
+          titulo={item.ganhoTipo === "cliente" ? "Quantos clientes ganham com isso?" : "Quem ganha com isso?"}
+          dica={item.ganhoTipo === "cliente" ? `Você listou ${item.clientes.length} cliente${item.clientes.length === 1 ? "" : "s"}. Conte também os que ainda virão.` : "Conte as áreas que usam ou sentem o resultado, não só quem pediu."}
+        >
           <div role="radiogroup" aria-label="Alcance" className="grid gap-2">
-            {ESCALA_ALCANCE.map((a) => (
+            {escalaDeAlcance(item.ganhoTipo).map((a) => (
               <Opcao key={a.valor} ativo={item.reach === a.valor} nome={a.nome} exemplo={a.exemplo} onClick={() => onSalvar({ reach: a.valor })} />
             ))}
           </div>
@@ -318,7 +365,7 @@ export function FichaGuiada({ item, onSalvar, compacta = false }: { item: Item; 
   const resumo: [string, string | null][] = [
     ["Tipo de ganho", TIPOS.find((t) => t.valor === item.ganhoTipo)?.nome ?? null],
     ["Ganho", ganho ? `${ganho.nota} · ${ganho.texto}` : null],
-    ["Alcance", ESCALA_ALCANCE.find((a) => a.valor === item.reach)?.nome ?? null],
+    ["Alcance", escalaDeAlcance(item.ganhoTipo).find((a) => a.valor === item.reach)?.nome ?? null],
     ["Confiança", ESCALA_CONFIANCA.find((c) => c.valor === item.confidence)?.nome ?? null],
     ["Por que vale a pena", item.justificativa.trim() || null],
   ];

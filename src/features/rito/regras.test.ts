@@ -125,7 +125,8 @@ describe("status do produto", () => {
 });
 
 describe("ficha guiada", () => {
-  const ficha: FichaGanho = { ganhoTipo: null, horasMes: null, valorHora: null, tier: null, riscoPerda: null, faixaReceita: null };
+  const ficha: FichaGanho = { ganhoTipo: null, horasMes: null, valorHora: null, clientes: [], riscoPerda: null, faixaReceita: null, nivelRisco: null };
+  const cli = (...tiers: ("bronze" | "prata" | "ouro" | "diamante" | null)[]) => tiers.map((tier, i) => ({ nome: `C${i}`, tier }));
 
   it("faixas de valor anual alinhadas aos tiers", () => {
     expect([30_000, 50_000, 50_001, 200_000, 350_000, 500_001].map(faixaDeValor)).toEqual([1, 1, 2, 2, 3, 4]);
@@ -138,10 +139,21 @@ describe("ficha guiada", () => {
   });
 
   it("cliente: tier, uma faixa acima com risco de perda", () => {
-    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", tier: "ouro", riscoPerda: false })?.nota).toBe(3);
-    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", tier: "ouro", riscoPerda: true })?.nota).toBe(4);
-    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", tier: "diamante", riscoPerda: true })?.nota).toBe(5);
-    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", tier: "ouro", riscoPerda: null })).toBeNull();
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: false })?.nota).toBe(3);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: true })?.nota).toBe(4);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("diamante"), riscoPerda: true })?.nota).toBe(5);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: null })).toBeNull();
+  });
+
+  it("vários clientes: vale o maior tier; todos precisam de tier", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("prata", "ouro", "bronze"), riscoPerda: false })).toEqual({ nota: 3, texto: "Ouro (maior de 3 clientes)" });
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("prata", null), riscoPerda: false })).toBeNull();
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: [], riscoPerda: false })).toBeNull();
+  });
+
+  it("risco ou controle: o nível escolhido", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "risco", nivelRisco: 3 })).toEqual({ nota: 3, texto: "Multa ou reclamação" });
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "risco" })).toBeNull();
   });
 
   it("receita: a faixa escolhida", () => {
