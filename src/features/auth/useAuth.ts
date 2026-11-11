@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { aoExpirarSessao } from "./sessionEvents";
 
 type AuthStatus = "checking" | "authed" | "anon";
 
@@ -18,6 +19,8 @@ export function useAuth() {
       active = false;
     };
   }, []);
+
+  useEffect(() => aoExpirarSessao(() => setStatus("anon")), []);
 
   const login = useCallback(
     async (username: string, password: string): Promise<string | null> => {

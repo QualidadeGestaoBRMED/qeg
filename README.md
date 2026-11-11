@@ -131,6 +131,10 @@ O codigo principal vive em `src/features/sprint-monitor/`:
 npm test
 ```
 
+### Smoke de Preview
+
+`npm run smoke:preview` verifica autenticação, sessão e leitura da API, medindo o cold start da função e a primeira consulta ao banco. Defina `BASE_URL`, `SMOKE_USERNAME` e `SMOKE_PASSWORD` no ambiente; configure `SMOKE_BLOCKED_HOSTS` com a lista correta e completa dos domínios de produção, separados por vírgula. Sem essa lista o script recusa executar; uma lista incorreta ou incompleta não identifica todos os hosts de Production. Não informe segredos no repositório. O smoke é somente de leitura e não valida criação ou encerramento de rito. O fluxo completo fica para Playwright/QA, com coordenação para não interferir em rito existente. O script recusa `VERCEL_ENV=production` e hosts bloqueados; `--allow-production` é reservado à STC-1007.
+
 ### Fluxo do rito no navegador (Playwright)
 
 `npm run test:e2e` percorre o fluxo do rito de ponta a ponta com itens cadastrados manualmente (o Pipefy pode estar indisponível). Fora do `npm test`.
