@@ -59,23 +59,32 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
   const linha = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: new RegExp(feature) }) });
   const proximo = () => page.getByRole("button", { name: /^Próximo:/ });
 
-  await test.step("4. priorizar discovery com R, I e C e ver o pré-score", async () => {
+  await test.step("4. preencher a ficha guiada e ver a nota prévia", async () => {
     await page.getByRole("button", { name: /^(Iniciar|Continuar) rito$/ }).click();
     await expect(page.getByRole("heading", { name: "Produtos e features", level: 2 })).toBeVisible();
     await expect(linha).toBeVisible();
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Priorizar discovery", level: 2 })).toBeVisible();
 
-    const reach = linha.locator('input[id^="reach-"]');
-    await reach.fill("300");
-    await reach.press("Enter");
-    await linha.getByRole("radio", { name: "Alto" }).click();
-    await expect(linha.getByRole("radio", { name: "Alto" })).toHaveAttribute("aria-checked", "true");
-    await linha.getByRole("radio", { name: "Média" }).click();
+    const continuar = () => linha.getByRole("button", { name: "Continuar" }).click();
+    await linha.getByRole("radio", { name: /Atende ou retém um cliente/ }).click();
+    await continuar();
+    await linha.getByRole("radio", { name: "Ouro" }).click();
+    await linha.getByRole("radio", { name: /^Sim/ }).click();
+    await expect(linha.getByRole("radio", { name: /^Sim/ })).toHaveAttribute("aria-checked", "true");
+    await print(page, 4, "ficha-ganho-cliente");
+    await continuar();
+    await linha.getByRole("radio", { name: /Várias áreas/ }).click();
+    await continuar();
+    await linha.getByRole("radio", { name: /Estimado/ }).click();
+    await continuar();
+    await linha.getByLabel("Por que vale a pena").fill("O cliente é Ouro e pode sair sem o painel.");
+    await linha.getByRole("button", { name: "Concluir ficha" }).click();
     await expect(linha.getByRole("button", { name: "Abrir discovery" })).toBeVisible();
-    await expect(linha.getByText("pré", { exact: true })).toBeVisible();
-    await expect(linha.getByTitle(/Pré-score/)).toContainText("480");
-    await print(page, 4, "pre-score");
+    await expect(linha.getByText("prévia", { exact: true })).toBeVisible();
+    // ganho 4 (Ouro + risco de perda) × alcance 3 × confiança 0,8
+    await expect(linha.getByTitle(/Nota prévia/)).toContainText("9,6");
+    await print(page, 4, "nota-previa");
     await linha.getByRole("button", { name: "Abrir discovery" }).click();
   });
 
@@ -83,7 +92,7 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Discovery", level: 2 })).toBeVisible();
     await expect(linha.getByRole("button", { name: "Discovery concluído" })).toBeDisabled();
-    const esforco = linha.getByLabel("Esforço (pessoa-semana)");
+    const esforco = linha.getByLabel("Esforço: semanas de trabalho");
     await esforco.fill("2");
     await esforco.blur();
     await expect(linha.getByRole("button", { name: "Discovery concluído" })).toBeEnabled();
@@ -91,11 +100,11 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await linha.getByRole("button", { name: "Discovery concluído" }).click();
   });
 
-  await test.step("6. priorizar execução com o RICE completo", async () => {
+  await test.step("6. priorizar execução com o score final", async () => {
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Priorizar execução", level: 2 })).toBeVisible();
-    await expect(linha.getByTitle(/RICE:/)).toContainText("240");
-    await print(page, 6, "rice-completo");
+    await expect(linha.getByTitle(/Score final/)).toContainText("4,8");
+    await print(page, 6, "score-final");
     await linha.getByRole("button", { name: "Entrar em execução" }).click();
   });
 

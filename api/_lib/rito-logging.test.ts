@@ -45,6 +45,7 @@ const item = {
   confidence: 1,
   effort: null,
   motivo: "",
+  justificativa: "texto livre confidencial",
 };
 
 function resposta() {

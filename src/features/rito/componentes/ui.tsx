@@ -28,7 +28,7 @@ export function Botao({
   );
 }
 
-/** Grupo de opções fixas (escalas do RICE, pilares). */
+/** Grupo de opções fixas (pilares). */
 export function Escolha<T extends string | number>({
   opcoes,
   valor,
@@ -75,7 +75,7 @@ export function Score({ item, grande = false }: { item: ItemRice; grande?: boole
   }
   return (
     <span
-      title={tipo === "rice" ? "RICE: alcance × impacto × confiança ÷ esforço" : "Pré-score: alcance × impacto × confiança (sem esforço ainda)"}
+      title={tipo === "rice" ? "Score final: ganho × alcance × confiança ÷ semanas de trabalho" : "Nota prévia: ganho × alcance × confiança (sem esforço ainda)"}
       className={cn(
         "inline-flex items-baseline gap-1 tabular-nums",
         grande ? "text-2xl font-semibold text-foreground" : "text-sm font-semibold text-foreground",
@@ -83,7 +83,7 @@ export function Score({ item, grande = false }: { item: ItemRice; grande?: boole
     >
       {valor.toLocaleString("pt-BR")}
       <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        {tipo === "rice" ? "RICE" : "pré"}
+        {tipo === "rice" ? "final" : "prévia"}
       </span>
     </span>
   );

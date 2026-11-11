@@ -3,12 +3,16 @@ import type { ServerResponse } from "node:http";
 import pg from "pg";
 import { dbConnectionOptions } from "./db-connection.mjs";
 import {
+  ALCANCES,
   bloqueioDaMudanca,
   CONFIANCAS,
   ETAPAS,
-  IMPACTOS,
+  FAIXAS_VALOR,
+  ganhoDaFicha,
   montarAta,
   PILARES,
+  TIERS,
+  TIPOS_GANHO,
   type Etapa,
 } from "../../src/features/rito/regras.js";
 import { isAuthed, json, readJsonBody, type Req } from "./server.js";
@@ -104,7 +108,30 @@ function numeroOuNulo(v: unknown, campo: string, permitidos?: readonly number[])
 const COLUNAS_ITEM = `i.id, i.area_id as "areaId", i.produto_id as "produtoId", i.titulo, i.problema,
   i.solicitante, i.pilar, i.etapa, i.reach::float, i.impact::float, i.confidence::float, i.effort::float,
   i.solucao, i.riscos, i.motivo, i.pipefy_url as "pipefyUrl", i.criado_em as "criadoEm",
-  i.atualizado_em as "atualizadoEm"`;
+  i.atualizado_em as "atualizadoEm", i.ganho_tipo as "ganhoTipo", i.horas_mes::float as "horasMes",
+  i.valor_hora::float as "valorHora", i.cliente, i.tier, i.risco_perda as "riscoPerda",
+  i.faixa_receita as "faixaReceita", i.justificativa, i.ajuste_score::float as "ajusteScore",
+  i.ajuste_motivo as "ajusteMotivo"`;
+
+function opcao<T extends string>(v: unknown, campo: string, permitidos: readonly T[]): T | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (!permitidos.includes(v as T)) throw new ErroDeUso(400, `Valor inválido em "${campo}".`);
+  return v as T;
+}
+function booleanoOuNulo(v: unknown, campo: string): boolean | null {
+  if (v === null || v === undefined || v === "") return null;
+  if (typeof v !== "boolean") throw new ErroDeUso(400, `Campo "${campo}" inválido.`);
+  return v;
+}
+function decimalOuNulo(v: unknown, campo: string): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  if (!Number.isFinite(n)) throw new ErroDeUso(400, `Campo "${campo}" inválido.`);
+  return n;
+}
+
+/** Campos da ficha que definem o ganho: quando um deles muda, o ganho (impact) é recalculado. */
+const CAMPOS_DO_GANHO = ["ganho_tipo", "horas_mes", "valor_hora", "tier", "risco_perda", "faixa_receita"];
 
 // Campos editáveis e como validar cada um.
 const EDITAVEIS: Record<string, (v: unknown) => unknown> = {
@@ -121,14 +148,23 @@ const EDITAVEIS: Record<string, (v: unknown) => unknown> = {
     return v;
   },
   produto_id: (v) => opcInteiro(v, "produto"),
-  reach: (v) => numeroOuNulo(v, "alcance"),
-  impact: (v) => numeroOuNulo(v, "impacto", IMPACTOS),
+  reach: (v) => numeroOuNulo(v, "alcance", ALCANCES),
   confidence: (v) => numeroOuNulo(v, "confiança", CONFIANCAS),
   effort: (v) => {
     const n = numeroOuNulo(v, "esforço");
     if (n === 0) throw new ErroDeUso(400, "O esforço precisa ser maior que zero.");
     return n;
   },
+  ganho_tipo: (v) => opcao(v, "tipo de ganho", TIPOS_GANHO),
+  horas_mes: (v) => numeroOuNulo(v, "horas por mês"),
+  valor_hora: (v) => numeroOuNulo(v, "valor da hora"),
+  cliente: (v) => texto(v, 200),
+  tier: (v) => opcao(v, "tier", TIERS),
+  risco_perda: (v) => booleanoOuNulo(v, "risco de perda"),
+  faixa_receita: (v) => numeroOuNulo(v, "faixa de receita", FAIXAS_VALOR.map((f) => f.nota)),
+  justificativa: (v) => texto(v),
+  ajuste_score: (v) => decimalOuNulo(v, "ajuste"),
+  ajuste_motivo: (v) => texto(v, 500),
   solucao: (v) => texto(v),
   riscos: (v) => texto(v),
   pipefy_url: (v) => {
@@ -137,12 +173,29 @@ const EDITAVEIS: Record<string, (v: unknown) => unknown> = {
     return t;
   },
 };
-const NOMES_CAMPOS: Record<string, string> = { produtoId: "produto_id", pipefyUrl: "pipefy_url" };
+const NOMES_CAMPOS: Record<string, string> = {
+  produtoId: "produto_id",
+  pipefyUrl: "pipefy_url",
+  ganhoTipo: "ganho_tipo",
+  horasMes: "horas_mes",
+  valorHora: "valor_hora",
+  riscoPerda: "risco_perda",
+  faixaReceita: "faixa_receita",
+  ajusteScore: "ajuste_score",
+  ajusteMotivo: "ajuste_motivo",
+};
 
 async function buscarItem(c: pg.PoolClient | pg.Pool, id: number) {
   const { rows } = await c.query(`select ${COLUNAS_ITEM} from itens i where i.id = $1`, [id]);
   if (!rows[0]) throw new ErroDeUso(404, "Item não encontrado.");
   return rows[0];
+}
+
+/** Recalcula o ganho (impact) a partir das respostas da ficha gravadas no item; devolve a nota. */
+async function recalcularGanho(c: pg.PoolClient, id: number): Promise<number | null> {
+  const nota = ganhoDaFicha(await buscarItem(c, id))?.nota ?? null;
+  await c.query("update itens set impact = $1 where id = $2", [nota, id]);
+  return nota;
 }
 
 const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
@@ -202,6 +255,7 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
         rows[0].id,
         opcInteiro(d.ritoId, "rito"),
       ]);
+      if (cols.some((k) => CAMPOS_DO_GANHO.includes(k))) await recalcularGanho(c, rows[0].id);
       await c.query("commit");
       return { item: await buscarItem(c, rows[0].id) };
     } catch (e) {
@@ -215,6 +269,9 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
   async atualizarItem(d) {
     const id = inteiro(d.id, "id");
     const campos = (d.campos ?? {}) as Dados;
+    if (campos.ajusteScore != null && campos.ajusteScore !== "" && !texto(campos.ajusteMotivo, 500)) {
+      throw new ErroDeUso(400, "Diga por que a posição foi ajustada.");
+    }
     const sets: string[] = [];
     const args: unknown[] = [];
     for (const [chave, valor] of Object.entries(campos)) {
@@ -231,12 +288,16 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
       const { rows } = await c.query(`select ${COLUNAS_ITEM} from itens i where i.id = $1 for update`, [id]);
       const item = rows[0];
       if (!item) throw new ErroDeUso(404, "Item não encontrado.");
-      if (item.etapa !== "backlog") for (const campo of ["reach", "impact", "confidence", "effort"]) {
+      if (item.etapa !== "backlog") for (const campo of ["reach", "confidence", "effort"]) {
         if (Object.hasOwn(campos, campo) && (campos[campo] == null || campos[campo] === "")) throw new ErroDeUso(409, `Não é possível limpar ${campo} após avançar a etapa.`);
       }
       args.push(id);
       const r = await c.query(`update itens set ${sets.join(", ")}, atualizado_em = now() where id = $${args.length}`, args);
       if (r.rowCount === 0) throw new ErroDeUso(404, "Item não encontrado.");
+      if (Object.keys(campos).some((k) => CAMPOS_DO_GANHO.includes(NOMES_CAMPOS[k] ?? k))) {
+        const nota = await recalcularGanho(c, id);
+        if (item.etapa !== "backlog" && nota == null) throw new ErroDeUso(409, "Não é possível deixar o ganho incompleto após avançar a etapa.");
+      }
       await c.query("commit");
       return { item: await buscarItem(c, id) };
     } catch (e) {
@@ -262,7 +323,8 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
       const bloqueio = bloqueioDaMudanca(item, para, nota);
       if (bloqueio) throw new ErroDeUso(409, bloqueio);
       await c.query(
-        `update itens set etapa = $1, motivo = case when $1 = 'descartado' then $2 else motivo end, atualizado_em = now() where id = $3`,
+        `update itens set etapa = $1, motivo = case when $1 = 'descartado' then $2 else motivo end,
+           ajuste_score = null, ajuste_motivo = '', atualizado_em = now() where id = $3`,
         [para, nota, id],
       );
       await c.query(`insert into movimentos (item_id, rito_id, de, para, nota) values ($1, $2, $3, $4, $5)`, [

@@ -1,11 +1,11 @@
 import type React from "react";
 import { useState } from "react";
-import { Check, Copy, Plus, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSprintMonitor } from "@/features/sprint-monitor/useSprintMonitor";
-import { bloqueioDaMudanca, faseDoItem, ordenar, type Etapa, type Fase } from "../regras";
+import { bloqueioDaMudanca, chaveParaMover, faseDoItem, ordenar, type Etapa, type Fase } from "../regras";
 import type { CamposItem, Item, Produto } from "../tipos";
-import { RiceCampos } from "./RiceCampos";
+import { CampoEsforco, FichaGuiada } from "./FichaGuiada";
 import { Aviso, Botao, estiloEntrada, Score } from "./ui";
 
 const normalizar = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
@@ -39,9 +39,9 @@ function PipefyDaArea({ area }: { area: string }) {
 // O rito segue o mesmo fluxo da feature; a execução fecha a reunião.
 const PASSOS = [
   { titulo: "Produtos e features", pergunta: "O que chegou de novo? Adicione no produto certo." },
-  { titulo: "Priorizar discovery", pergunta: "Defina alcance, impacto e confiança. Depois, escolha o que vale entender." },
-  { titulo: "Discovery", pergunta: "O que já foi entendido? Defina o esforço." },
-  { titulo: "Priorizar execução", pergunta: "Com o RICE completo, o que entra em execução?" },
+  { titulo: "Priorizar discovery", pergunta: "Preencha a ficha de cada feature nova. Depois, escolha o que vale entender." },
+  { titulo: "Discovery", pergunta: "O que já foi entendido? Estime o esforço em semanas de trabalho." },
+  { titulo: "Priorizar execução", pergunta: "Com o score final, o que entra em execução?" },
   { titulo: "Execução", pergunta: "O que está rodando? Algo terminou ou travou?" },
   { titulo: "Ata", pergunta: "O que decidimos hoje." },
 ];
@@ -61,6 +61,87 @@ function Linha({ item, produto, onAbrir, children, rodape }: { item: Item; produ
       </div>
       {rodape}
     </li>
+  );
+}
+
+/**
+ * Lista ordenada pelo score, com ajuste manual: subir ou descer um item pede o motivo, que fica gravado.
+ */
+function ListaPriorizada({
+  lista,
+  produto,
+  onAbrir,
+  onAtualizar,
+  acoes,
+  vazio,
+}: {
+  lista: Item[];
+  produto: (id: number | null) => Produto | undefined;
+  onAbrir: (id: number) => void;
+  onAtualizar: (id: number, c: CamposItem) => Promise<void>;
+  acoes: (i: Item) => React.ReactNode;
+  vazio: string;
+}) {
+  const [pendente, setPendente] = useState<{ id: number; dir: -1 | 1 } | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const aplicar = async () => {
+    if (!pendente || !motivo.trim()) return;
+    const chave = chaveParaMover(lista, pendente.id, pendente.dir);
+    if (chave != null) await onAtualizar(pendente.id, { ajusteScore: chave, ajusteMotivo: motivo.trim() });
+    setPendente(null);
+    setMotivo("");
+  };
+  if (lista.length === 0) return <Vazio texto={vazio} />;
+  return (
+    <ul className="flex flex-col gap-2">
+      {lista.map((i, n) => (
+        <Linha
+          key={i.id}
+          item={i}
+          produto={produto(i.produtoId)}
+          onAbrir={() => onAbrir(i.id)}
+          rodape={
+            <>
+              {i.ajusteMotivo && (
+                <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  Posição ajustada à mão: {i.ajusteMotivo}
+                  <button type="button" className="underline underline-offset-4 hover:text-foreground" onClick={() => void onAtualizar(i.id, { ajusteScore: null, ajusteMotivo: "" })}>
+                    voltar à ordem do score
+                  </button>
+                </p>
+              )}
+              {pendente?.id === i.id && (
+                <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/40 p-3">
+                  <label htmlFor={`ajuste-${i.id}`} className="text-sm text-foreground">
+                    Por que {pendente.dir === -1 ? "subir" : "descer"} esta feature? O motivo fica registrado.
+                  </label>
+                  <input id={`ajuste-${i.id}`} autoFocus value={motivo} onChange={(e) => setMotivo(e.target.value)} onKeyDown={(e) => e.key === "Enter" && void aplicar()} className={estiloEntrada} placeholder="ex.: prazo contratual com o cliente em dezembro" />
+                  <div className="flex gap-2">
+                    <Botao variante="primario" disabled={!motivo.trim()} onClick={() => void aplicar()}>
+                      Aplicar ajuste
+                    </Botao>
+                    <Botao variante="fantasma" onClick={() => setPendente(null)}>
+                      Cancelar
+                    </Botao>
+                  </div>
+                </div>
+              )}
+            </>
+          }
+        >
+          <span className="text-xs tabular-nums text-muted-foreground">#{n + 1}</span>
+          <span className="flex gap-0.5">
+            <Botao variante="fantasma" className="h-8 px-1.5" aria-label={`Subir ${i.titulo}`} disabled={n === 0} onClick={() => { setPendente({ id: i.id, dir: -1 }); setMotivo(""); }}>
+              <ArrowUp className="h-3.5 w-3.5" />
+            </Botao>
+            <Botao variante="fantasma" className="h-8 px-1.5" aria-label={`Descer ${i.titulo}`} disabled={n === lista.length - 1} onClick={() => { setPendente({ id: i.id, dir: 1 }); setMotivo(""); }}>
+              <ArrowDown className="h-3.5 w-3.5" />
+            </Botao>
+          </span>
+          {acoes(i)}
+        </Linha>
+      ))}
+    </ul>
   );
 }
 
@@ -178,25 +259,24 @@ export function ModoRito({
         {passo === 1 && (
           <div className="flex flex-col gap-6">
             <section className="flex flex-col gap-2">
-              <Titulo>Definir alcance, impacto e confiança</Titulo>
+              <Titulo>Preencher a ficha</Titulo>
               <ul className="flex flex-col gap-2">
                 {novas.map((i) => (
-                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} rodape={<RiceCampos item={i} comEsforco={false} onSalvar={(c) => void atualizar(i.id, c)} />} />
+                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} rodape={<FichaGuiada item={i} onSalvar={(c) => void atualizar(i.id, c)} />} />
                 ))}
-                {novas.length === 0 && <Vazio texto="Todas as features já têm nota." />}
+                {novas.length === 0 && <Vazio texto="Todas as features já têm a ficha preenchida." />}
               </ul>
             </section>
             <section className="flex flex-col gap-2">
               <Titulo>Escolher o que vai para discovery</Titulo>
-              <ul className="flex flex-col gap-2">
-                {candidatos.map((i, n) => (
-                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
-                    <span className="text-xs tabular-nums text-muted-foreground">#{n + 1}</span>
-                    {acao(i, "discovery", "Abrir discovery")}
-                  </Linha>
-                ))}
-                {candidatos.length === 0 && <Vazio texto="Nenhuma feature com nota esperando discovery." />}
-              </ul>
+              <ListaPriorizada
+                lista={candidatos}
+                produto={produto}
+                onAbrir={onAbrir}
+                onAtualizar={atualizar}
+                acoes={(i) => acao(i, "discovery", "Abrir discovery")}
+                vazio="Nenhuma feature com nota esperando discovery."
+              />
             </section>
           </div>
         )}
@@ -209,21 +289,7 @@ export function ModoRito({
                 item={i}
                 produto={produto(i.produtoId)}
                 onAbrir={() => onAbrir(i.id)}
-                rodape={
-                  <label className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    Esforço (pessoa-semana)
-                    <input
-                      inputMode="decimal"
-                      defaultValue={i.effort ?? ""}
-                      onBlur={(e) => {
-                        const v = e.target.value.trim().replace(",", ".");
-                        const n = v === "" ? null : Number(v);
-                        if (n !== i.effort && (n == null || (Number.isFinite(n) && n > 0))) void atualizar(i.id, { effort: n });
-                      }}
-                      className={`${estiloEntrada.replace("w-full", "w-24")} tabular-nums`}
-                    />
-                  </label>
-                }
+                rodape={<CampoEsforco item={i} onSalvar={(c) => void atualizar(i.id, c)} />}
               >
                 {acao(i, "decidir", "Discovery concluído")}
               </Linha>
@@ -233,16 +299,19 @@ export function ModoRito({
         )}
 
         {passo === 3 && (
-          <ul className="flex flex-col gap-2">
-            {daEtapa("decidir").map((i, n) => (
-              <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)}>
-                <span className="text-xs tabular-nums text-muted-foreground">#{n + 1}</span>
+          <ListaPriorizada
+            lista={daEtapa("decidir")}
+            produto={produto}
+            onAbrir={onAbrir}
+            onAtualizar={atualizar}
+            acoes={(i) => (
+              <>
                 {acao(i, "execucao", "Entrar em execução")}
                 {acao(i, "backlog", "Agora não", false)}
-              </Linha>
-            ))}
-            {daEtapa("decidir").length === 0 && <Vazio texto="Nada esperando decisão de execução." />}
-          </ul>
+              </>
+            )}
+            vazio="Nada esperando decisão de execução."
+          />
         )}
 
         {passo === 4 && (
