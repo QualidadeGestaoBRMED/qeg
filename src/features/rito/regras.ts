@@ -1,4 +1,5 @@
 // Regras do rito, sem dependências: usadas pela tela e pela API.
+import type { StatusExibido, StatusProduto } from "./tipos";
 
 export const ETAPAS = ["backlog", "discovery", "decidir", "execucao", "pausado", "entregue", "descartado"] as const;
 export type Etapa = (typeof ETAPAS)[number];
@@ -193,3 +194,18 @@ export function montarAta(area: string, data: Date, movimentos: MovimentoDaAta[]
   }
   return linhas.join("\n").trimEnd();
 }
+
+/**
+ * O status do produto acompanha o quadro: alguma feature em execução → em construção; features abertas,
+ * mas nenhuma em execução → em avaliação. Sem feature aberta, vale o status gravado (entregue, em implantação,
+ * parado); um "em construção" gravado sem nada em execução (ex.: produto recém-criado) vira em avaliação.
+ */
+export function statusDoProduto(status: StatusProduto, itensDoProduto: ItemRice[]): StatusExibido {
+  const fases = itensDoProduto.map(faseDoItem).filter((f) => f != null);
+  if (fases.includes("execucao")) return "em_construcao";
+  if (fases.length > 0 || status === "em_construcao") return "em_avaliacao";
+  return status;
+}
+
+/** Ordem na lista de produtos: o que está em andamento primeiro; os entregues no fim, só antes dos parados. */
+export const ORDEM_STATUS: StatusExibido[] = ["em_construcao", "em_implantacao", "em_avaliacao", "entregue", "parado"];

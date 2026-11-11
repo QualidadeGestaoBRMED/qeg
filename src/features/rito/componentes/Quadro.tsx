@@ -31,7 +31,8 @@ export function Quadro({ itens, produtos, onAbrir }: { itens: Item[]; produtos: 
         {FASES.map((fase, n) => {
           const lista = ordenar(itens.filter((i) => faseDoItem(i) === fase));
           return (
-            <section key={fase} className="flex min-w-0 flex-col gap-3 rounded-xl bg-muted/60 p-3">
+            // subgrid: o cabeçalho de todas as colunas da mesma linha fica com a altura do maior, e os cards começam alinhados
+            <section key={fase} className="row-span-2 grid min-w-0 grid-rows-subgrid gap-3 rounded-xl bg-muted/60 p-3">
               <header className="flex flex-col gap-0.5 px-1">
                 <h3 className="text-sm font-semibold text-foreground">
                   <span className="mr-1.5 text-xs tabular-nums text-muted-foreground">{n + 1}</span>
@@ -39,7 +40,7 @@ export function Quadro({ itens, produtos, onAbrir }: { itens: Item[]; produtos: 
                 </h3>
                 <span className="text-xs text-muted-foreground">Próximo: {PROXIMO_PASSO[fase].toLowerCase()}</span>
               </header>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 self-start">
                 {lista.map((i) => (
                   <CardItem key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} />
                 ))}
