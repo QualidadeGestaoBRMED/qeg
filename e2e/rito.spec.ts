@@ -66,20 +66,24 @@ test("fluxo completo do rito, com itens manuais e sem depender do Pipefy", async
     await proximo().click();
     await expect(page.getByRole("heading", { name: "Priorizar discovery", level: 2 })).toBeVisible();
 
-    const continuar = () => linha.getByRole("button", { name: "Continuar" }).click();
-    await linha.getByRole("radio", { name: /Atende ou retém um cliente/ }).click();
+    await linha.getByRole("button", { name: "Preencher ficha" }).click();
+    const ficha = page.getByRole("dialog", { name: feature });
+    await expect(ficha).toBeVisible();
+    const continuar = () => ficha.getByRole("button", { name: "Continuar" }).click();
+    await ficha.getByRole("radio", { name: /Atende ou retém um cliente/ }).click();
     await continuar();
-    await linha.getByRole("radio", { name: "Ouro" }).click();
-    await linha.getByRole("radio", { name: /^Sim/ }).click();
-    await expect(linha.getByRole("radio", { name: /^Sim/ })).toHaveAttribute("aria-checked", "true");
+    await ficha.getByRole("radio", { name: "Ouro" }).click();
+    await ficha.getByRole("radio", { name: /^Sim/ }).click();
+    await expect(ficha.getByRole("radio", { name: /^Sim/ })).toHaveAttribute("aria-checked", "true");
     await print(page, 4, "ficha-ganho-cliente");
     await continuar();
-    await linha.getByRole("radio", { name: /Várias áreas/ }).click();
+    await ficha.getByRole("radio", { name: /Várias áreas/ }).click();
     await continuar();
-    await linha.getByRole("radio", { name: /Estimado/ }).click();
+    await ficha.getByRole("radio", { name: /Estimado/ }).click();
     await continuar();
-    await linha.getByLabel("Por que vale a pena").fill("O cliente é Ouro e pode sair sem o painel.");
-    await linha.getByRole("button", { name: "Concluir ficha" }).click();
+    await ficha.getByLabel("Por que vale a pena").fill("O cliente é Ouro e pode sair sem o painel.");
+    await ficha.getByRole("button", { name: "Concluir ficha" }).click();
+    await expect(ficha).toBeHidden();
     await expect(linha.getByRole("button", { name: "Abrir discovery" })).toBeVisible();
     await expect(linha.getByText("prévia", { exact: true })).toBeVisible();
     // ganho 4 (Ouro + risco de perda) × alcance 3 × confiança 0,8

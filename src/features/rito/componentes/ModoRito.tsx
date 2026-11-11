@@ -262,7 +262,7 @@ export function ModoRito({
               <Titulo>Preencher a ficha</Titulo>
               <ul className="flex flex-col gap-2">
                 {novas.map((i) => (
-                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} rodape={<FichaGuiada item={i} onSalvar={(c) => void atualizar(i.id, c)} />} />
+                  <Linha key={i.id} item={i} produto={produto(i.produtoId)} onAbrir={() => onAbrir(i.id)} rodape={<FichaGuiada compacta item={i} onSalvar={(c) => void atualizar(i.id, c)} />} />
                 ))}
                 {novas.length === 0 && <Vazio texto="Todas as features já têm a ficha preenchida." />}
               </ul>

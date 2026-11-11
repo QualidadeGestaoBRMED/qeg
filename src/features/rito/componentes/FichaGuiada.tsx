@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   economiaAnual,
@@ -83,13 +83,28 @@ function respondido(item: Item, passo: number): boolean {
   return item.justificativa.trim() !== "";
 }
 
+/** O primeiro passo ainda sem resposta (null = ficha completa). */
+function primeiroAberto(item: Item): number | null {
+  const i = PASSOS.findIndex((_, n) => !respondido(item, n));
+  return i < 0 ? null : i;
+}
+
 /**
  * Ficha de priorização, uma pergunta por vez. Cada resposta é gravada na hora; a nota prévia
  * (ganho × alcance × confiança) aparece assim que ganho, alcance e confiança estão respondidos.
  */
-export function FichaGuiada({ item, onSalvar }: { item: Item; onSalvar: (campos: CamposItem) => void }) {
-  const primeiroAberto = PASSOS.findIndex((_, i) => !respondido(item, i));
-  const [passo, setPasso] = useState<number | null>(primeiroAberto < 0 ? null : primeiroAberto);
+function PassosDaFicha({
+  item,
+  onSalvar,
+  passoInicial,
+  onConcluir,
+}: {
+  item: Item;
+  onSalvar: (campos: CamposItem) => void;
+  passoInicial: number;
+  onConcluir: () => void;
+}) {
+  const [passo, setPasso] = useState(passoInicial);
   const [horas, setHoras] = useState(item.horasMes);
   const [valorHora, setValorHora] = useState(item.valorHora);
   const [justificativa, setJustificativa] = useState(item.justificativa);
@@ -99,48 +114,11 @@ export function FichaGuiada({ item, onSalvar }: { item: Item; onSalvar: (campos:
 
   const ganho = ganhoDaFicha(item);
   const previa = preScore(item);
-  const avancar = () => setPasso((p) => (p == null ? null : p + 1 < PASSOS.length ? p + 1 : null));
-
-  const resumo: [string, string | null][] = [
-    ["Tipo de ganho", TIPOS.find((t) => t.valor === item.ganhoTipo)?.nome ?? null],
-    ["Ganho", ganho ? `${ganho.nota} · ${ganho.texto}` : null],
-    ["Alcance", ESCALA_ALCANCE.find((a) => a.valor === item.reach)?.nome ?? null],
-    ["Confiança", ESCALA_CONFIANCA.find((c) => c.valor === item.confidence)?.nome ?? null],
-    ["Por que vale a pena", item.justificativa.trim() || null],
-  ];
-
-  if (passo == null) {
-    return (
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-white px-4 py-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ficha de priorização</span>
-          {previa != null && (
-            <span className="text-sm tabular-nums text-muted-foreground">
-              Nota prévia <b className="text-foreground">{previa.toLocaleString("pt-BR")}</b>
-            </span>
-          )}
-        </div>
-        <dl className="grid gap-x-4 gap-y-1.5 text-sm sm:grid-cols-[160px_1fr]">
-          {resumo.map(([rotulo, valor], i) => (
-            <div key={rotulo} className="contents">
-              <dt className="text-muted-foreground">{rotulo}</dt>
-              <dd className="flex min-w-0 items-start justify-between gap-2">
-                <span className={cn("min-w-0 break-words", valor ? "text-foreground" : "text-muted-foreground")}>{valor ?? "a responder"}</span>
-                <button type="button" onClick={() => setPasso(i)} aria-label={`Editar ${rotulo.toLowerCase()}`} className="shrink-0 text-muted-foreground hover:text-foreground">
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    );
-  }
-
+  const avancar = () => (passo + 1 < PASSOS.length ? setPasso(passo + 1) : onConcluir());
   const ano = economiaAnual({ horasMes: horas, valorHora });
 
   return (
-    <div className="flex flex-col gap-4 rounded-lg border border-border bg-white px-4 py-4">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <div className="flex gap-1" aria-hidden>
           {PASSOS.map((p, i) => (
@@ -149,7 +127,7 @@ export function FichaGuiada({ item, onSalvar }: { item: Item; onSalvar: (campos:
         </div>
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Ficha · passo {passo + 1} de {PASSOS.length}
+            Passo {passo + 1} de {PASSOS.length} · {PASSOS[passo]}
           </span>
           <span className="text-xs tabular-nums text-muted-foreground">
             Nota prévia: <b className="text-foreground">{previa != null ? previa.toLocaleString("pt-BR") : "–"}</b>
@@ -284,6 +262,102 @@ export function FichaGuiada({ item, onSalvar }: { item: Item; onSalvar: (campos:
           {passo === PASSOS.length - 1 ? "Concluir ficha" : "Continuar"}
         </Botao>
       </div>
+    </div>
+  );
+}
+
+/** A ficha aberta num modal centralizado. Esc ou clique fora fecham só o modal. */
+function ModalFicha({ item, passoInicial, onSalvar, onFechar }: { item: Item; passoInicial: number; onSalvar: (campos: CamposItem) => void; onFechar: () => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopImmediatePropagation();
+      onFechar();
+    };
+    window.addEventListener("keydown", esc, true);
+    return () => window.removeEventListener("keydown", esc, true);
+  }, [onFechar]);
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-foreground/30 px-4 py-10 sm:items-center" onClick={onFechar}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`ficha-titulo-${item.id}`}
+        className="flex w-full max-w-[640px] flex-col gap-5 rounded-xl border border-border bg-background p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-medium uppercase tracking-wide text-primary">Ficha de priorização</p>
+            <h3 id={`ficha-titulo-${item.id}`} className="text-lg font-semibold text-foreground">
+              {item.titulo}
+            </h3>
+          </div>
+          <Botao variante="fantasma" aria-label="Fechar a ficha" onClick={onFechar} className="px-2">
+            <X className="h-4 w-4" />
+          </Botao>
+        </div>
+        <PassosDaFicha item={item} onSalvar={onSalvar} passoInicial={passoInicial} onConcluir={onFechar} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A ficha de um item: resumo das respostas e da nota prévia, com o botão que abre o passo a passo no modal.
+ * O lápis de cada linha abre o modal direto naquela pergunta.
+ */
+/** `compacta`: só o andamento e o botão, sem o resumo das respostas (para listas). */
+export function FichaGuiada({ item, onSalvar, compacta = false }: { item: Item; onSalvar: (campos: CamposItem) => void; compacta?: boolean }) {
+  const [aberta, setAberta] = useState<number | null>(null);
+  const ganho = ganhoDaFicha(item);
+  const previa = preScore(item);
+  const proximo = primeiroAberto(item);
+  const respondidas = PASSOS.filter((_, i) => respondido(item, i)).length;
+
+  const resumo: [string, string | null][] = [
+    ["Tipo de ganho", TIPOS.find((t) => t.valor === item.ganhoTipo)?.nome ?? null],
+    ["Ganho", ganho ? `${ganho.nota} · ${ganho.texto}` : null],
+    ["Alcance", ESCALA_ALCANCE.find((a) => a.valor === item.reach)?.nome ?? null],
+    ["Confiança", ESCALA_CONFIANCA.find((c) => c.valor === item.confidence)?.nome ?? null],
+    ["Por que vale a pena", item.justificativa.trim() || null],
+  ];
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-white px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-col">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Ficha de priorização</span>
+          <span className="text-sm text-muted-foreground">
+            {proximo == null ? (
+              <>
+                Completa · nota prévia <b className="tabular-nums text-foreground">{previa?.toLocaleString("pt-BR")}</b>
+              </>
+            ) : (
+              `${respondidas} de ${PASSOS.length} perguntas respondidas`
+            )}
+          </span>
+        </div>
+        <Botao variante={proximo == null ? "secundario" : "primario"} onClick={() => setAberta(proximo ?? 0)}>
+          {proximo == null ? "Editar ficha" : respondidas === 0 ? "Preencher ficha" : "Continuar ficha"}
+        </Botao>
+      </div>
+      {respondidas > 0 && !compacta && (
+        <dl className="grid gap-x-4 gap-y-1.5 border-t border-border pt-3 text-sm sm:grid-cols-[160px_1fr]">
+          {resumo.map(([rotulo, valor], i) => (
+            <div key={rotulo} className="contents">
+              <dt className="text-muted-foreground">{rotulo}</dt>
+              <dd className="flex min-w-0 items-start justify-between gap-2">
+                <span className={cn("min-w-0 break-words", valor ? "text-foreground" : "text-muted-foreground")}>{valor ?? "a responder"}</span>
+                <button type="button" onClick={() => setAberta(i)} aria-label={`Editar ${rotulo.toLowerCase()}`} className="shrink-0 text-muted-foreground hover:text-foreground">
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {aberta != null && <ModalFicha item={item} passoInicial={aberta} onSalvar={onSalvar} onFechar={() => setAberta(null)} />}
     </div>
   );
 }
