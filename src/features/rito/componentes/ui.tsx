@@ -1,7 +1,7 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { scoreDoCard, type ItemRice } from "../regras";
-import type { StatusProduto } from "../tipos";
+import type { StatusExibido } from "../tipos";
 
 const foco =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
@@ -89,14 +89,15 @@ export function Score({ item, grande = false }: { item: ItemRice; grande?: boole
   );
 }
 
-const STATUS_PRODUTO: Record<StatusProduto, { nome: string; cor: string }> = {
+const STATUS_PRODUTO: Record<StatusExibido, { nome: string; cor: string }> = {
   entregue: { nome: "Entregue", cor: "bg-primary/10 text-primary" },
   em_implantacao: { nome: "Em implantação", cor: "bg-[hsl(var(--amber))]/15 text-[hsl(30_70%_32%)]" },
   em_construcao: { nome: "Em construção", cor: "border border-primary/40 text-primary" },
+  em_avaliacao: { nome: "Em avaliação", cor: "border border-border text-muted-foreground" },
   parado: { nome: "Parado", cor: "bg-muted text-muted-foreground" },
 };
 
-export function StatusProdutoPill({ status }: { status: StatusProduto }) {
+export function StatusProdutoPill({ status }: { status: StatusExibido }) {
   const s = STATUS_PRODUTO[status];
   return <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", s.cor)}>{s.nome}</span>;
 }

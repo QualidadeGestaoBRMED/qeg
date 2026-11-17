@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bloqueioDaMudanca, faseDoItem, montarAta, ordenar, preScore, rice, scoreDoCard, type ItemRice } from "./regras";
+import { bloqueioDaMudanca, faseDoItem, montarAta, ordenar, preScore, rice, scoreDoCard, statusDoProduto, type ItemRice } from "./regras";
 
 const base: ItemRice = { etapa: "backlog", reach: null, impact: null, confidence: null, effort: null };
 
@@ -102,5 +102,22 @@ describe("ordem e ata", () => {
       { itemId: 2, titulo: "Igual", de: "decidir", para: "execucao", nota: "" },
     ]);
     expect(ata.match(/- Igual/g)).toHaveLength(2);
+  });
+});
+
+describe("status do produto", () => {
+  const em = (etapa: ItemRice["etapa"]): ItemRice => ({ ...base, etapa });
+
+  it("acompanha as features do quadro", () => {
+    expect(statusDoProduto("entregue", [em("backlog"), em("execucao")])).toBe("em_construcao");
+    expect(statusDoProduto("entregue", [em("discovery")])).toBe("em_avaliacao");
+    expect(statusDoProduto("parado", [em("decidir")])).toBe("em_avaliacao");
+  });
+
+  it("sem feature aberta, vale o status gravado; em construção sem execução vira em avaliação", () => {
+    expect(statusDoProduto("entregue", [em("entregue"), em("descartado")])).toBe("entregue");
+    expect(statusDoProduto("parado", [em("pausado")])).toBe("parado");
+    expect(statusDoProduto("em_implantacao", [])).toBe("em_implantacao");
+    expect(statusDoProduto("em_construcao", [])).toBe("em_avaliacao");
   });
 });

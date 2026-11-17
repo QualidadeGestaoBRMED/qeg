@@ -7,6 +7,8 @@ export interface Area {
 }
 
 export type StatusProduto = "entregue" | "em_implantacao" | "parado" | "em_construcao";
+/** O status que a tela mostra: segue as features do quadro (ver statusDoProduto); "em_avaliacao" não é gravado. */
+export type StatusExibido = StatusProduto | "em_avaliacao";
 
 export interface Produto {
   id: number;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronRight, Plus } from "lucide-react";
 import { ritoApi } from "../api";
-import { faseDoItem, FASES, NOMES_ETAPA, NOMES_FASE, ordenar, type Etapa } from "../regras";
+import { faseDoItem, FASES, NOMES_ETAPA, NOMES_FASE, ORDEM_STATUS, ordenar, statusDoProduto, type Etapa } from "../regras";
 import type { Area, Item, Produto, Rito } from "../tipos";
 import { Botao, estiloEntrada, Score, StatusProdutoPill } from "./ui";
 
@@ -184,7 +184,10 @@ export function ListaProdutos({
       </div>
       {produtos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum produto nesta área ainda. Comece criando um.</p>}
       <ul className="flex flex-col divide-y divide-border overflow-hidden rounded-xl border border-border bg-white">
-        {produtos.map((p) => {
+        {produtos
+          .map((p) => ({ p, status: statusDoProduto(p.status, itens.filter((i) => i.produtoId === p.id)) }))
+          .sort((a, b) => ORDEM_STATUS.indexOf(a.status) - ORDEM_STATUS.indexOf(b.status))
+          .map(({ p, status }) => {
           const dele = ordenar(itens.filter((i) => i.produtoId === p.id));
           const ativo = aberto === p.id;
           return (
@@ -206,7 +209,7 @@ export function ListaProdutos({
                   <span className="text-xs text-muted-foreground">
                     {dele.length} {dele.length === 1 ? "feature" : "features"}
                   </span>
-                  <StatusProdutoPill status={p.status} />
+                  <StatusProdutoPill status={status} />
                 </span>
               </button>
               {ativo && (
