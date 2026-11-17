@@ -115,7 +115,7 @@ export function NovaFeature({
           />
         </Campo>
         <p className="text-xs text-muted-foreground">
-          Depois de criada, a feature vai para <b>Features novas</b>. O próximo passo é definir alcance, impacto e confiança.
+          Depois de criada, a feature vai para <b>Features novas</b>. O próximo passo é preencher a ficha de priorização.
         </p>
         <div className="flex justify-end gap-2">
           <Botao variante="fantasma" onClick={onFechar}>

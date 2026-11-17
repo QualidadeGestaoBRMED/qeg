@@ -200,7 +200,27 @@ describe("API do Rito: segurança", () => {
     expect(mocks.query.mock.calls.some(([sql]) => String(sql).startsWith("update itens"))).toBe(false);
   });
 
-  it.each(["reach", "impact", "confidence", "effort"])("não limpa %s após o item avançar", async (field) => {
+  it("não aceita o ganho direto: ele sai das respostas da ficha", async () => {
+    const res = response();
+    await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { impact: 3 } }) as never, res as never);
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("não deixa o ganho incompleto depois que o item avançou", async () => {
+    const res = response();
+    await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { ganhoTipo: null } }) as never, res as never);
+    expect(res.statusCode).toBe(409);
+    expect(mocks.query.mock.calls.map(([sql]) => sql)).toContain("rollback");
+  });
+
+  it("recusa ajuste de posição sem motivo", async () => {
+    const res = response();
+    await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { ajusteScore: 4.5, ajusteMotivo: " " } }) as never, res as never);
+    expect(res.statusCode).toBe(400);
+    expect(mocks.query.mock.calls.some(([sql]) => String(sql).startsWith("update itens"))).toBe(false);
+  });
+
+  it.each(["reach", "confidence", "effort"])("não limpa %s após o item avançar", async (field) => {
     const res = response();
     await ritoHandler(request({ acao: "atualizarItem", id: 9, campos: { [field]: null } }) as never, res as never);
     expect(res.statusCode).toBe(409);

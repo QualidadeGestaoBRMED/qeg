@@ -1,4 +1,4 @@
-import type { Etapa, Pilar } from "./regras";
+import type { ClienteDaFicha, Etapa, Pilar, TipoGanho } from "./regras";
 
 export interface Area {
   id: number;
@@ -37,6 +37,19 @@ export interface Item {
   pipefyUrl: string;
   criadoEm: string;
   atualizadoEm: string;
+  // Ficha guiada: de onde vem o ganho (impact é calculado a partir daqui)
+  ganhoTipo: TipoGanho | null;
+  horasMes: number | null;
+  valorHora: number | null;
+  clientes: ClienteDaFicha[];
+  nivelRisco: number | null;
+  riscoPerda: boolean | null;
+  faixaReceita: number | null;
+  /** "Por que vale a pena?" */
+  justificativa: string;
+  /** Posição ajustada à mão no ranking, com o motivo. */
+  ajusteScore: number | null;
+  ajusteMotivo: string;
 }
 
 export interface Movimento {
@@ -66,9 +79,18 @@ export type CamposItem = Partial<
     | "pilar"
     | "produtoId"
     | "reach"
-    | "impact"
     | "confidence"
     | "effort"
+    | "ganhoTipo"
+    | "horasMes"
+    | "valorHora"
+    | "clientes"
+    | "nivelRisco"
+    | "riscoPerda"
+    | "faixaReceita"
+    | "justificativa"
+    | "ajusteScore"
+    | "ajusteMotivo"
     | "solucao"
     | "riscos"
     | "pipefyUrl"

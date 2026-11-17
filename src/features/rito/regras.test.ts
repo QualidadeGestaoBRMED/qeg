@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bloqueioDaMudanca, faseDoItem, montarAta, ordenar, preScore, rice, scoreDoCard, statusDoProduto, type ItemRice } from "./regras";
+import { bloqueioDaMudanca, chaveParaMover, faixaDeValor, faseDoItem, ganhoDaFicha, montarAta, ordenar, preScore, rice, scoreDoCard, statusDoProduto, type FichaGanho, type ItemRice } from "./regras";
 
 const base: ItemRice = { etapa: "backlog", reach: null, impact: null, confidence: null, effort: null };
 
@@ -21,9 +21,10 @@ describe("scores", () => {
 });
 
 describe("regras de mudança de etapa", () => {
-  it("discovery exige R, I e C", () => {
-    expect(bloqueioDaMudanca(base, "discovery")).toMatch(/alcance/);
-    expect(bloqueioDaMudanca({ ...base, reach: 1, impact: 1, confidence: 1 }, "discovery")).toBeNull();
+  it("discovery exige a ficha completa, com o business case", () => {
+    expect(bloqueioDaMudanca(base, "discovery")).toMatch(/ficha/);
+    expect(bloqueioDaMudanca({ ...base, reach: 1, impact: 1, confidence: 1 }, "discovery")).toMatch(/vale a pena/);
+    expect(bloqueioDaMudanca({ ...base, reach: 1, impact: 1, confidence: 1, justificativa: "Evita perder o cliente." }, "discovery")).toBeNull();
   });
 
   it("sair do discovery exige esforço", () => {
@@ -43,9 +44,10 @@ describe("regras de mudança de etapa", () => {
 });
 
 describe("fases do fluxo", () => {
-  it("o backlog se divide pelo RIC", () => {
+  it("o backlog se divide pela ficha completa", () => {
     expect(faseDoItem(base)).toBe("nova");
-    expect(faseDoItem({ ...base, reach: 1, impact: 1, confidence: 1 })).toBe("priorizar_discovery");
+    expect(faseDoItem({ ...base, reach: 1, impact: 1, confidence: 1 })).toBe("nova");
+    expect(faseDoItem({ ...base, reach: 1, impact: 1, confidence: 1, justificativa: "x" })).toBe("priorizar_discovery");
     expect(faseDoItem({ ...base, etapa: "decidir" })).toBe("priorizar_execucao");
     expect(faseDoItem({ ...base, etapa: "entregue" })).toBeNull();
   });
@@ -119,5 +121,63 @@ describe("status do produto", () => {
     expect(statusDoProduto("parado", [em("pausado")])).toBe("parado");
     expect(statusDoProduto("em_implantacao", [])).toBe("em_implantacao");
     expect(statusDoProduto("em_construcao", [])).toBe("em_avaliacao");
+  });
+});
+
+describe("ficha guiada", () => {
+  const ficha: FichaGanho = { ganhoTipo: null, horasMes: null, valorHora: null, clientes: [], riscoPerda: null, faixaReceita: null, nivelRisco: null };
+  const cli = (...tiers: ("bronze" | "prata" | "ouro" | "diamante" | null)[]) => tiers.map((tier, i) => ({ nome: `C${i}`, tier }));
+
+  it("faixas de valor anual alinhadas aos tiers", () => {
+    expect([30_000, 50_000, 50_001, 200_000, 350_000, 500_001].map(faixaDeValor)).toEqual([1, 1, 2, 2, 3, 4]);
+  });
+
+  it("economia de tempo vira R$ por ano e depois faixa", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "tempo", horasMes: 60, valorHora: 40 })).toEqual({ nota: 1, texto: expect.stringContaining("28.800") });
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "tempo", horasMes: 400, valorHora: 50 })?.nota).toBe(3);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "tempo", horasMes: 60, valorHora: null })).toBeNull();
+  });
+
+  it("cliente: tier, uma faixa acima com risco de perda", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: false })?.nota).toBe(3);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: true })?.nota).toBe(4);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("diamante"), riscoPerda: true })?.nota).toBe(5);
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("ouro"), riscoPerda: null })).toBeNull();
+  });
+
+  it("vários clientes: vale o maior tier; todos precisam de tier", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("prata", "ouro", "bronze"), riscoPerda: false })).toEqual({ nota: 3, texto: "Ouro (maior de 3 clientes)" });
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: cli("prata", null), riscoPerda: false })).toBeNull();
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "cliente", clientes: [], riscoPerda: false })).toBeNull();
+  });
+
+  it("risco ou controle: o nível escolhido", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "risco", nivelRisco: 3 })).toEqual({ nota: 3, texto: "Multa ou reclamação" });
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "risco" })).toBeNull();
+  });
+
+  it("receita: a faixa escolhida", () => {
+    expect(ganhoDaFicha({ ...ficha, ganhoTipo: "receita", faixaReceita: 2 })?.nota).toBe(2);
+    expect(ganhoDaFicha(ficha)).toBeNull();
+  });
+});
+
+describe("ajuste manual da posição", () => {
+  const itens = [
+    { ...base, id: 1, reach: 3, impact: 4, confidence: 1 }, // 12
+    { ...base, id: 2, reach: 3, impact: 2, confidence: 1 }, // 6
+    { ...base, id: 3, reach: 1, impact: 2, confidence: 1 }, // 2
+  ];
+
+  it("subir põe o item entre os vizinhos do novo lugar", () => {
+    const chave = chaveParaMover(ordenar(itens), 3, -1)!;
+    expect(chave).toBe(9);
+    expect(ordenar(itens.map((i) => (i.id === 3 ? { ...i, ajusteScore: chave } : i))).map((i) => i.id)).toEqual([1, 3, 2]);
+  });
+
+  it("subir o segundo o põe acima do primeiro; não há para onde subir o primeiro", () => {
+    expect(chaveParaMover(ordenar(itens), 2, -1)).toBe(13);
+    expect(chaveParaMover(ordenar(itens), 1, -1)).toBeNull();
+    expect(chaveParaMover(ordenar(itens), 3, 1)).toBeNull();
   });
 });

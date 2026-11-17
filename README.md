@@ -2,7 +2,7 @@
 
 Ferramenta do rito de priorizacao da SOTEC, feito com cada area cliente. Tem duas telas:
 
-- **Rito** (tela principal): quadro da area (backlog, discovery, pronto para decidir, execucao), produtos, atas e o modo rito, que conduz a reuniao em 5 passos (execucao, discovery, triagem, escolha, ata). A priorizacao tem dois momentos: alcance, impacto e confianca (pre-score) decidem qual discovery fazer; o discovery traz o esforco, e o RICE completo decide o que entra em execucao.
+- **Rito** (tela principal): quadro da area (backlog, discovery, pronto para decidir, execucao), produtos, atas e o modo rito, que conduz a reuniao em 5 passos (execucao, discovery, triagem, escolha, ata). A priorizacao tem dois momentos: a ficha guiada (ganho, alcance, confianca e por que vale a pena) gera a nota previa, que decide qual discovery fazer; o discovery traz o esforco em semanas de trabalho, e o score final (nota previa ÷ esforco) decide o que entra em execucao. O ganho vem de horas economizadas × valor da hora, do tier do cliente (Bronze a Diamante, uma faixa acima com risco de perda) ou da faixa de receita; o ranking aceita ajuste manual com motivo.
 - **Execucao**: monitor de sprint do Pipefy (cards das fases configuradas, por responsavel e por area).
 
 ## Stack

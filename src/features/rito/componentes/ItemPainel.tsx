@@ -10,7 +10,7 @@ import {
   type Etapa,
 } from "../regras";
 import type { CamposItem, Item, Movimento, Produto } from "../tipos";
-import { RiceCampos } from "./RiceCampos";
+import { CampoEsforco, FichaGuiada } from "./FichaGuiada";
 import { Aviso, Botao, Campo, Escolha, estiloEntrada, Score } from "./ui";
 
 const ROTULO_ACAO: Partial<Record<Etapa, string>> = {
@@ -137,7 +137,7 @@ export function ItemPainel({
           <div className="flex items-end justify-between gap-4 rounded-lg border border-border bg-white px-4 py-3">
             <Score item={item} grande />
             <span className="max-w-[220px] text-right text-xs text-muted-foreground">
-              {item.effort ? "Alcance × impacto × confiança ÷ esforço" : "Sem esforço ainda: a nota serve para escolher o discovery"}
+              {item.effort ? "Ganho × alcance × confiança ÷ semanas de trabalho" : "Nota prévia: serve para escolher o discovery; o esforço vem depois"}
             </span>
           </div>
 
@@ -200,7 +200,11 @@ export function ItemPainel({
             <Texto id={`problema-${item.id}`} valor={item.problema} placeholder="O que dói hoje, em uma frase." onSalvar={(v) => void salvar({ problema: v })} />
           </Campo>
 
-          <RiceCampos item={item} comEsforco={mostraEsforco} onSalvar={(c) => void salvar(c)} />
+          <FichaGuiada key={item.id} item={item} onSalvar={(c) => void salvar(c)} />
+          {mostraEsforco && <CampoEsforco item={item} onSalvar={(c) => void salvar(c)} />}
+          {item.ajusteMotivo && (
+            <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">Posição ajustada à mão: {item.ajusteMotivo}</p>
+          )}
 
           <Campo rotulo="Pilar">
             <Escolha
