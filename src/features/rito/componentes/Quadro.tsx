@@ -15,6 +15,7 @@ export function CardItem({ item, produto, onAbrir }: { item: Item; produto?: Pro
     >
       <span className="text-xs text-muted-foreground">{produto?.nome ?? "Sem produto"}</span>
       <span className="text-sm font-medium leading-snug text-foreground">{item.titulo}</span>
+      {item.solicitante && <span className="text-xs text-muted-foreground">Pedido por {item.solicitante}</span>}
       <Score item={item} />
     </button>
   );

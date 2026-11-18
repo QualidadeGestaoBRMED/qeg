@@ -23,6 +23,7 @@ export function NovaFeature({
   const [nomeProduto, setNomeProduto] = useState("");
   const [titulo, setTitulo] = useState("");
   const [problema, setProblema] = useState("");
+  const [solicitante, setSolicitante] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -34,6 +35,7 @@ export function NovaFeature({
 
   const salvar = async () => {
     if (!titulo.trim()) return setErro("Dê um título à feature.");
+    if (!solicitante.trim()) return setErro("Diga quem pediu a feature.");
     if (!produto || (produto === NOVO && !nomeProduto.trim())) return setErro("Escolha ou crie o produto da feature.");
     setSalvando(true);
     let produtoId = Number(produto);
@@ -45,7 +47,7 @@ export function NovaFeature({
       }
       produtoId = id;
     }
-    const e = await onCriar({ titulo: titulo.trim(), problema: problema.trim(), produtoId });
+    const e = await onCriar({ titulo: titulo.trim(), problema: problema.trim(), solicitante: solicitante.trim(), produtoId });
     setSalvando(false);
     if (e) setErro(e);
     else onFechar();
@@ -112,6 +114,17 @@ export function NovaFeature({
             onChange={(e) => setProblema(e.target.value)}
             placeholder="Qual problema isso resolve? (opcional)"
             className={`${estiloEntrada} resize-y`}
+          />
+        </Campo>
+        <Campo rotulo="3. Quem pediu">
+          <input
+            id="nf-solicitante"
+            aria-label="Quem pediu"
+            value={solicitante}
+            onChange={(e) => setSolicitante(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void salvar()}
+            placeholder="Nome de quem trouxe a demanda"
+            className={estiloEntrada}
           />
         </Campo>
         <p className="text-xs text-muted-foreground">
