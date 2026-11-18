@@ -200,6 +200,10 @@ export function ItemPainel({
             <Texto id={`problema-${item.id}`} valor={item.problema} placeholder="O que dói hoje, em uma frase." onSalvar={(v) => void salvar({ problema: v })} />
           </Campo>
 
+          <Campo rotulo="Quem pediu">
+            <Texto id={`solicitante-${item.id}`} valor={item.solicitante} linhas={1} placeholder="Nome de quem trouxe a demanda" onSalvar={(v) => void salvar({ solicitante: v })} />
+          </Campo>
+
           <FichaGuiada key={item.id} item={item} onSalvar={(c) => void salvar(c)} />
           {mostraEsforco && <CampoEsforco item={item} onSalvar={(c) => void salvar(c)} />}
           {item.ajusteMotivo && (
@@ -260,9 +264,6 @@ export function ItemPainel({
               </Campo>
               <Campo rotulo="Riscos">
                 <Texto id={`riscos-${item.id}`} valor={item.riscos} linhas={2} onSalvar={(v) => void salvar({ riscos: v })} />
-              </Campo>
-              <Campo rotulo="Quem pediu">
-                <Texto id={`solicitante-${item.id}`} valor={item.solicitante} linhas={1} onSalvar={(v) => void salvar({ solicitante: v })} />
               </Campo>
               <Campo rotulo="Card no Pipefy">
                 <div className="flex items-center gap-2">

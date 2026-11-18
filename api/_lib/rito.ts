@@ -16,7 +16,7 @@ import {
   TIPOS_GANHO,
   type Etapa,
 } from "../../src/features/rito/regras.js";
-import { isAuthed, json, readJsonBody, type Req } from "./server.js";
+import { contaDaSessao, json, readJsonBody, type Req } from "./server.js";
 
 let pool: pg.Pool | null = null;
 function db(): pg.Pool {
@@ -434,6 +434,56 @@ const acoes: Record<string, (d: Dados) => Promise<unknown>> = {
   },
 };
 
+/**
+ * Conta restrita a uma área: só mexe no rito dela. Confere a área de cada ação antes de executá-la;
+ * a reunião interna (sem área) e as outras áreas ficam de fora.
+ */
+async function exigirArea(acao: string, d: Dados, areaId: number) {
+  const negar = () => {
+    throw new ErroDeUso(403, "Esta conta só acessa o rito da própria área.");
+  };
+  const areaDe = async (sql: string, id: number) => (await db().query(sql, [id])).rows[0]?.area_id ?? null;
+  const produtoDaArea = async (v: unknown) => {
+    if (v === null || v === undefined || v === "") return;
+    const { rows } = await db().query("select 1 from produto_areas where produto_id = $1 and area_id = $2", [
+      inteiro(v, "produto"),
+      areaId,
+    ]);
+    if (!rows[0]) negar();
+  };
+  const ritoDaArea = async (v: unknown) => {
+    if (v === null || v === undefined || v === "") return;
+    if ((await areaDe("select area_id from ritos where id = $1", inteiro(v, "rito"))) !== areaId) negar();
+  };
+  switch (acao) {
+    case "areas":
+      return;
+    case "dados":
+    case "criarProduto":
+    case "iniciarRito":
+    case "ritos":
+      if (opcInteiro(d.areaId, "área") !== areaId) negar();
+      return;
+    case "criarItem":
+      if (opcInteiro(d.areaId, "área") !== areaId) negar();
+      await ritoDaArea(d.ritoId);
+      return produtoDaArea(d.produtoId);
+    case "atualizarItem":
+      if ((await areaDe("select area_id from itens where id = $1", inteiro(d.id, "id"))) !== areaId) negar();
+      return produtoDaArea(((d.campos ?? {}) as Dados).produtoId);
+    case "mover":
+    case "historico":
+      if ((await areaDe("select area_id from itens where id = $1", inteiro(d.id, "id"))) !== areaId) negar();
+      if (acao === "mover") await ritoDaArea(d.ritoId);
+      return;
+    case "encerrarRito":
+      if (d.id === null || d.id === undefined || d.id === "") negar();
+      return ritoDaArea(d.id);
+    default:
+      negar();
+  }
+}
+
 const acoesLogaveis = new Set(Object.keys(acoes));
 
 export function formatRitoActionLog(action: string, areaId: unknown, result: "ok" | "error", durationMs: number) {
@@ -470,14 +520,20 @@ function areaLogavel(areaRequisitada: unknown, response: unknown): number | null
 
 export async function ritoHandler(req: Req, res: ServerResponse) {
   if (req.method !== "POST") return json(res, 405, { error: "Método não permitido." });
-  if (!isAuthed(req)) return json(res, 401, { error: "Não autenticado." });
+  const conta = contaDaSessao(req);
+  if (!conta) return json(res, 401, { error: "Não autenticado." });
   const d = await readJsonBody(req);
   const action = String(d.acao ?? "");
   if (!Object.prototype.hasOwnProperty.call(acoes, action)) return json(res, 400, { error: "Ação desconhecida." });
   const acao = acoes[action];
   const startedAt = performance.now();
   try {
-    const result = await acao(d);
+    if (conta.areaId !== null) await exigirArea(action, d, conta.areaId);
+    let result = await acao(d);
+    if (conta.areaId !== null && action === "areas") {
+      const { areas } = result as { areas: { id: number }[] };
+      result = { areas: areas.filter((a) => a.id === conta.areaId) };
+    }
     console.log(formatRitoActionLog(action, areaLogavel(d.areaId, result), "ok", performance.now() - startedAt));
     return json(res, 200, result);
   } catch (e) {

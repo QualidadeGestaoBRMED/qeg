@@ -2,7 +2,7 @@ import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  isAuthed: vi.fn(),
+  contaDaSessao: vi.fn(),
   readJsonBody: vi.fn(),
   poolQuery: vi.fn(),
   poolConnect: vi.fn(),
@@ -25,7 +25,7 @@ vi.mock("pg", () => ({
 }));
 
 vi.mock("./server.js", () => ({
-  isAuthed: mocks.isAuthed,
+  contaDaSessao: mocks.contaDaSessao,
   json: (res: { statusCode?: number; body?: unknown }, status: number, body: unknown) => {
     res.statusCode = status;
     res.body = body;
@@ -63,7 +63,7 @@ describe("ritoHandler logging", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/rito";
-    mocks.isAuthed.mockReturnValue(true);
+    mocks.contaDaSessao.mockReturnValue({ usuario: "admin", areaId: null });
     mocks.poolQuery.mockImplementation(async (query: string) => (
       query.includes("from itens i where i.id = $1")
         ? { rows: [item], rowCount: 1 }

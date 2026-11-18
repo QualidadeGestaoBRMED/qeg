@@ -43,11 +43,12 @@ function FalhaComRetry({
   );
 }
 
-export function RitoScreen() {
+/** areaFixa: conta restrita a uma área; a tela abre direto nela e não troca de área. */
+export function RitoScreen({ areaFixa = null }: { areaFixa?: number | null }) {
   const [areas, setAreas] = useState<Area[]>([]);
   const [erroAreas, setErroAreas] = useState<string | null>(null);
   const [carregandoAreas, setCarregandoAreas] = useState(true);
-  const [selecao, setSelecao] = useState<Selecao>(lerArea);
+  const [selecao, setSelecao] = useState<Selecao>(() => areaFixa ?? lerArea());
   const [aberto, setAberto] = useState<number | null>(null);
   const [emRito, setEmRito] = useState(false);
   const [aba, setAba] = useState("quadro");
@@ -69,6 +70,7 @@ export function RitoScreen() {
   }, [carregarAreas]);
 
   const escolher = (s: Selecao) => {
+    if (areaFixa !== null) return;
     setSelecao(s);
     setAba(s === null ? "geral" : "quadro");
     try {
@@ -101,7 +103,8 @@ export function RitoScreen() {
     );
   }
 
-  const criarFeature = (campos: Parameters<typeof estado.criar>[0]) => estado.criar({ ...campos, solicitante: nomeArea });
+  const criarFeature = (campos: Parameters<typeof estado.criar>[0]) =>
+    estado.criar({ ...campos, solicitante: campos.solicitante?.trim() || nomeArea });
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,9 +116,11 @@ export function RitoScreen() {
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">{nomeArea}</h2>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Botao onClick={() => escolher(undefined)}>
-            <ArrowLeftRight className="h-3.5 w-3.5" /> Trocar área
-          </Botao>
+          {areaFixa === null && (
+            <Botao onClick={() => escolher(undefined)}>
+              <ArrowLeftRight className="h-3.5 w-3.5" /> Trocar área
+            </Botao>
+          )}
           {selecao !== null && (
             <Botao onClick={() => setNovaFeature({ produtoId: null })}>
               <Plus className="h-3.5 w-3.5" /> Feature

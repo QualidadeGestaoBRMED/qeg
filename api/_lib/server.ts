@@ -58,23 +58,75 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb);
 }
 
-function createSession(secret: string): string {
-  const exp = String(Math.floor(Date.now() / 1000) + SESSION_TTL_SEC);
-  return `${exp}.${sign(exp, secret)}`;
+/** Conta logada. areaId nulo = acesso a tudo (login principal); com área, só o rito daquela área. */
+export type Conta = { usuario: string; areaId: number | null };
+
+type ContaDeArea = { usuario: string; senha: string; areaId: number };
+
+/** Contas extras, restritas a uma área: AUTH_CONTAS='[{"usuario":"suporte","senha":"...","areaId":1}]'. */
+function contasDeArea(): ContaDeArea[] {
+  try {
+    const lista = JSON.parse(env("AUTH_CONTAS") || "[]");
+    if (!Array.isArray(lista)) return [];
+    return lista.filter(
+      (c): c is ContaDeArea =>
+        typeof c?.usuario === "string" &&
+        /^[\w-]{1,64}$/.test(c.usuario) &&
+        typeof c.senha === "string" &&
+        c.senha.length > 0 &&
+        Number.isInteger(c.areaId) &&
+        c.areaId > 0,
+    );
+  } catch {
+    return [];
+  }
 }
 
-function verifySession(token: string | undefined, secret: string): boolean {
-  if (!token || !secret) return false;
-  const dot = token.indexOf(".");
-  if (dot === -1) return false;
-  const exp = token.slice(0, dot);
-  if (!safeEqual(token.slice(dot + 1), sign(exp, secret))) return false;
+function autenticar(usuario: string, senha: string): Conta | null {
+  const principal = env("AUTH_USERNAME");
+  const senhaPrincipal = env("AUTH_PASSWORD");
+  if (principal && senhaPrincipal && safeEqual(usuario, principal) && safeEqual(senha, senhaPrincipal)) {
+    return { usuario: principal, areaId: null };
+  }
+  for (const c of contasDeArea()) {
+    if (safeEqual(usuario, c.usuario) && safeEqual(senha, c.senha)) return { usuario: c.usuario, areaId: c.areaId };
+  }
+  return null;
+}
+
+// Sessão: "<exp>.<assinatura>" para o login principal (formato antigo) e "<exp>:<usuario>.<assinatura>" para contas de área.
+function createSession(secret: string, conta: Conta): string {
+  const exp = String(Math.floor(Date.now() / 1000) + SESSION_TTL_SEC);
+  const payload = conta.areaId === null ? exp : `${exp}:${conta.usuario}`;
+  return `${payload}.${sign(payload, secret)}`;
+}
+
+function verifySession(token: string | undefined, secret: string): Conta | null {
+  if (!token || !secret) return null;
+  const dot = token.lastIndexOf(".");
+  if (dot === -1) return null;
+  const payload = token.slice(0, dot);
+  if (!safeEqual(token.slice(dot + 1), sign(payload, secret))) return null;
+  const [exp, usuario] = payload.split(":");
   const expNum = Number(exp);
-  return Number.isFinite(expNum) && expNum > Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(expNum) || expNum <= Math.floor(Date.now() / 1000)) return null;
+  if (usuario === undefined) return { usuario: env("AUTH_USERNAME"), areaId: null };
+  // A conta precisa continuar em AUTH_CONTAS: tirar de lá derruba a sessão.
+  const conta = contasDeArea().find((c) => c.usuario === usuario);
+  return conta ? { usuario: conta.usuario, areaId: conta.areaId } : null;
+}
+
+export function contaDaSessao(req: Req): Conta | null {
+  return verifySession(parseCookies(req)[COOKIE_NAME], env("SESSION_SECRET"));
 }
 
 export function isAuthed(req: Req): boolean {
-  return verifySession(parseCookies(req)[COOKIE_NAME], env("SESSION_SECRET"));
+  return contaDaSessao(req) !== null;
+}
+
+/** Login principal: as contas de área não usam Pipefy nem a aba Execução. */
+function isAdmin(req: Req): boolean {
+  return contaDaSessao(req)?.areaId === null;
 }
 
 function isHttps(req: Req): boolean {
@@ -103,22 +155,16 @@ export async function loginHandler(req: Req, res: ServerResponse) {
   if (req.method !== "POST") return json(res, 405, { error: "Método não permitido." });
 
   const secret = env("SESSION_SECRET");
-  const expectedUser = env("AUTH_USERNAME");
-  const expectedPass = env("AUTH_PASSWORD");
-  if (!secret || !expectedUser || !expectedPass) {
+  if (!secret || !env("AUTH_USERNAME") || !env("AUTH_PASSWORD")) {
     return json(res, 500, { error: "Servidor sem credenciais configuradas." });
   }
 
   const body = await readJsonBody(req);
-  const username = String(body.username ?? "");
-  const password = String(body.password ?? "");
+  const conta = autenticar(String(body.username ?? ""), String(body.password ?? ""));
+  if (!conta) return json(res, 401, { error: "Usuário ou senha inválidos." });
 
-  if (!safeEqual(username, expectedUser) || !safeEqual(password, expectedPass)) {
-    return json(res, 401, { error: "Usuário ou senha inválidos." });
-  }
-
-  setSessionCookie(res, createSession(secret), SESSION_TTL_SEC, isHttps(req));
-  return json(res, 200, { ok: true });
+  setSessionCookie(res, createSession(secret, conta), SESSION_TTL_SEC, isHttps(req));
+  return json(res, 200, { ok: true, conta });
 }
 
 export async function logoutHandler(req: Req, res: ServerResponse) {
@@ -127,12 +173,14 @@ export async function logoutHandler(req: Req, res: ServerResponse) {
 }
 
 export async function sessionHandler(req: Req, res: ServerResponse) {
-  return json(res, isAuthed(req) ? 200 : 401, { authed: isAuthed(req) });
+  const conta = contaDaSessao(req);
+  return json(res, conta ? 200 : 401, { authed: conta !== null, conta });
 }
 
 export async function pipefyHandler(req: Req, res: ServerResponse) {
   if (req.method !== "POST") return json(res, 405, { error: "Método não permitido." });
   if (!isAuthed(req)) return json(res, 401, { error: "Não autenticado." });
+  if (!isAdmin(req)) return json(res, 403, { error: "Sem acesso." });
 
   const token = env("PIPEFY_TOKEN");
   if (!token) return json(res, 500, { error: "PIPEFY_TOKEN não configurado no servidor." });

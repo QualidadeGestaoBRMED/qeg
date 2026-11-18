@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 type Tela = "rito" | "execucao";
 
 const App = () => {
-  const { status, login, logout } = useAuth();
+  const { status, conta, login, logout } = useAuth();
   const [tela, setTela] = useState<Tela>("rito");
 
   if (status === "checking") {
@@ -25,6 +25,11 @@ const App = () => {
     return <LoginScreen onLogin={login} />;
   }
 
+  // Conta de área: só o rito daquela área, sem a aba Execução.
+  const areaFixa = conta?.areaId ?? null;
+  const abas = areaFixa === null ? ([["rito", "Rito"], ["execucao", "Execução"]] as const) : ([["rito", "Rito"]] as const);
+  const telaAtual: Tela = areaFixa === null ? tela : "rito";
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b border-border bg-white">
@@ -32,21 +37,16 @@ const App = () => {
           <div className="flex items-center gap-6">
             <span className="py-3 text-sm font-semibold tracking-tight text-foreground">QEG</span>
             <div className="flex gap-1" role="tablist" aria-label="Seções">
-              {(
-                [
-                  ["rito", "Rito"],
-                  ["execucao", "Execução"],
-                ] as const
-              ).map(([chave, nome]) => (
+              {abas.map(([chave, nome]) => (
                 <button
                   key={chave}
                   type="button"
                   role="tab"
-                  aria-selected={tela === chave}
+                  aria-selected={telaAtual === chave}
                   onClick={() => setTela(chave)}
                   className={cn(
                     "border-b-2 px-3 py-3 text-sm font-medium transition-colors",
-                    tela === chave
+                    telaAtual === chave
                       ? "border-primary text-foreground"
                       : "border-transparent text-muted-foreground hover:text-foreground",
                   )}
@@ -56,7 +56,7 @@ const App = () => {
               ))}
             </div>
           </div>
-          {tela === "rito" && (
+          {telaAtual === "rito" && (
             <button
               type="button"
               onClick={logout}
@@ -68,9 +68,9 @@ const App = () => {
         </div>
       </nav>
 
-      {tela === "rito" ? (
+      {telaAtual === "rito" ? (
         <main className="mx-auto w-full max-w-[1400px] px-4 py-8 sm:px-8 sm:py-10">
-          <RitoScreen />
+          <RitoScreen key={areaFixa ?? "todas"} areaFixa={areaFixa} />
         </main>
       ) : (
         <SprintMonitorScreen onLogout={logout} />
